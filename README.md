@@ -1,2 +1,3 @@
-# comapeo-utils
-A variety of utilities used for CoMapeo applications
+# @comapeo/react
+
+React helpers for CoMapeo apps

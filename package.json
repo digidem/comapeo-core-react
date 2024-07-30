@@ -1,0 +1,45 @@
+{
+  "name": "@comapeo/react",
+  "version": "0.1.0",
+  "description": "React helpers for CoMapeo apps",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digidem/comapeo-react.git"
+  },
+  "keywords": [
+    "comapeo"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/digidem/comapeo-react/issues"
+  },
+  "homepage": "https://github.com/digidem/comapeo-react#readme",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "src/",
+    "types/"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "lint:format": "prettier . --cache --check",
+    "lint:types": "tsc -p tsconfig.json",
+    "build:types": "tsc -p tsconfig.npm.json",
+    "prepack": "npm run build:types"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "husky": "^9.1.1",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}
