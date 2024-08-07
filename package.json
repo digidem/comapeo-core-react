@@ -15,30 +15,33 @@
   },
   "homepage": "https://github.com/digidem/comapeo-react#readme",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
+    },
+    "./hooks/*.js": {
+      "import": "./dist/hooks/*.js"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
-    "src/",
     "dist/"
   ],
   "scripts": {
     "prepare": "husky",
-    "lint:eslint": "eslint . --cache",
+    "lint:code": "eslint . --cache",
     "lint:format": "prettier . --cache --check",
     "lint:types": "tsc -p tsconfig.json",
-    "build:dist": "tsc -p tsconfig.npm.json",
+    "clean:dist": "rm -rf ./dist",
+    "build:dist": "npm run clean:dist && tsc -p tsconfig.npm.json",
     "prepack": "npm run build:dist"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.8.0",
+    "@tanstack/eslint-plugin-query": "^5.51.15",
     "@types/node": "^22.0.0",
+    "@types/react": "^18.3.3",
     "eslint": "^9.8.0",
     "globals": "^15.8.0",
     "husky": "^9.1.1",
@@ -46,5 +49,13 @@
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5 <6",
+    "react": ">17.0.0"
+  },
+  "dependencies": {
+    "@mapeo/core": "9.0.0-alpha.14",
+    "@mapeo/ipc": "0.9.0"
   }
 }
