@@ -38,6 +38,12 @@
 		"build": "npm-run-all build:clean build:npm",
 		"prepack": "npm run build"
 	},
+	"peerDependencies": {
+		"@comapeo/core": "*",
+		"@comapeo/ipc": "*",
+		"@tanstack/react-query": ">=5 <6",
+		"react": ">17.0.0"
+	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
 		"@eslint/js": "^9.15.0",
@@ -53,11 +59,5 @@
 		"rimraf": "^6.0.1",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.15.0"
-	},
-	"peerDependencies": {
-		"@comapeo/core": "*",
-		"@comapeo/ipc": "*",
-		"@tanstack/react-query": ">=5 <6",
-		"react": ">17.0.0"
 	}
 }
