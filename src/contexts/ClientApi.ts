@@ -1,4 +1,4 @@
-import type { MapeoClientApi } from '@mapeo/ipc'
+import type { MapeoClientApi } from '@comapeo/ipc'
 import { createContext, createElement, type PropsWithChildren } from 'react'
 
 export const ClientApiContext = createContext<MapeoClientApi | null>(null)

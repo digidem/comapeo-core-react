@@ -1,4 +1,4 @@
-import type { MapeoClientApi, MapeoProjectApi } from '@mapeo/ipc'
+import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import {
   queryOptions,
   useMutation,
@@ -113,7 +113,7 @@ export function createdByToDeviceIdQueryOptions(opts: {
   return queryOptions({
     queryKey: createdByToDeviceIdQueryKey(opts.projectId, opts.createdBy),
     queryFn: () => {
-      return opts.projectApi.$createdByToDeviceId(opts.createdBy)
+      return opts.projectApi.$originalVersionIdToDeviceId(opts.createdBy)
     },
   })
 }

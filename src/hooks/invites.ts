@@ -1,4 +1,4 @@
-import type { MapeoClientApi } from '@mapeo/ipc'
+import type { MapeoClientApi } from '@comapeo/ipc'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 
 import { useClientApi } from './client-api.js'
