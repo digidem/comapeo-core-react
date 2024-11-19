@@ -31,7 +31,7 @@
     "prepare": "husky",
     "lint:code": "eslint . --cache",
     "lint:format": "prettier . --cache --check",
-    "lint:types": "tsc -p tsconfig.json",
+    "lint:types": "tsc",
     "clean:dist": "rm -rf ./dist",
     "build:dist": "npm run clean:dist && tsc -p tsconfig.npm.json",
     "prepack": "npm run build:dist"
