@@ -1,7 +1,7 @@
 // @ts-check
 
 import { includeIgnoreFile } from '@eslint/compat'
-import pluginJs from '@eslint/js'
+import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
 import globals from 'globals'
 import path from 'node:path'
@@ -13,13 +13,41 @@ const gitignorePath = path.resolve(
   '.gitignore',
 )
 
-const config = [
-  includeIgnoreFile(gitignorePath),
+export default tseslint.config(
+  js.configs.recommended,
+  {
+    name: 'typescript',
+    extends: tseslint.configs.recommended,
+    rules: {
+      '@typescript-eslint/array-type': ['warn', { default: 'generic' }],
+      // Allow unused vars if prefixed with `_` (https://typescript-eslint.io/rules/no-unused-vars/)
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
+  ...pluginQuery.configs['flat/recommended'],
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  ...pluginQuery.configs['flat/recommended'],
-]
-
-export default config
+  {
+    name: 'node',
+    files: ['**/*.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.nodeBuiltin,
+        ...globals.worker,
+      },
+    },
+  },
+  includeIgnoreFile(gitignorePath),
+)
