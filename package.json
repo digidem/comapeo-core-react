@@ -1,63 +1,63 @@
 {
-  "name": "@comapeo/react",
-  "version": "0.1.0",
-  "description": "React helpers for CoMapeo apps",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/digidem/comapeo-react.git"
-  },
-  "keywords": [
-    "comapeo"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/digidem/comapeo-react/issues"
-  },
-  "homepage": "https://github.com/digidem/comapeo-react#readme",
-  "type": "module",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "import": "./dist/index.js"
-    },
-    "./hooks/*.js": {
-      "import": "./dist/hooks/*.js"
-    }
-  },
-  "files": [
-    "dist/"
-  ],
-  "scripts": {
-    "prepare": "husky",
-    "lint:eslint": "eslint --cache .",
-    "lint:format": "prettier --cache --check .",
-    "lint:types": "tsc",
-    "lint": "npm-run-all --parallel --continue-on-error --print-label lint:*",
-    "build:clean": "rimraf ./dist",
-    "build:npm": "tsc -p tsconfig.npm.json",
-    "build": "npm-run-all build:clean build:npm",
-    "prepack": "npm run build"
-  },
-  "devDependencies": {
-    "@eslint/compat": "^1.2.3",
-    "@eslint/js": "^9.15.0",
-    "@tanstack/eslint-plugin-query": "^5.60.1",
-    "@types/node": "^20.17.6",
-    "@types/react": "^18.3.12",
-    "eslint": "^9.15.0",
-    "globals": "^15.12.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.2.10",
-    "npm-run-all2": "^7.0.1",
-    "prettier": "^3.3.3",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.6.3",
-    "typescript-eslint": "^8.15.0"
-  },
-  "peerDependencies": {
-    "@comapeo/core": "*",
-    "@comapeo/ipc": "*",
-    "@tanstack/react-query": ">=5 <6",
-    "react": ">17.0.0"
-  }
+	"name": "@comapeo/react",
+	"version": "0.1.0",
+	"description": "React helpers for CoMapeo apps",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/digidem/comapeo-react.git"
+	},
+	"keywords": [
+		"comapeo"
+	],
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/digidem/comapeo-react/issues"
+	},
+	"homepage": "https://github.com/digidem/comapeo-react#readme",
+	"type": "module",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"import": "./dist/index.js"
+		},
+		"./hooks/*.js": {
+			"import": "./dist/hooks/*.js"
+		}
+	},
+	"files": [
+		"dist/"
+	],
+	"scripts": {
+		"prepare": "husky",
+		"lint:eslint": "eslint --cache .",
+		"lint:format": "prettier --cache --check .",
+		"lint:types": "tsc",
+		"lint": "npm-run-all --parallel --continue-on-error --print-label lint:*",
+		"build:clean": "rimraf ./dist",
+		"build:npm": "tsc -p tsconfig.npm.json",
+		"build": "npm-run-all build:clean build:npm",
+		"prepack": "npm run build"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.2.3",
+		"@eslint/js": "^9.15.0",
+		"@tanstack/eslint-plugin-query": "^5.60.1",
+		"@types/node": "^20.17.6",
+		"@types/react": "^18.3.12",
+		"eslint": "^9.15.0",
+		"globals": "^15.12.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.2.10",
+		"npm-run-all2": "^7.0.1",
+		"prettier": "^3.3.3",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.6.3",
+		"typescript-eslint": "^8.15.0"
+	},
+	"peerDependencies": {
+		"@comapeo/core": "*",
+		"@comapeo/ipc": "*",
+		"@tanstack/react-query": ">=5 <6",
+		"react": ">17.0.0"
+	}
 }

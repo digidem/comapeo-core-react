@@ -4,12 +4,12 @@ import { createContext, createElement, type PropsWithChildren } from 'react'
 export const ClientApiContext = createContext<MapeoClientApi | null>(null)
 
 export function ApiProvider({
-  clientApi,
-  children,
+	clientApi,
+	children,
 }: PropsWithChildren<{ clientApi: MapeoClientApi }>) {
-  return createElement(
-    ClientApiContext.Provider,
-    { value: clientApi },
-    children,
-  )
+	return createElement(
+		ClientApiContext.Provider,
+		{ value: clientApi },
+		children,
+	)
 }
