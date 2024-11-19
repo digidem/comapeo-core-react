@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
     "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
+    "declaration": false,
+    "esModuleInterop": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "module": "preserve",
     "lib": ["es2022", "dom", "dom.iterable"],
+    "module": "preserve",
+    "moduleDetection": "force",
     "noEmit": true,
-    "declaration": false
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": false, // May want to enable but we let typescript-eslint handle checking this since it can be more granular
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2022",
+    "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
