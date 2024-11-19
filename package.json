@@ -44,16 +44,16 @@
     "@types/react": "^18.3.3",
     "eslint": "^9.8.0",
     "globals": "^15.9.0",
-    "husky": "^9.1.1",
+    "husky": "^9.1.7",
     "lint-staged": "^15.2.8",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.1"
   },
   "peerDependencies": {
-    "@tanstack/react-query": ">=5 <6",
-    "react": ">17.0.0",
     "@comapeo/core": "*",
-    "@comapeo/ipc": "*"
+    "@comapeo/ipc": "*",
+    "@tanstack/react-query": ">=5 <6",
+    "react": ">17.0.0"
   }
 }
