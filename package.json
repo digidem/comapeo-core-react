@@ -18,10 +18,8 @@
 	"sideEffects": false,
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./hooks/*.js": {
-			"import": "./dist/hooks/*.js"
 		}
 	},
 	"files": [
