@@ -11,12 +11,16 @@
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitOverride": true,
 		"noUncheckedIndexedAccess": true,
-		"noUnusedLocals": false, // May want to enable but we let typescript-eslint handle checking this since it can be more granular
+		"noUnusedLocals": false,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
-		"target": "es2022",
-		"verbatimModuleSyntax": true
+		"target": "es2022"
+		// TODO: Enable this when rpc-reflector release with
+		// https://github.com/digidem/rpc-reflector/commit/d4963871dbbf7e3c3dfebef1e07b6465c2172775 and
+		// https://github.com/digidem/rpc-reflector/commit/e7c1becbc6fa7c9c1345b99ca20fc3331dc756af
+		// is released
+		// "verbatimModuleSyntax": true
 	},
 	"exclude": ["node_modules"]
 }

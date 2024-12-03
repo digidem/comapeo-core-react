@@ -1,11 +1,11 @@
-import type { MapeoDocMap } from '@comapeo/core/dist/types'
 import type { MapeoProjectApi } from '@comapeo/ipc'
+import type { MapeoDoc } from '@comapeo/schema'
 import { queryOptions } from '@tanstack/react-query'
 
-import { ROOT_QUERY_KEY } from '../constants'
+import { BASE_QUERY_OPTIONS, ROOT_QUERY_KEY } from './shared'
 
 export type DocumentType = Extract<
-	keyof MapeoDocMap,
+	MapeoDoc['schemaName'],
 	'field' | 'observation' | 'preset' | 'track' | 'remoteDetectionAlert'
 >
 
@@ -84,9 +84,9 @@ export function documentsQueryOptions<D extends DocumentType>({
 	opts?: Parameters<MapeoProjectApi[D]['getMany']>[0]
 }) {
 	return queryOptions({
+		...BASE_QUERY_OPTIONS,
 		queryKey: DOCUMENTS_QUERY_KEYS.manyDocuments({ projectId, docType, opts }),
-		// @ts-expect-error Inferred type is correct despite TS complaining
-		queryFn: () => {
+		queryFn: async () => {
 			return projectApi[docType].getMany(opts)
 		},
 	})
@@ -106,14 +106,14 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 	opts?: Parameters<MapeoProjectApi[D]['getByDocId']>[1]
 }) {
 	return queryOptions({
+		...BASE_QUERY_OPTIONS,
 		queryKey: DOCUMENTS_QUERY_KEYS.documentByDocId({
 			projectId,
 			docType,
 			docId,
 			opts,
 		}),
-		// @ts-expect-error Inferred type is correct despite TS complaining
-		queryFn: () => {
+		queryFn: async () => {
 			return projectApi[docType].getByDocId(docId, opts)
 		},
 	})
@@ -129,18 +129,18 @@ export function documentByVersionIdQueryOptions<D extends DocumentType>({
 	projectApi: MapeoProjectApi
 	projectId: string
 	docType: D
-	versionId: string
+	versionId: Parameters<MapeoProjectApi[D]['getByVersionId']>[0]
 	opts?: Parameters<MapeoProjectApi[D]['getByVersionId']>[1]
 }) {
 	return queryOptions({
+		...BASE_QUERY_OPTIONS,
 		queryKey: DOCUMENTS_QUERY_KEYS.documentByVersionId({
 			projectId,
 			docType,
 			versionId,
 			opts,
 		}),
-		// @ts-expect-error Inferred type is correct despite TS complaining
-		queryFn: () => {
+		queryFn: async () => {
 			return projectApi[docType].getByVersionId(versionId, opts)
 		},
 	})

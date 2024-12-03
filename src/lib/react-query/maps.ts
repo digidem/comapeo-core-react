@@ -1,7 +1,7 @@
 import type { MapeoClientApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
 
-import { ROOT_QUERY_KEY } from '../constants'
+import { BASE_QUERY_OPTIONS, ROOT_QUERY_KEY } from './shared'
 
 export const MAPS_QUERY_KEYS = {
 	maps: () => {
@@ -20,6 +20,7 @@ export function mapStyleJsonUrlQueryOptions({
 	refreshToken?: string
 }) {
 	return queryOptions({
+		...BASE_QUERY_OPTIONS,
 		queryKey: MAPS_QUERY_KEYS.styleJsonUrl({ refreshToken }),
 		queryFn: async () => {
 			const result = await clientApi.getMapStyleJsonUrl()

@@ -1,7 +1,7 @@
 import type { MapeoClientApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
 
-import { ROOT_QUERY_KEY } from '../constants.js'
+import { BASE_QUERY_OPTIONS, ROOT_QUERY_KEY } from './shared'
 
 export const INVITES_QUERY_KEYS = {
 	invites: () => {
@@ -18,8 +18,9 @@ export function pendingInvitesQueryOptions({
 	clientApi: MapeoClientApi
 }) {
 	return queryOptions({
+		...BASE_QUERY_OPTIONS,
 		queryKey: INVITES_QUERY_KEYS.pendingInvites(),
-		queryFn: () => {
+		queryFn: async () => {
 			return clientApi.invite.getPending()
 		},
 	})
