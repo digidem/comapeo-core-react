@@ -30,7 +30,7 @@
 		"lint:eslint": "eslint --cache .",
 		"lint:format": "prettier --cache --check .",
 		"lint:types": "tsc",
-		"lint": "npm-run-all --parallel --continue-on-error --print-label lint:*",
+		"lint": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output lint:*",
 		"build:clean": "rimraf ./dist",
 		"build:npm": "tsc -p tsconfig.npm.json",
 		"build": "npm-run-all build:clean build:npm",
