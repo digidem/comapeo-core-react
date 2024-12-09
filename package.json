@@ -14,6 +14,9 @@
 		"url": "https://github.com/digidem/comapeo-core-react/issues"
 	},
 	"homepage": "https://github.com/digidem/comapeo-core-react#readme",
+	"authors": [
+		"Andrew Chou <achou@awana.digital>"
+	],
 	"type": "module",
 	"sideEffects": false,
 	"exports": {
