@@ -5,6 +5,7 @@
 		"declaration": false,
 		"esModuleInterop": true,
 		"isolatedModules": true,
+		"jsx": "react-jsx",
 		"lib": ["es2022", "dom", "dom.iterable"],
 		"module": "preserve",
 		"moduleDetection": "force",
@@ -13,6 +14,9 @@
 		"noImplicitOverride": true,
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": false,
+		"paths": {
+			"*": ["./node_modules/@digidem/types/vendor/*/index.d.ts"]
+		},
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
@@ -23,6 +27,6 @@
 		// is released
 		// "verbatimModuleSyntax": true
 	},
-	"include": ["src/**/*", "tests/**/*", "*.config.js"],
+	"include": ["src/**/*", "test/**/*", "*.config.js"],
 	"exclude": ["node_modules"]
 }
