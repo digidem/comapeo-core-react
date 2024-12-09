@@ -1,3 +1,3 @@
-# @comapeo/react
+# @comapeo/core-react
 
-React helpers for CoMapeo apps
+React wrapper for working with [`@comapeo/core`](https://github.com/digidem/comapeo-core)
