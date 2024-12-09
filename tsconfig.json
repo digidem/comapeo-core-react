@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"allowJs": true,
+		"checkJs": true,
 		"declaration": false,
 		"esModuleInterop": true,
 		"isolatedModules": true,
@@ -22,5 +23,6 @@
 		// is released
 		// "verbatimModuleSyntax": true
 	},
+	"include": ["src/**/*", "tests/**/*", "*.config.js"],
 	"exclude": ["node_modules"]
 }
