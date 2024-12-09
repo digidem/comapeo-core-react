@@ -13,6 +13,13 @@ const gitignorePath = path.resolve(
 	'.gitignore',
 )
 
+const gitExcludePath = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	'.git',
+	'info',
+	'exclude',
+)
+
 export default tseslint.config(
 	js.configs.recommended,
 	{
@@ -50,4 +57,5 @@ export default tseslint.config(
 		},
 	},
 	includeIgnoreFile(gitignorePath),
+	includeIgnoreFile(gitExcludePath),
 )
