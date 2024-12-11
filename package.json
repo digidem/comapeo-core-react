@@ -63,7 +63,6 @@
 		"fastify": "^4.29.0",
 		"globals": "^15.13.0",
 		"husky": "^9.1.7",
-		"jsdom": "^25.0.1",
 		"lint-staged": "^15.2.10",
 		"npm-run-all2": "^7.0.1",
 		"prettier": "^3.4.2",
