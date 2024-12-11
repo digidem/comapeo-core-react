@@ -9,6 +9,31 @@ import {
 import { useSingleProject } from './projects'
 
 // TODO: Return type is not narrowed properly by `docType`
+/**
+ * Retrieve a single document from the database based on the document's document ID.
+ *
+ * Triggers the closest error boundary if the document cannot be found
+ *
+ * @param {Object} opts
+ * @param {string} opts.projectId Project public ID
+ * @param {DocumentType} opts.docType Document type of interest
+ * @param {string} opts.docId Document ID
+ * @param {Object} [opts.opts]
+ * @param {string} [opts.opts.lang] Language to translate the document into
+ *
+ * @example
+ * ```tsx
+ * function SingleDocumentByDocIdExample() {
+ *   const { data, isRefetching } = useSingleDocByDocId({
+ *     projectId: '...',
+ *     docType: 'observation',
+ *     docId: '...',
+ *   })
+ *
+ *   console.log(data.schemaName) // logs 'observation'
+ * }
+ * ```
+ */
 export function useSingleDocByDocId<D extends DocumentType>({
 	projectId,
 	docType,
@@ -36,6 +61,31 @@ export function useSingleDocByDocId<D extends DocumentType>({
 }
 
 // TODO: Return type is not narrowed properly by `docType`
+/**
+ * Retrieve a single document from the database based on the document's version ID.
+ *
+ * Triggers the closest error boundary if the document cannot be found.
+ *
+ * @param {Object} opts
+ * @param {string} opts.projectId Project public ID
+ * @param {DocumentType} opts.docType Document type of interest
+ * @param {string} opts.versionId Document's version ID
+ * @param {Object} [opts.opts]
+ * @param {string} [opts.opts.lang] Language to translate the document into
+ *
+ *  * @example
+ * ```tsx
+ * function SingleDocumentByVersionIdExample() {
+ *   const { data, isRefetching } = useSingleDocByVersionId({
+ *     projectId: '...',
+ *     docType: 'observation',
+ *     docId: '...',
+ *   })
+ *
+ *   console.log(data.schemaName) // logs 'observation'
+ * }
+ * ```
+ */
 export function useSingleDocByVersionId<D extends DocumentType>({
 	projectId,
 	docType,
@@ -63,6 +113,42 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 }
 
 // TODO: Return type is not narrowed properly by `docType`
+/**
+ * Retrieve all documents of a specific `docType`.
+ *
+ * @param {Object} opts
+ * @param {string} opts.projectId Project public ID
+ * @param {DocumentType} opts.docType Document type of interest
+ * @param {Object} [opts.opts]
+ * @param {boolean} [opts.opts.includeDeleted] Include documents that have been marked as deleted
+ * @param {string} [opts.opts.lang] Language to translate the documents into
+ *
+ * @example
+ * ```tsx
+ * function BasicExample() {
+ *   const { data, isRefetching } = useManyDocs({
+ *     projectId: '...',
+ *     docType: 'observations',
+ *   })
+ * }
+ * ```
+ *
+ * ```tsx
+ * function useAllObservations(opts) {
+ *   return useManyDocs({
+ *     ...opts,
+ *     docType: 'observations',
+ *   })
+ * }
+ *
+ * function useAllPresets(opts) {
+ *   return useManyDocs({
+ *     ...opts,
+ *     docType: 'presets',
+ *   })
+ * }
+ * ```
+ */
 export function useManyDocs<D extends DocumentType>({
 	projectId,
 	docType,
