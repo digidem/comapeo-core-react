@@ -111,12 +111,12 @@ export function useIconUrl({
 	return { data, isRefetching }
 }
 
-export function useAttachmentUrl<B extends BlobId>({
+export function useAttachmentUrl({
 	projectId,
 	blobId,
 }: {
 	projectId: string
-	blobId: B
+	blobId: BlobId
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
