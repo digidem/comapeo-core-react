@@ -97,7 +97,7 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 	projectId: string
 	docType: D
 	docId: Parameters<MapeoProjectApi[D]['getByDocId']>[0]
-	opts?: Parameters<MapeoProjectApi[D]['getByDocId']>[1]
+	opts?: Omit<Parameters<MapeoProjectApi[D]['getByDocId']>[1], 'mustBeFound'>
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
@@ -108,7 +108,11 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 			opts,
 		}),
 		queryFn: async () => {
-			return projectApi[docType].getByDocId(docId, opts)
+			return projectApi[docType].getByDocId(docId, {
+				...opts,
+				// We want to make sure that this throws in the case that no match is found
+				mustBeFound: true,
+			})
 		},
 	})
 }
