@@ -2,81 +2,78 @@ import type { BlobId } from '@comapeo/core/dist/types.js'
 import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
 
-import { BASE_QUERY_OPTIONS, ROOT_QUERY_KEY } from './shared'
+import { baseQueryOptions, ROOT_QUERY_KEY } from './shared'
 
-export const PROJECTS_QUERY_KEYS = {
-	projects: () => {
-		return [ROOT_QUERY_KEY, 'projects'] as const
-	},
-	projectById: ({ projectId }: { projectId: string }) => {
-		return [ROOT_QUERY_KEY, 'projects', projectId] as const
-	},
-	projectSettings: ({ projectId }: { projectId: string }) => {
-		return [ROOT_QUERY_KEY, 'projects', projectId, 'project_settings'] as const
-	},
-	projectRole: ({ projectId }: { projectId: string }) => {
-		return [ROOT_QUERY_KEY, 'projects', projectId, 'role'] as const
-	},
-	members: ({ projectId }: { projectId: string }) => {
-		return [ROOT_QUERY_KEY, 'projects', projectId, 'members'] as const
-	},
-	memberById: ({
+export function getProjectsQueryKey() {
+	return [ROOT_QUERY_KEY, 'projects'] as const
+}
+
+export function getProjectByIdQueryKey({ projectId }: { projectId: string }) {
+	return [ROOT_QUERY_KEY, 'projects', projectId] as const
+}
+
+export function getProjectSettingsQueryKey({
+	projectId,
+}: {
+	projectId: string
+}) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'project_settings'] as const
+}
+
+export function getProjectRoleQueryKey({ projectId }: { projectId: string }) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'role'] as const
+}
+
+export function getMembersQueryKey({ projectId }: { projectId: string }) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'members'] as const
+}
+
+export function getMemberByIdQueryKey({
+	projectId,
+	deviceId,
+}: {
+	projectId: string
+	deviceId: string
+}) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'members', deviceId] as const
+}
+
+export function getIconUrlQueryKey({
+	projectId,
+	iconId,
+	opts,
+}: {
+	projectId: string
+	iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
+	opts: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[1]
+}) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'icons', iconId, opts] as const
+}
+
+export function getDocumentCreatedByQueryKey({
+	projectId,
+	originalVersionId,
+}: {
+	projectId: string
+	originalVersionId: string
+}) {
+	return [
+		ROOT_QUERY_KEY,
+		'projects',
 		projectId,
-		deviceId,
-	}: {
-		projectId: string
-		deviceId: string
-	}) => {
-		return [ROOT_QUERY_KEY, 'projects', projectId, 'members', deviceId] as const
-	},
-	iconUrl: ({
-		projectId,
-		iconId,
-		opts,
-	}: {
-		projectId: string
-		iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
-		opts: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[1]
-	}) => {
-		return [
-			ROOT_QUERY_KEY,
-			'projects',
-			projectId,
-			'icons',
-			iconId,
-			opts,
-		] as const
-	},
-	documentCreatedBy: ({
-		projectId,
+		'document_created_by',
 		originalVersionId,
-	}: {
-		projectId: string
-		originalVersionId: string
-	}) => {
-		return [
-			ROOT_QUERY_KEY,
-			'projects',
-			projectId,
-			'document_created_by',
-			originalVersionId,
-		] as const
-	},
-	attachmentUrl: ({
-		projectId,
-		blobId,
-	}: {
-		projectId: string
-		blobId: BlobId
-	}) => {
-		return [
-			ROOT_QUERY_KEY,
-			'projects',
-			projectId,
-			'attachments',
-			blobId,
-		] as const
-	},
+	] as const
+}
+
+export function getAttachmentUrlQueryKey({
+	projectId,
+	blobId,
+}: {
+	projectId: string
+	blobId: BlobId
+}) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'attachments', blobId] as const
 }
 
 export function projectsQueryOptions({
@@ -85,8 +82,8 @@ export function projectsQueryOptions({
 	clientApi: MapeoClientApi
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.projects(),
+		...baseQueryOptions(),
+		queryKey: getProjectsQueryKey(),
 		queryFn: async () => {
 			return clientApi.listProjects()
 		},
@@ -101,8 +98,8 @@ export function projectByIdQueryOptions({
 	projectId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.projectById({ projectId }),
+		...baseQueryOptions(),
+		queryKey: getProjectByIdQueryKey({ projectId }),
 		queryFn: async () => {
 			return clientApi.getProject(projectId)
 		},
@@ -117,8 +114,8 @@ export function projectSettingsQueryOptions({
 	projectId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.projectSettings({ projectId }),
+		...baseQueryOptions(),
+		queryKey: getProjectSettingsQueryKey({ projectId }),
 		queryFn: async () => {
 			return projectApi.$getProjectSettings()
 		},
@@ -133,8 +130,8 @@ export function projectMembersQueryOptions({
 	projectId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.members({ projectId }),
+		...baseQueryOptions(),
+		queryKey: getMembersQueryKey({ projectId }),
 		queryFn: async () => {
 			return projectApi.$member.getMany()
 		},
@@ -151,8 +148,8 @@ export function projectMemberByIdQueryOptions({
 	deviceId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.memberById({ projectId, deviceId }),
+		...baseQueryOptions(),
+		queryKey: getMemberByIdQueryKey({ projectId, deviceId }),
 		queryFn: async () => {
 			return projectApi.$member.getById(deviceId)
 		},
@@ -167,8 +164,8 @@ export function projectOwnRoleQueryOptions({
 	projectId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.projectRole({ projectId }),
+		...baseQueryOptions(),
+		queryKey: getProjectRoleQueryKey({ projectId }),
 		queryFn: async () => {
 			return projectApi.$getOwnRole()
 		},
@@ -187,8 +184,8 @@ export function iconUrlQueryOptions({
 	opts: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[1]
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.iconUrl({ projectId, iconId, opts }),
+		...baseQueryOptions(),
+		queryKey: getIconUrlQueryKey({ projectId, iconId, opts }),
 		queryFn: async () => {
 			return projectApi.$icons.getIconUrl(iconId, opts)
 		},
@@ -205,8 +202,8 @@ export function documentCreatedByQueryOptions({
 	originalVersionId: string
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.documentCreatedBy({
+		...baseQueryOptions(),
+		queryKey: getDocumentCreatedByQueryKey({
 			projectId,
 			originalVersionId,
 		}),
@@ -226,8 +223,8 @@ export function attachmentUrlQueryOptions({
 	blobId: BlobId
 }) {
 	return queryOptions({
-		...BASE_QUERY_OPTIONS,
-		queryKey: PROJECTS_QUERY_KEYS.attachmentUrl({ projectId, blobId }),
+		...baseQueryOptions(),
+		queryKey: getAttachmentUrlQueryKey({ projectId, blobId }),
 		queryFn: async () => {
 			// TODO: Might need a refresh token? (similar to map style url)
 			return projectApi.$blobs.getUrl(blobId)

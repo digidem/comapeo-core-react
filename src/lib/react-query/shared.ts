@@ -7,7 +7,9 @@ export const ROOT_QUERY_KEY = '@comapeo/react'
 // have to manually set the network mode, but we still should keep these options
 // to avoid surprises. Not using the queryClient `defaultOptions` because the API
 // consumer might also use the same queryClient for network queries
-export const BASE_QUERY_OPTIONS = {
-	networkMode: 'always',
-	retry: 0,
-} satisfies QueryOptions
+export function baseQueryOptions() {
+	return {
+		networkMode: 'always',
+		retry: 0,
+	} satisfies QueryOptions
+}
