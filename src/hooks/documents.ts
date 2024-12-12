@@ -24,7 +24,7 @@ import { useSingleProject } from './projects'
  * @example
  * ```tsx
  * function SingleDocumentByDocIdExample() {
- *   const { data, isRefetching } = useSingleDocByDocId({
+ *   const { data } = useSingleDocByDocId({
  *     projectId: '...',
  *     docType: 'observation',
  *     docId: '...',
@@ -47,7 +47,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		documentByDocumentIdQueryOptions({
 			projectApi,
 			projectId,
@@ -57,7 +57,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 // TODO: Return type is not narrowed properly by `docType`
@@ -76,7 +76,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
  *  * @example
  * ```tsx
  * function SingleDocumentByVersionIdExample() {
- *   const { data, isRefetching } = useSingleDocByVersionId({
+ *   const { data } = useSingleDocByVersionId({
  *     projectId: '...',
  *     docType: 'observation',
  *     docId: '...',
@@ -99,7 +99,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		documentByVersionIdQueryOptions({
 			projectApi,
 			projectId,
@@ -109,7 +109,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 // TODO: Return type is not narrowed properly by `docType`
@@ -126,7 +126,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useManyDocs({
+ *   const { data } = useManyDocs({
  *     projectId: '...',
  *     docType: 'observations',
  *   })
@@ -160,7 +160,7 @@ export function useManyDocs<D extends DocumentType>({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		documentsQueryOptions({
 			projectApi,
 			projectId,
@@ -169,5 +169,5 @@ export function useManyDocs<D extends DocumentType>({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }

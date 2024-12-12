@@ -24,7 +24,7 @@ import { useClientApi } from './client'
  * ```tsx
  * function ExampleWithRefreshToken() {
  *   const [refreshToken] = useState('foo')
- *   const { data, isRefetching } = useMapStyleUrl({ refreshToken })
+ *   const { data } = useMapStyleUrl({ refreshToken })
  *
  *   console.log(data) // logs something like 'http://localhost:...?refresh_token=foo'
  * }
@@ -37,9 +37,9 @@ export function useMapStyleUrl({
 } = {}) {
 	const clientApi = useClientApi()
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		mapStyleJsonUrlQueryOptions({ clientApi, refreshToken }),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }

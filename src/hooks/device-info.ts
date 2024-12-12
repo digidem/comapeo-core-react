@@ -9,7 +9,7 @@ import { useClientApi } from './client'
  * @example
  * ```tsx
  * function DeviceInfoExample() {
- *   const { data, isRefetching } = useDeviceInfo()
+ *   const { data } = useDeviceInfo()
  * }
  * ```
  *
@@ -17,9 +17,9 @@ import { useClientApi } from './client'
 export function useOwnDeviceInfo() {
 	const clientApi = useClientApi()
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		deviceInfoQueryOptions({ clientApi }),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }

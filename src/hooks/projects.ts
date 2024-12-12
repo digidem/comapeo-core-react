@@ -22,7 +22,7 @@ import { useClientApi } from './client'
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useProjectSettings({ projectId: '...' })
+ *   const { data } = useProjectSettings({ projectId: '...' })
  *
  *   console.log(data.name)
  * }
@@ -38,14 +38,14 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
 		}),
 	)
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		projectSettingsQueryOptions({
 			projectApi,
 			projectId,
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -59,21 +59,21 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useSingleProject({ projectId: '...' })
+ *   const { data } = useSingleProject({ projectId: '...' })
  * }
  * ```
  */
 export function useSingleProject({ projectId }: { projectId: string }) {
 	const clientApi = useClientApi()
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		projectByIdQueryOptions({
 			clientApi,
 			projectId,
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -82,7 +82,7 @@ export function useSingleProject({ projectId }: { projectId: string }) {
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useManyProjects()
+ *   const { data } = useManyProjects()
  *
  *   console.log(data.map(project => project.name))
  * }
@@ -91,13 +91,13 @@ export function useSingleProject({ projectId }: { projectId: string }) {
 export function useManyProjects() {
 	const clientApi = useClientApi()
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		projectsQueryOptions({
 			clientApi,
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -110,7 +110,7 @@ export function useManyProjects() {
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useSingleMember({ projectId: '...', deviceId: '...' })
+ *   const { data } = useSingleMember({ projectId: '...', deviceId: '...' })
  *
  *   console.log(data.role)
  * }
@@ -125,7 +125,7 @@ export function useSingleMember({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		projectMemberByIdQueryOptions({
 			projectApi,
 			projectId,
@@ -133,7 +133,7 @@ export function useSingleMember({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -145,7 +145,7 @@ export function useSingleMember({
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useManyMembers({ projectId: '...' })
+ *   const { data } = useManyMembers({ projectId: '...' })
  *
  *   console.log(data.role)
  * }
@@ -154,11 +154,11 @@ export function useSingleMember({
 export function useManyMembers({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		projectMembersQueryOptions({ projectApi, projectId }),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -174,7 +174,7 @@ export function useManyMembers({ projectId }: { projectId: string }) {
  * @example
  * ```tsx
  * function PngExample() {
- *   const { data, isRefetching } = useIconUrl({
+ *   const { data } = useIconUrl({
  *     projectId: '...',
  *     iconId: '...',
  *     opts: {
@@ -188,7 +188,7 @@ export function useManyMembers({ projectId }: { projectId: string }) {
  *
  * ```tsx
  * function SvgExample() {
- *   const { data, isRefetching } = useIconUrl({
+ *   const { data } = useIconUrl({
  *     projectId: '...',
  *     iconId: '...',
  *     opts: {
@@ -210,7 +210,7 @@ export function useIconUrl({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		iconUrlQueryOptions({
 			projectApi,
 			projectId,
@@ -219,7 +219,7 @@ export function useIconUrl({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 /**
@@ -234,7 +234,7 @@ export function useIconUrl({
  * @example
  * ```tsx
  * function PhotoExample() {
- *   const { data, isRefetching } = useAttachmentUrl({
+ *   const { data } = useAttachmentUrl({
  *     projectId: '...',
  *     blobId: {
  *       type: 'photo',
@@ -248,7 +248,7 @@ export function useIconUrl({
  *
  * ```tsx
  * function AudioExample() {
- *   const { data, isRefetching } = useAttachmentUrl({
+ *   const { data } = useAttachmentUrl({
  *     projectId: '...',
  *     blobId: {
  *       type: 'audio',
@@ -262,7 +262,7 @@ export function useIconUrl({
  *
  * ```tsx
  * function VideoExample() {
- *   const { data, isRefetching } = useAttachmentUrl({
+ *   const { data } = useAttachmentUrl({
  *     projectId: '...',
  *     blobId: {
  *       type: 'video',
@@ -283,7 +283,7 @@ export function useAttachmentUrl({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		attachmentUrlQueryOptions({
 			projectApi,
 			projectId,
@@ -291,7 +291,7 @@ export function useAttachmentUrl({
 		}),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
 
 // TODO: Eventually remove in favor of this information being provided by the backend when retrieving documents
@@ -305,7 +305,7 @@ export function useAttachmentUrl({
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data, isRefetching } = useDocumentCreatedBy({
+ *   const { data } = useDocumentCreatedBy({
  *     projectId: '...',
  *     originalVersionId: '...',
  *   })
@@ -321,9 +321,9 @@ export function useDocumentCreatedBy({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useSuspenseQuery(
 		documentCreatedByQueryOptions({ projectApi, projectId, originalVersionId }),
 	)
 
-	return { data, isRefetching }
+	return { data, error, isRefetching }
 }
