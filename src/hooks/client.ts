@@ -1,6 +1,8 @@
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useContext } from 'react'
 
 import { ClientApiContext } from '../contexts/ClientApi'
+import { deviceInfoQueryOptions } from '../lib/react-query/client'
 
 /**
  * Access a client API instance. If a ClientApiContext provider is not
@@ -37,4 +39,25 @@ export function useClientApi() {
 	}
 
 	return clientApi
+}
+
+/**
+ * Retrieve info about the current device.
+ *
+ * @example
+ * ```tsx
+ * function DeviceInfoExample() {
+ *   const { data } = useDeviceInfo()
+ * }
+ * ```
+ *
+ */
+export function useOwnDeviceInfo() {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery(
+		deviceInfoQueryOptions({ clientApi }),
+	)
+
+	return { data, error, isRefetching }
 }

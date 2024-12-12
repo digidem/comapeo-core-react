@@ -3,8 +3,12 @@ import { queryOptions } from '@tanstack/react-query'
 
 import { baseQueryOptions, ROOT_QUERY_KEY } from './shared'
 
-function getDeviceInfoQueryKey() {
-	return [ROOT_QUERY_KEY, 'device_info'] as const
+export function getClientQueryKey() {
+	return [ROOT_QUERY_KEY, 'client'] as const
+}
+
+export function getDeviceInfoQueryKey() {
+	return [ROOT_QUERY_KEY, 'client', 'device_info'] as const
 }
 
 export function deviceInfoQueryOptions({

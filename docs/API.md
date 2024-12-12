@@ -1,9 +1,11 @@
 ## Functions
 
 - [ClientApiProvider](#clientapiprovider)
-- [useClientApi](#useclientapi)
 - [baseQueryOptions](#basequeryoptions)
+- [getClientQueryKey](#getclientquerykey)
+- [getDeviceInfoQueryKey](#getdeviceinfoquerykey)
 - [deviceInfoQueryOptions](#deviceinfoqueryoptions)
+- [useClientApi](#useclientapi)
 - [useOwnDeviceInfo](#useowndeviceinfo)
 - [getDocumentsQueryKey](#getdocumentsquerykey)
 - [getManyDocumentsQueryKey](#getmanydocumentsquerykey)
@@ -63,6 +65,30 @@ Parameters:
 * `opts.clientApi`: Client API instance
 
 
+### baseQueryOptions
+
+| Function | Type |
+| ---------- | ---------- |
+| `baseQueryOptions` | `() => { networkMode: "always"; retry: number; }` |
+
+### getClientQueryKey
+
+| Function | Type |
+| ---------- | ---------- |
+| `getClientQueryKey` | `() => readonly ["@comapeo/core-react", "client"]` |
+
+### getDeviceInfoQueryKey
+
+| Function | Type |
+| ---------- | ---------- |
+| `getDeviceInfoQueryKey` | `() => readonly ["@comapeo/core-react", "client", "device_info"]` |
+
+### deviceInfoQueryOptions
+
+| Function | Type |
+| ---------- | ---------- |
+| `deviceInfoQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<{ deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<...>, Error, { ...; } and Partial<...>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
+
 ### useClientApi
 
 Access a client API instance. If a ClientApiContext provider is not
@@ -91,18 +117,6 @@ function ComponentThatUsesClient() {
 }
 ```
 
-
-### baseQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `baseQueryOptions` | `() => { networkMode: "always"; retry: number; }` |
-
-### deviceInfoQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `deviceInfoQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<{ deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<...>, Error, { ...; } and Partial<...>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
 
 ### useOwnDeviceInfo
 
