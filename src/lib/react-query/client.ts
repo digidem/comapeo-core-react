@@ -11,6 +11,10 @@ export function getDeviceInfoQueryKey() {
 	return [ROOT_QUERY_KEY, 'client', 'device_info'] as const
 }
 
+export function getIsArchiveDeviceQueryKey() {
+	return [ROOT_QUERY_KEY, 'client', 'is_remote_archive'] as const
+}
+
 export function deviceInfoQueryOptions({
 	clientApi,
 }: {
@@ -21,6 +25,20 @@ export function deviceInfoQueryOptions({
 		queryKey: getDeviceInfoQueryKey(),
 		queryFn: async () => {
 			return clientApi.getDeviceInfo()
+		},
+	})
+}
+
+export function isArchiveDeviceQueryOptions({
+	clientApi,
+}: {
+	clientApi: MapeoClientApi
+}) {
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: getIsArchiveDeviceQueryKey(),
+		queryFn: async () => {
+			return clientApi.getIsArchiveDevice()
 		},
 	})
 }

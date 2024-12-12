@@ -4,9 +4,12 @@
 - [baseQueryOptions](#basequeryoptions)
 - [getClientQueryKey](#getclientquerykey)
 - [getDeviceInfoQueryKey](#getdeviceinfoquerykey)
+- [getIsArchiveDeviceQueryKey](#getisarchivedevicequerykey)
 - [deviceInfoQueryOptions](#deviceinfoqueryoptions)
+- [isArchiveDeviceQueryOptions](#isarchivedevicequeryoptions)
 - [useClientApi](#useclientapi)
 - [useOwnDeviceInfo](#useowndeviceinfo)
+- [useIsArchiveDevice](#useisarchivedevice)
 - [getDocumentsQueryKey](#getdocumentsquerykey)
 - [getManyDocumentsQueryKey](#getmanydocumentsquerykey)
 - [getDocumentByDocIdQueryKey](#getdocumentbydocidquerykey)
@@ -83,11 +86,23 @@ Parameters:
 | ---------- | ---------- |
 | `getDeviceInfoQueryKey` | `() => readonly ["@comapeo/core-react", "client", "device_info"]` |
 
+### getIsArchiveDeviceQueryKey
+
+| Function | Type |
+| ---------- | ---------- |
+| `getIsArchiveDeviceQueryKey` | `() => readonly ["@comapeo/core-react", "client", "is_remote_archive"]` |
+
 ### deviceInfoQueryOptions
 
 | Function | Type |
 | ---------- | ---------- |
 | `deviceInfoQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<{ deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<...>, Error, { ...; } and Partial<...>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
+
+### isArchiveDeviceQueryOptions
+
+| Function | Type |
+| ---------- | ---------- |
+| `isArchiveDeviceQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<boolean, Error, boolean, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
 
 ### useClientApi
 
@@ -131,6 +146,23 @@ Examples:
 ```tsx
 function DeviceInfoExample() {
   const { data } = useDeviceInfo()
+}
+```
+
+
+### useIsArchiveDevice
+
+Retrieve whether the current device is an archive device or not.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useIsArchiveDevice` | `() => { data: boolean; error: Error or null; isRefetching: boolean; }` |
+
+Examples:
+
+```tsx
+function IsArchiveDeviceExample() {
+  const { data } = useIsArchiveDevice()
 }
 ```
 
