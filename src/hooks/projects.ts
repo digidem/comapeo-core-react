@@ -66,12 +66,18 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
 export function useSingleProject({ projectId }: { projectId: string }) {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectByIdQueryOptions({
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...projectByIdQueryOptions({
 			clientApi,
 			projectId,
 		}),
-	)
+		// Keep project instances around indefinitely - shouldn't be a memory
+		// problem because these are only lightweight proxy objects, and project
+		// references are kept indefinitely on the backend anyway once they are
+		// accessed
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
 
 	return { data, error, isRefetching }
 }
