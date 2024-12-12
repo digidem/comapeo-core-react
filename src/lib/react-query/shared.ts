@@ -1,6 +1,6 @@
 import { type QueryOptions } from '@tanstack/react-query'
 
-export const ROOT_QUERY_KEY = '@comapeo/react'
+export const ROOT_QUERY_KEY = '@comapeo/core-react'
 
 // Since the API is running locally, queries should run regardless of network
 // status, and should not be retried. In React Native the API consumer would
