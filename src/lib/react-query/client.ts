@@ -12,7 +12,7 @@ export function getDeviceInfoQueryKey() {
 }
 
 export function getIsArchiveDeviceQueryKey() {
-	return [ROOT_QUERY_KEY, 'client', 'is_remote_archive'] as const
+	return [ROOT_QUERY_KEY, 'client', 'is_archive_device'] as const
 }
 
 export function deviceInfoQueryOptions({
