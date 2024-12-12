@@ -25,6 +25,7 @@
 		}
 	},
 	"files": [
+		"CHANGELOG.md",
 		"dist/",
 		"docs/API.md"
 	],
