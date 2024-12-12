@@ -90,7 +90,7 @@ Parameters:
 
 | Function | Type |
 | ---------- | ---------- |
-| `getIsArchiveDeviceQueryKey` | `() => readonly ["@comapeo/core-react", "client", "is_remote_archive"]` |
+| `getIsArchiveDeviceQueryKey` | `() => readonly ["@comapeo/core-react", "client", "is_archive_device"]` |
 
 ### deviceInfoQueryOptions
 
