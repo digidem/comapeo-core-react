@@ -27,3 +27,9 @@ Some helpful commands:
   ```sh
   Run `git push --follow-tags origin main` to publish
   ```
+
+  In order to publish to npm, you'll have to run the following:
+
+  ```sh
+  npm publish --access=public
+  ```
