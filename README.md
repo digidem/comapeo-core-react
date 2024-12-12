@@ -12,6 +12,10 @@ npm install @comapeo/core-react
 
 Still a work in progress. Currently lives in [`docs/API.md`](./docs/API.md).
 
+## Contributing
+
+See contributing docs in [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
+
 ## License
 
 [MIT](./LICENSE)
