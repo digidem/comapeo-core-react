@@ -110,13 +110,13 @@ Retrieve info about the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<DeviceInfoParam>; isRefetching: boolean; }` |
+| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
 ```tsx
 function DeviceInfoExample() {
-  const { data, isRefetching } = useDeviceInfo()
+  const { data } = useDeviceInfo()
 }
 ```
 
@@ -125,7 +125,7 @@ function DeviceInfoExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, }: { projectId: string; docType: D; }) => readonly ["@comapeo/react", "projects", string, D]` |
+| `getDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, }: { projectId: string; docType: D; }) => readonly ["@comapeo/core-react", "projects", string, D]` |
 
 ### getManyDocumentsQueryKey
 
@@ -167,55 +167,55 @@ function DeviceInfoExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getProjectsQueryKey` | `() => readonly ["@comapeo/react", "projects"]` |
+| `getProjectsQueryKey` | `() => readonly ["@comapeo/core-react", "projects"]` |
 
 ### getProjectByIdQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getProjectByIdQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/react", "projects", string]` |
+| `getProjectByIdQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string]` |
 
 ### getProjectSettingsQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getProjectSettingsQueryKey` | `({ projectId, }: { projectId: string; }) => readonly ["@comapeo/react", "projects", string, "project_settings"]` |
+| `getProjectSettingsQueryKey` | `({ projectId, }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "project_settings"]` |
 
 ### getProjectRoleQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getProjectRoleQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/react", "projects", string, "role"]` |
+| `getProjectRoleQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "role"]` |
 
 ### getMembersQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getMembersQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/react", "projects", string, "members"]` |
+| `getMembersQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "members"]` |
 
 ### getMemberByIdQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getMemberByIdQueryKey` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => readonly ["@comapeo/react", "projects", string, "members", string]` |
+| `getMemberByIdQueryKey` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => readonly ["@comapeo/core-react", "projects", string, "members", string]` |
 
 ### getIconUrlQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getIconUrlQueryKey` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => readonly ["@comapeo/react", "projects", string, "icons", string, BitmapOpts or SvgOpts]` |
+| `getIconUrlQueryKey` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => readonly ["@comapeo/core-react", "projects", string, "icons", string, BitmapOpts or SvgOpts]` |
 
 ### getDocumentCreatedByQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getDocumentCreatedByQueryKey` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => readonly ["@comapeo/react", "projects", string, "document_created_by", string]` |
+| `getDocumentCreatedByQueryKey` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => readonly ["@comapeo/core-react", "projects", string, "document_created_by", string]` |
 
 ### getAttachmentUrlQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getAttachmentUrlQueryKey` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => readonly ["@comapeo/react", "projects", string, "attachments", BlobId]` |
+| `getAttachmentUrlQueryKey` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => readonly ["@comapeo/core-react", "projects", string, "attachments", BlobId]` |
 
 ### projectsQueryOptions
 
@@ -277,7 +277,7 @@ Retrieve the project settings for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useProjectSettings` | `({ projectId }: { projectId: string; }) => { data: EditableProjectSettings; isRefetching: boolean; }` |
+| `useProjectSettings` | `({ projectId }: { projectId: string; }) => { data: EditableProjectSettings; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -288,7 +288,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useProjectSettings({ projectId: '...' })
+  const { data } = useProjectSettings({ projectId: '...' })
 
   console.log(data.name)
 }
@@ -303,7 +303,7 @@ This is mostly used internally by the other hooks and should only be used if cer
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleProject` | `({ projectId }: { projectId: string; }) => { data: ClientApi<MapeoProject>; isRefetching: boolean; }` |
+| `useSingleProject` | `({ projectId }: { projectId: string; }) => { data: ClientApi<MapeoProject>; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -314,7 +314,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useSingleProject({ projectId: '...' })
+  const { data } = useSingleProject({ projectId: '...' })
 }
 ```
 
@@ -325,13 +325,13 @@ Retrieve project information for each project that exists.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyProjects` | `() => { data: (Pick<{ schemaName: "projectSettings"; name?: string or undefined; defaultPresets?: { point: string[]; area: string[]; vertex: string[]; line: string[]; relation: string[]; } or undefined; configMetadata?: { ...; } or undefined; }, "name"> and { ...; })[]; isRefetching: boolean; }` |
+| `useManyProjects` | `() => { data: (Pick<{ schemaName: "projectSettings"; name?: string or undefined; defaultPresets?: { point: string[]; area: string[]; vertex: string[]; line: string[]; relation: string[]; } or undefined; configMetadata?: { ...; } or undefined; }, "name"> and { ...; })[]; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useManyProjects()
+  const { data } = useManyProjects()
 
   console.log(data.map(project => project.name))
 }
@@ -344,7 +344,7 @@ Retrieve a single member of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => { data: MemberInfo; isRefetching: boolean; }` |
+| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => { data: MemberInfo; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -356,7 +356,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useSingleMember({ projectId: '...', deviceId: '...' })
+  const { data } = useSingleMember({ projectId: '...', deviceId: '...' })
 
   console.log(data.role)
 }
@@ -369,7 +369,7 @@ Retrieve all members of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: MemberInfo[]; isRefetching: boolean; }` |
+| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: MemberInfo[]; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -380,7 +380,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useManyMembers({ projectId: '...' })
+  const { data } = useManyMembers({ projectId: '...' })
 
   console.log(data.role)
 }
@@ -395,7 +395,7 @@ _TODO: Explain bitmap opts vs svg opts_
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIconUrl` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => { data: string; isRefetching: boolean; }` |
+| `useIconUrl` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -408,7 +408,7 @@ Examples:
 
 ```tsx
 function PngExample() {
-  const { data, isRefetching } = useIconUrl({
+  const { data } = useIconUrl({
     projectId: '...',
     iconId: '...',
     opts: {
@@ -422,7 +422,7 @@ function PngExample() {
 
 ```tsx
 function SvgExample() {
-  const { data, isRefetching } = useIconUrl({
+  const { data } = useIconUrl({
     projectId: '...',
     iconId: '...',
     opts: {
@@ -442,7 +442,7 @@ _TODO: Explain BlobId in more depth_
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAttachmentUrl` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => { data: string; isRefetching: boolean; }` |
+| `useAttachmentUrl` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -454,7 +454,7 @@ Examples:
 
 ```tsx
 function PhotoExample() {
-  const { data, isRefetching } = useAttachmentUrl({
+  const { data } = useAttachmentUrl({
     projectId: '...',
     blobId: {
       type: 'photo',
@@ -468,7 +468,7 @@ function PhotoExample() {
 
 ```tsx
 function AudioExample() {
-  const { data, isRefetching } = useAttachmentUrl({
+  const { data } = useAttachmentUrl({
     projectId: '...',
     blobId: {
       type: 'audio',
@@ -482,7 +482,7 @@ function AudioExample() {
 
 ```tsx
 function VideoExample() {
-  const { data, isRefetching } = useAttachmentUrl({
+  const { data } = useAttachmentUrl({
     projectId: '...',
     blobId: {
       type: 'video',
@@ -501,7 +501,7 @@ Retrieve the device ID that created a document.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: string; isRefetching: boolean; }` |
+| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -513,7 +513,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useDocumentCreatedBy({
+  const { data } = useDocumentCreatedBy({
     projectId: '...',
     originalVersionId: '...',
   })
@@ -543,7 +543,7 @@ Examples:
 
 ```tsx
 function SingleDocumentByDocIdExample() {
-  const { data, isRefetching } = useSingleDocByDocId({
+  const { data } = useSingleDocByDocId({
     projectId: '...',
     docType: 'observation',
     docId: '...',
@@ -562,7 +562,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, opts, }: { projectId: string; docType: D; versionId: string; opts?: { lang?: string or undefined; } or undefined; }) => { data: { schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; } or { ...; }; isRefe...` |
+| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, opts, }: { projectId: string; docType: D; versionId: string; opts?: { lang?: string or undefined; } or undefined; }) => { data: { schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; } or { ...; }; error:...` |
 
 Parameters:
 
@@ -578,7 +578,7 @@ Examples:
 
 ```tsx
 function SingleDocumentByVersionIdExample() {
-  const { data, isRefetching } = useSingleDocByVersionId({
+  const { data } = useSingleDocByVersionId({
     projectId: '...',
     docType: 'observation',
     docId: '...',
@@ -609,7 +609,7 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data, isRefetching } = useManyDocs({
+  const { data } = useManyDocs({
     projectId: '...',
     docType: 'observations',
   })
@@ -637,13 +637,13 @@ function useAllPresets(opts) {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getMapsQueryKey` | `() => readonly ["@comapeo/react", "maps"]` |
+| `getMapsQueryKey` | `() => readonly ["@comapeo/core-react", "maps"]` |
 
 ### getStyleJsonUrlQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getStyleJsonUrlQueryKey` | `({ refreshToken, }: { refreshToken?: string or undefined; }) => readonly ["@comapeo/react", "maps", "stylejson_url", { readonly refreshToken: string or undefined; }]` |
+| `getStyleJsonUrlQueryKey` | `({ refreshToken, }: { refreshToken?: string or undefined; }) => readonly ["@comapeo/core-react", "maps", "stylejson_url", { readonly refreshToken: string or undefined; }]` |
 
 ### mapStyleJsonUrlQueryOptions
 
@@ -660,7 +660,7 @@ due to hidden internal details by consuming components (e.g. map component from 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: string; isRefetching: boolean; }` |
+| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -680,7 +680,7 @@ function ExampleWithoutRefreshToken() {
 ```tsx
 function ExampleWithRefreshToken() {
   const [refreshToken] = useState('foo')
-  const { data, isRefetching } = useMapStyleUrl({ refreshToken })
+  const { data } = useMapStyleUrl({ refreshToken })
 
   console.log(data) // logs something like 'http://localhost:...?refresh_token=foo'
 }
@@ -691,13 +691,13 @@ function ExampleWithRefreshToken() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getInvitesQueryKey` | `() => readonly ["@comapeo/react", "invites"]` |
+| `getInvitesQueryKey` | `() => readonly ["@comapeo/core-react", "invites"]` |
 
 ### getPendingInvitesQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getPendingInvitesQueryKey` | `() => readonly ["@comapeo/react", "invites", { readonly status: "pending"; }]` |
+| `getPendingInvitesQueryKey` | `() => readonly ["@comapeo/core-react", "invites", { readonly status: "pending"; }]` |
 
 ### pendingInvitesQueryOptions
 
@@ -721,7 +721,7 @@ function ExampleWithRefreshToken() {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ROOT_QUERY_KEY` | `"@comapeo/react"` |
+| `ROOT_QUERY_KEY` | `"@comapeo/core-react"` |
 
 
 
