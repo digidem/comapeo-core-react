@@ -9,7 +9,7 @@ import {
 } from '../lib/react-query/documents'
 import { useSingleProject } from './projects'
 
-type ReadHookReturn<D> = {
+type ReadHookResult<D> = {
 	data: D
 	error: Error | null
 	isRefetching: boolean
@@ -48,7 +48,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
 	docType: D
 	docId: string
 	lang?: string
-}): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -104,7 +104,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 	docType: D
 	versionId: string
 	lang?: string
-}): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -169,7 +169,7 @@ export function useManyDocs<D extends DocumentType>({
 	docType: D
 	includeDeleted?: boolean
 	lang?: string
-}): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
