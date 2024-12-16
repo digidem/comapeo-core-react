@@ -1,6 +1,6 @@
 {
 	"name": "@comapeo/core-react",
-	"version": "0.1.2",
+	"version": "1.0.0",
 	"description": "React wrapper for working with @comapeo/core",
 	"repository": {
 		"type": "git",
