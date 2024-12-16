@@ -11,7 +11,7 @@ import {
  * Access a client API instance. If a ClientApiContext provider is not
  * set up, it will throw an error.
  *
- * @returns {import('@comapeo/ipc').MapeoClientApi} Client API instance
+ * @returns Client API instance
  *
  * @example
  * ```tsx

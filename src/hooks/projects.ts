@@ -1,3 +1,4 @@
+import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api'
 import type { BlobId } from '@comapeo/core/dist/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
@@ -16,8 +17,7 @@ import { useClientApi } from './client'
 /**
  * Retrieve the project settings for a project.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
+ * @param opts.projectId Project public ID
  *
  * @example
  * ```tsx
@@ -53,8 +53,7 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
  *
  * This is mostly used internally by the other hooks and should only be used if certain project APIs are not exposed via the hooks.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
+ * @param opts.projectId Project public ID
  *
  * @example
  * ```tsx
@@ -109,9 +108,8 @@ export function useManyProjects() {
 /**
  * Retrieve a single member of a project.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {deviceId} opts.projectId Device ID of interest
+ * @param opts.projectId Project public ID
+ * @param opts.projectId Device ID of interest
  *
  * @example
  * ```tsx
@@ -145,8 +143,7 @@ export function useSingleMember({
 /**
  * Retrieve all members of a project.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
+ * @param opts.projectId Project public ID
  *
  * @example
  * ```tsx
@@ -172,10 +169,11 @@ export function useManyMembers({ projectId }: { projectId: string }) {
  *
  * _TODO: Explain bitmap opts vs svg opts_
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {string} opts.iconId Icon ID of interest
- * @param {BitmapOpts | SvgOpts} opts.opts Parameters related to the mime type of the icon of interest
+ * @param opts.projectId Project public ID
+ * @param opts.iconId Icon ID of interest
+ * @param opts.mimeType MIME type of desired resource
+ * @param opts.pixelDensity Pixel density resource (only applicable when `mimeType` is `'image/png'`)
+ * @param opts.size Size of desired resource
  *
  * @example
  * ```tsx
@@ -183,11 +181,9 @@ export function useManyMembers({ projectId }: { projectId: string }) {
  *   const { data } = useIconUrl({
  *     projectId: '...',
  *     iconId: '...',
- *     opts: {
- *       mimeType: 'image/png',
- *       pixelDensity: 1,
- *       size: 'medium'
- *     }
+ *     mimeType: 'image/png',
+ *     pixelDensity: 1,
+ *     size: 'medium'
  *   })
  * }
  * ```
@@ -197,10 +193,8 @@ export function useManyMembers({ projectId }: { projectId: string }) {
  *   const { data } = useIconUrl({
  *     projectId: '...',
  *     iconId: '...',
- *     opts: {
- *       mimeType: 'image/svg',
- *       size: 'medium'
- *     }
+ *     mimeType: 'image/svg',
+ *     size: 'medium'
  *   })
  * }
  * ```
@@ -208,20 +202,19 @@ export function useManyMembers({ projectId }: { projectId: string }) {
 export function useIconUrl({
 	projectId,
 	iconId,
-	opts,
+	...mimeBasedOpts
 }: {
 	projectId: string
 	iconId: string
-	opts: Parameters<typeof iconUrlQueryOptions>[0]['opts']
-}) {
+} & (BitmapOpts | SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
 		iconUrlQueryOptions({
+			...mimeBasedOpts,
 			projectApi,
 			projectId,
 			iconId,
-			opts,
 		}),
 	)
 
@@ -233,9 +226,8 @@ export function useIconUrl({
  *
  * _TODO: Explain BlobId in more depth_
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public Id
- * @param {BlobId} opts.blobId Blob ID of the desired resource
+ * @param opts.projectId Project public Id
+ * @param opts.blobId Blob ID of the desired resource
  *
  * @example
  * ```tsx
@@ -304,9 +296,8 @@ export function useAttachmentUrl({
 /**
  * Retrieve the device ID that created a document.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {string} opts.originalVersionId Version ID of document
+ * @param opts.projectId Project public ID
+ * @param opts.originalVersionId Version ID of document
  *
  * @example
  * ```tsx

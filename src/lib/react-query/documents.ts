@@ -22,39 +22,54 @@ export function getDocumentsQueryKey<D extends DocumentType>({
 export function getManyDocumentsQueryKey<D extends DocumentType>({
 	projectId,
 	docType,
-	opts,
+	includeDeleted,
+	lang,
 }: {
 	projectId: string
 	docType: D
-	opts?: Parameters<MapeoProjectApi[D]['getMany']>[0]
+	includeDeleted?: boolean
+	lang?: string
 }) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, docType, opts] as const
+	return [
+		ROOT_QUERY_KEY,
+		'projects',
+		projectId,
+		docType,
+		{ includeDeleted, lang },
+	] as const
 }
 
 export function getDocumentByDocIdQueryKey<D extends DocumentType>({
 	projectId,
 	docType,
 	docId,
-	opts,
+	lang,
 }: {
 	projectId: string
 	docType: D
-	docId: Parameters<MapeoProjectApi[D]['getByDocId']>[0]
-	opts?: Parameters<MapeoProjectApi[D]['getByDocId']>[1]
+	docId: string
+	lang?: string
 }) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, docType, docId, opts] as const
+	return [
+		ROOT_QUERY_KEY,
+		'projects',
+		projectId,
+		docType,
+		docId,
+		{ lang },
+	] as const
 }
 
 export function getDocumentByVersionIdQueryKey<D extends DocumentType>({
 	projectId,
 	docType,
 	versionId,
-	opts,
+	lang,
 }: {
 	projectId: string
 	docType: D
-	versionId: Parameters<MapeoProjectApi[D]['getByVersionId']>[0]
-	opts?: Parameters<MapeoProjectApi[D]['getByVersionId']>[1]
+	versionId: string
+	lang?: string
 }) {
 	return [
 		ROOT_QUERY_KEY,
@@ -62,7 +77,7 @@ export function getDocumentByVersionIdQueryKey<D extends DocumentType>({
 		projectId,
 		docType,
 		versionId,
-		opts,
+		{ lang },
 	] as const
 }
 
@@ -70,18 +85,28 @@ export function documentsQueryOptions<D extends DocumentType>({
 	projectApi,
 	projectId,
 	docType,
-	opts,
+	includeDeleted,
+	lang,
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
 	docType: D
-	opts?: Parameters<MapeoProjectApi[D]['getMany']>[0]
+	includeDeleted?: boolean
+	lang?: string
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getManyDocumentsQueryKey({ projectId, docType, opts }),
+		queryKey: getManyDocumentsQueryKey({
+			projectId,
+			docType,
+			includeDeleted,
+			lang,
+		}),
 		queryFn: async () => {
-			return projectApi[docType].getMany(opts)
+			return projectApi[docType].getMany({
+				includeDeleted,
+				lang,
+			})
 		},
 	})
 }
@@ -91,13 +116,13 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 	projectId,
 	docType,
 	docId,
-	opts,
+	lang,
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
 	docType: D
-	docId: Parameters<MapeoProjectApi[D]['getByDocId']>[0]
-	opts?: Omit<Parameters<MapeoProjectApi[D]['getByDocId']>[1], 'mustBeFound'>
+	docId: string
+	lang?: string
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
@@ -105,11 +130,11 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 			projectId,
 			docType,
 			docId,
-			opts,
+			lang,
 		}),
 		queryFn: async () => {
 			return projectApi[docType].getByDocId(docId, {
-				...opts,
+				lang,
 				// We want to make sure that this throws in the case that no match is found
 				mustBeFound: true,
 			})
@@ -122,13 +147,13 @@ export function documentByVersionIdQueryOptions<D extends DocumentType>({
 	projectId,
 	docType,
 	versionId,
-	opts,
+	lang,
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
 	docType: D
-	versionId: Parameters<MapeoProjectApi[D]['getByVersionId']>[0]
-	opts?: Parameters<MapeoProjectApi[D]['getByVersionId']>[1]
+	versionId: string
+	lang?: string
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
@@ -136,10 +161,10 @@ export function documentByVersionIdQueryOptions<D extends DocumentType>({
 			projectId,
 			docType,
 			versionId,
-			opts,
+			lang,
 		}),
 		queryFn: async () => {
-			return projectApi[docType].getByVersionId(versionId, opts)
+			return projectApi[docType].getByVersionId(versionId, { lang })
 		},
 	})
 }

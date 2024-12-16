@@ -1,3 +1,4 @@
+import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api'
 import type { BlobId } from '@comapeo/core/dist/types.js'
 import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
@@ -41,13 +42,19 @@ export function getMemberByIdQueryKey({
 export function getIconUrlQueryKey({
 	projectId,
 	iconId,
-	opts,
+	...mimeBasedOpts
 }: {
 	projectId: string
-	iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
-	opts: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[1]
-}) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, 'icons', iconId, opts] as const
+	iconId: string
+} & (BitmapOpts | SvgOpts)) {
+	return [
+		ROOT_QUERY_KEY,
+		'projects',
+		projectId,
+		'icons',
+		iconId,
+		mimeBasedOpts,
+	] as const
 }
 
 export function getDocumentCreatedByQueryKey({
@@ -176,18 +183,17 @@ export function iconUrlQueryOptions({
 	projectApi,
 	projectId,
 	iconId,
-	opts,
+	...mimeBasedOpts
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
 	iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
-	opts: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[1]
-}) {
+} & (BitmapOpts | SvgOpts)) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getIconUrlQueryKey({ projectId, iconId, opts }),
+		queryKey: getIconUrlQueryKey({ ...mimeBasedOpts, projectId, iconId }),
 		queryFn: async () => {
-			return projectApi.$icons.getIconUrl(iconId, opts)
+			return projectApi.$icons.getIconUrl(iconId, mimeBasedOpts)
 		},
 	})
 }

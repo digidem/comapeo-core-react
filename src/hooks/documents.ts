@@ -1,4 +1,4 @@
-import type { MapeoDoc, Observation, Track } from '@comapeo/schema'
+import type { MapeoDoc } from '@comapeo/schema'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 import {
@@ -9,7 +9,7 @@ import {
 } from '../lib/react-query/documents'
 import { useSingleProject } from './projects'
 
-type ReadHookReturn<D extends unknown> = {
+type ReadHookReturn<D> = {
 	data: D
 	error: Error | null
 	isRefetching: boolean
@@ -20,12 +20,10 @@ type ReadHookReturn<D extends unknown> = {
  *
  * Triggers the closest error boundary if the document cannot be found
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {string} opts.docId Document ID
- * @param {Object} [opts.opts]
- * @param {string} [opts.opts.lang] Language to translate the document into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.docId Document ID
+ * @param opts.lang Language to translate the document into
  *
  * @example
  * ```tsx
@@ -44,12 +42,12 @@ export function useSingleDocByDocId<D extends DocumentType>({
 	projectId,
 	docType,
 	docId,
-	opts,
+	lang,
 }: {
 	projectId: string
 	docType: D
 	docId: string
-	opts?: Parameters<typeof documentByDocumentIdQueryOptions>[0]['opts']
+	lang?: string
 }): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
@@ -59,7 +57,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
 			projectId,
 			docType,
 			docId,
-			opts,
+			lang,
 		}),
 	)
 
@@ -78,12 +76,10 @@ export function useSingleDocByDocId<D extends DocumentType>({
  *
  * Triggers the closest error boundary if the document cannot be found.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {string} opts.versionId Document's version ID
- * @param {Object} [opts.opts]
- * @param {string} [opts.opts.lang] Language to translate the document into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.versionId Document's version ID
+ * @param opts.lang Language to translate the document into
  *
  *  * @example
  * ```tsx
@@ -102,12 +98,12 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 	projectId,
 	docType,
 	versionId,
-	opts,
+	lang,
 }: {
 	projectId: string
 	docType: D
 	versionId: string
-	opts?: Parameters<typeof documentByVersionIdQueryOptions>[0]['opts']
+	lang?: string
 }): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
@@ -117,7 +113,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 			projectId,
 			docType,
 			versionId,
-			opts,
+			lang,
 		}),
 	)
 
@@ -132,12 +128,10 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 /**
  * Retrieve all documents of a specific `docType`.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {Object} [opts.opts]
- * @param {boolean} [opts.opts.includeDeleted] Include documents that have been marked as deleted
- * @param {string} [opts.opts.lang] Language to translate the documents into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.includeDeleted Include documents that have been marked as deleted
+ * @param opts.lang Language to translate the documents into
  *
  * @example
  * ```tsx
@@ -168,12 +162,14 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 export function useManyDocs<D extends DocumentType>({
 	projectId,
 	docType,
-	opts,
+	includeDeleted,
+	lang,
 }: {
 	projectId: string
 	docType: D
-	opts?: Parameters<typeof documentsQueryOptions>[0]['opts']
-}): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>[]> {
+	includeDeleted?: boolean
+	lang?: string
+}): ReadHookReturn<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -181,7 +177,8 @@ export function useManyDocs<D extends DocumentType>({
 			projectApi,
 			projectId,
 			docType,
-			opts,
+			includeDeleted,
+			lang,
 		}),
 	)
 
