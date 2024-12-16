@@ -68,13 +68,13 @@
 		"globals": "^15.13.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.2.11",
-		"npm-run-all2": "^7.0.1",
+		"npm-run-all2": "^7.0.2",
 		"prettier": "^3.4.2",
 		"random-access-memory": "^6.2.1",
 		"rimraf": "^6.0.1",
 		"tsdoc-markdown": "^1.0.0",
 		"typescript": "^5.7.2",
-		"typescript-eslint": "^8.18.0",
+		"typescript-eslint": "^8.18.1",
 		"vitest": "^2.1.8"
 	}
 }
