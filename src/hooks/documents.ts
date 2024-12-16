@@ -14,11 +14,10 @@ import { useSingleProject } from './projects'
  *
  * Triggers the closest error boundary if the document cannot be found
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {string} opts.docId Document ID
- * @param {string} [opts.lang] Language to translate the document into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.docId Document ID
+ * @param opts.lang Language to translate the document into
  *
  * @example
  * ```tsx
@@ -65,11 +64,10 @@ export function useSingleDocByDocId<D extends DocumentType>({
  *
  * Triggers the closest error boundary if the document cannot be found.
  *
- * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {string} opts.versionId Document's version ID
- * @param {string} [opts.lang] Language to translate the document into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.versionId Document's version ID
+ * @param opts.lang Language to translate the document into
  *
  *  * @example
  * ```tsx
@@ -114,7 +112,6 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 /**
  * Retrieve all documents of a specific `docType`.
  *
- * @param {Object} opts
  * @param opts.projectId Project public ID
  * @param opts.docType Document type of interest
  * @param opts.includeDeleted Include documents that have been marked as deleted
