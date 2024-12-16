@@ -1,3 +1,4 @@
+import type { MapeoDoc } from '@comapeo/schema'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 import {
@@ -8,7 +9,12 @@ import {
 } from '../lib/react-query/documents'
 import { useSingleProject } from './projects'
 
-// TODO: Return type is not narrowed properly by `docType`
+type ReadHookResult<D> = {
+	data: D
+	error: Error | null
+	isRefetching: boolean
+}
+
 /**
  * Retrieve a single document from the database based on the document's document ID.
  *
@@ -42,7 +48,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
 	docType: D
 	docId: string
 	lang?: string
-}) {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -55,10 +61,16 @@ export function useSingleDocByDocId<D extends DocumentType>({
 		}),
 	)
 
-	return { data, error, isRefetching }
+	return {
+		// @ts-expect-error - TS does not handle dependent types, so this will not
+		// be narrowed properly within the function body. See for example
+		// https://github.com/microsoft/TypeScript/issues/33014#event-15134418011
+		data,
+		error,
+		isRefetching,
+	}
 }
 
-// TODO: Return type is not narrowed properly by `docType`
 /**
  * Retrieve a single document from the database based on the document's version ID.
  *
@@ -92,7 +104,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 	docType: D
 	versionId: string
 	lang?: string
-}) {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -105,10 +117,14 @@ export function useSingleDocByVersionId<D extends DocumentType>({
 		}),
 	)
 
-	return { data, error, isRefetching }
+	return {
+		// @ts-expect-error - TS does not handle dependent types, see above
+		data,
+		error,
+		isRefetching,
+	}
 }
 
-// TODO: Return type is not narrowed properly by `docType`
 /**
  * Retrieve all documents of a specific `docType`.
  *
@@ -153,7 +169,7 @@ export function useManyDocs<D extends DocumentType>({
 	docType: D
 	includeDeleted?: boolean
 	lang?: string
-}) {
+}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -166,5 +182,10 @@ export function useManyDocs<D extends DocumentType>({
 		}),
 	)
 
-	return { data, error, isRefetching }
+	return {
+		// @ts-expect-error - TS does not handle dependent types, see above
+		data,
+		error,
+		isRefetching,
+	}
 }
