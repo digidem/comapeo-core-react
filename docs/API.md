@@ -573,7 +573,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => { data: ({ schemaName: "track"; locations: Position[]; observationRefs: { docId: string; versionId: string; }[]; ... 7 more ...; deleted: boolean; } and { ...; }) or ({ ...; } ...` |
+| `useSingleDocByDocId` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "translation"; docRef: { docId: string; versionId: string; }; docRefType: "track" or ... 7 more ... or "type_unspecified"; ... 10 more ......` |
 
 Parameters:
 
@@ -606,7 +606,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => { data: { schemaName: "track"; locations: Position[]; observationRefs: { ...; }[]; ... 7 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; } or { ...; }; e...` |
+| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "translation"; docRef: { docId: string; versionId: string; }; docRefType: "track" or ... 7 more ... or "type_unspecified"; ... 10 ...` |
 
 Parameters:
 
@@ -639,7 +639,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => { data: ({ schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } and { ...; })[] or ({ ...; } and { ...; })[] or ({ ...; ...` |
+| `useManyDocs` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "translation"; docRef: { docId: string; versionId: string; }; ... 11 more ...; deleted: boolean; }, { .....` |
 
 Parameters:
 
