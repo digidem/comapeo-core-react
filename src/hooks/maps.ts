@@ -9,8 +9,7 @@ import { useClientApi } from './client'
  * If `opts.refreshToken` is specified, it will be appended to the returned URL as a search param. This is useful for forcing cache busting
  * due to hidden internal details by consuming components (e.g. map component from MapLibre).
  *
- * @param {Object} opts
- * @param {string} opts.refreshToken String to append to the returned value as a search param
+ * @param opts.refreshToken String to append to the returned value as a search param
  *
  * @example
  * ```tsx
