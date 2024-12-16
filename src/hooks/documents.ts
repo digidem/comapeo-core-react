@@ -115,11 +115,10 @@ export function useSingleDocByVersionId<D extends DocumentType>({
  * Retrieve all documents of a specific `docType`.
  *
  * @param {Object} opts
- * @param {string} opts.projectId Project public ID
- * @param {DocumentType} opts.docType Document type of interest
- * @param {Object} [opts.opts]
- * @param {boolean} [opts.includeDeleted] Include documents that have been marked as deleted
- * @param {string} [opts.lang] Language to translate the documents into
+ * @param opts.projectId Project public ID
+ * @param opts.docType Document type of interest
+ * @param opts.includeDeleted Include documents that have been marked as deleted
+ * @param opts.lang Language to translate the documents into
  *
  * @example
  * ```tsx
