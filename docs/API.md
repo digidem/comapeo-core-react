@@ -177,37 +177,37 @@ function IsArchiveDeviceExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getManyDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, opts, }: { projectId: string; docType: D; opts?: Parameters<ClientApi<MapeoProject>[D]["getMany"]>[0] or undefined; }) => readonly [...]` |
+| `getManyDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, { ...; }]` |
 
 ### getDocumentByDocIdQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getDocumentByDocIdQueryKey` | `<D extends DocumentType>({ projectId, docType, docId, opts, }: { projectId: string; docType: D; docId: Parameters<ClientApi<MapeoProject>[D]["getByDocId"]>[0]; opts?: Parameters<ClientApi<MapeoProject>[D]["getByDocId"]>[1] or undefined; }) => readonly [...]` |
+| `getDocumentByDocIdQueryKey` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, string, { readonly lang: string or undefined; }]` |
 
 ### getDocumentByVersionIdQueryKey
 
 | Function | Type |
 | ---------- | ---------- |
-| `getDocumentByVersionIdQueryKey` | `<D extends DocumentType>({ projectId, docType, versionId, opts, }: { projectId: string; docType: D; versionId: Parameters<ClientApi<MapeoProject>[D]["getByVersionId"]>[0]; opts?: Parameters<ClientApi<...>[D]["getByVersionId"]>[1] or undefined; }) => readonly [...]` |
+| `getDocumentByVersionIdQueryKey` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, string, { readonly lang: string or undefined; }]` |
 
 ### documentsQueryOptions
 
 | Function | Type |
 | ---------- | ---------- |
-| `documentsQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, opts, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; opts?: Parameters<ClientApi<MapeoProject>[D]["getMany"]>[0] or undefined; }) => OmitKeyof<...> and ... 1 more ... and { ...; }` |
+| `documentsQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, includeDeleted, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => OmitKeyof<...> and ... 1 more ... and { ...; }` |
 
 ### documentByDocumentIdQueryOptions
 
 | Function | Type |
 | ---------- | ---------- |
-| `documentByDocumentIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, docId, opts, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; docId: Parameters<ClientApi<MapeoProject>[D]["getByDocId"]>[0]; opts?: Omit<...> or undefined; }) => OmitKeyof<...> and ... 1 more ... and { ...; }` |
+| `documentByDocumentIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, docId, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; docId: string; lang?: string or undefined; }) => OmitKeyof<UseQueryOptions<({ schemaName: "track"; ... 9 more ...; deleted: boolean; } and { ...; }) or ({ ...; } and { ...; }) or ...` |
 
 ### documentByVersionIdQueryOptions
 
 | Function | Type |
 | ---------- | ---------- |
-| `documentByVersionIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, versionId, opts, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; versionId: Parameters<ClientApi<MapeoProject>[D]["getByVersionId"]>[0]; opts?: Parameters<...>[1] or undefined; }) => OmitKeyof<...> and ... 1 more ... and { ...; }` |
+| `documentByVersionIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, versionId, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => OmitKeyof<UseQueryOptions<{ schemaName: "track"; ... 9 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; ...` |
 
 ### getProjectsQueryKey
 
@@ -249,7 +249,7 @@ function IsArchiveDeviceExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `getIconUrlQueryKey` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => readonly ["@comapeo/core-react", "projects", string, "icons", string, BitmapOpts or SvgOpts]` |
+| `getIconUrlQueryKey` | `({ projectId, iconId, ...mimeBasedOpts }: { projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => readonly ["@comapeo/core-react", "projects", string, "icons", string, { mimeType: "image/png"; pixelDensity: 2 or ... 1 more ... or 1; size: ValidSizes; } or { ...; }]` |
 
 ### getDocumentCreatedByQueryKey
 
@@ -303,7 +303,7 @@ function IsArchiveDeviceExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `iconUrlQueryOptions` | `({ projectApi, projectId, iconId, opts, }: { projectApi: ClientApi<MapeoProject>; projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
+| `iconUrlQueryOptions` | `({ projectApi, projectId, iconId, ...mimeBasedOpts }: { projectApi: ClientApi<MapeoProject>; projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
 
 ### documentCreatedByQueryOptions
 
@@ -441,13 +441,15 @@ _TODO: Explain bitmap opts vs svg opts_
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIconUrl` | `({ projectId, iconId, opts, }: { projectId: string; iconId: string; opts: BitmapOpts or SvgOpts; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
+| `useIconUrl` | `({ projectId, iconId, ...mimeBasedOpts }: { projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
 * `opts.projectId`: Project public ID
 * `opts.iconId`: Icon ID of interest
-* `opts.opts`: Parameters related to the mime type of the icon of interest
+* `opts.mimeType`: MIME type of desired resource
+* `opts.pixelDensity`: Pixel density resource (only applicable when `mimeType` is `'image/png'`)
+* `opts.size`: Size of desired resource
 
 
 Examples:
@@ -457,11 +459,9 @@ function PngExample() {
   const { data } = useIconUrl({
     projectId: '...',
     iconId: '...',
-    opts: {
-      mimeType: 'image/png',
-      pixelDensity: 1,
-      size: 'medium'
-    }
+    mimeType: 'image/png',
+    pixelDensity: 1,
+    size: 'medium'
   })
 }
 ```
@@ -471,10 +471,8 @@ function SvgExample() {
   const { data } = useIconUrl({
     projectId: '...',
     iconId: '...',
-    opts: {
-      mimeType: 'image/svg',
-      size: 'medium'
-    }
+    mimeType: 'image/svg',
+    size: 'medium'
   })
 }
 ```
@@ -575,14 +573,14 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends DocumentType>({ projectId, docType, docId, opts, }: { projectId: string; docType: D; docId: string; opts?: Omit<{ mustBeFound?: boolean or undefined; lang?: string or undefined; } or undefined, "mustBeFound"> or undefined; }) => { ...; }` |
+| `useSingleDocByDocId` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => { data: ({ schemaName: "track"; locations: Position[]; observationRefs: { docId: string; versionId: string; }[]; ... 7 more ...; deleted: boolean; } and { ...; }) or ({ ...; } ...` |
 
 Parameters:
 
 * `opts.projectId`: Project public ID
 * `opts.docType`: Document type of interest
 * `opts.docId`: Document ID
-* `opts.opts.lang`: Language to translate the document into
+* `opts.lang`: Language to translate the document into
 
 
 Examples:
@@ -608,14 +606,14 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, opts, }: { projectId: string; docType: D; versionId: string; opts?: { lang?: string or undefined; } or undefined; }) => { data: { schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; } or { ...; }; error:...` |
+| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => { data: { schemaName: "track"; locations: Position[]; observationRefs: { ...; }[]; ... 7 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; } or { ...; }; e...` |
 
 Parameters:
 
 * `opts.projectId`: Project public ID
 * `opts.docType`: Document type of interest
 * `opts.versionId`: Document's version ID
-* `opts.opts.lang`: Language to translate the document into
+* `opts.lang`: Language to translate the document into
 
 *
 
@@ -641,14 +639,14 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends DocumentType>({ projectId, docType, opts, }: { projectId: string; docType: D; opts?: { includeDeleted?: boolean or undefined; lang?: string or undefined; } or undefined; }) => { data: ({ schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } and { ...; })[] or ({ ...; } and { ...; })[] or ...` |
+| `useManyDocs` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => { data: ({ schemaName: "track"; locations: Position[]; ... 8 more ...; deleted: boolean; } and { ...; })[] or ({ ...; } and { ...; })[] or ({ ...; ...` |
 
 Parameters:
 
 * `opts.projectId`: Project public ID
 * `opts.docType`: Document type of interest
-* `opts.opts.includeDeleted`: Include documents that have been marked as deleted
-* `opts.opts.lang`: Language to translate the documents into
+* `opts.includeDeleted`: Include documents that have been marked as deleted
+* `opts.lang`: Language to translate the documents into
 
 
 Examples:
