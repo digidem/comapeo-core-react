@@ -4,10 +4,10 @@ React wrapper for working with [`@comapeo/core`](https://github.com/digidem/coma
 
 ## Installation
 
-`@comapeo/schema`, `@comapeo/core`, and `@comapeo/ipc` are peer deps and must be installed alongside this package. You may want to pin these to specific versions depending on your needs.
+`react`, `@tanstack/react-query`, `@comapeo/schema`, `@comapeo/core`, and `@comapeo/ipc` are peer deps and must be installed alongside this package. You may want to pin these to specific versions depending on your needs.
 
 ```sh
-npm install @comapeo/core-react @comapeo/schema @comapeo/core @comapeo/ipc
+npm install react @tanstack/react-query@5 @comapeo/core-react @comapeo/schema @comapeo/core @comapeo/ipc
 ```
 
 ## API Documentation
