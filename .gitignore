@@ -34,3 +34,6 @@ node_modules/
 
 # package output directory
 dist/
+
+# tshy build output
+.tshy-build/

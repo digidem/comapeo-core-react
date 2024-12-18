@@ -1,6 +1,12 @@
-import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api.js'
-import type { BlobId } from '@comapeo/core/dist/types.js'
-import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
+import type {
+	BitmapOpts,
+	SvgOpts,
+} from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
+import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
+import type {
+	MapeoClientApi,
+	MapeoProjectApi,
+} from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import { queryOptions } from '@tanstack/react-query'
 
 import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
