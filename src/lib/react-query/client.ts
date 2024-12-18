@@ -1,7 +1,7 @@
 import type { MapeoClientApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared'
+import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
 
 export function getClientQueryKey() {
 	return [ROOT_QUERY_KEY, 'client'] as const

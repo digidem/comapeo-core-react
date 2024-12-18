@@ -6,8 +6,8 @@ import {
 	documentByVersionIdQueryOptions,
 	documentsQueryOptions,
 	type DocumentType,
-} from '../lib/react-query/documents'
-import { useSingleProject } from './projects'
+} from '../lib/react-query/documents.js'
+import { useSingleProject } from './projects.js'
 
 type ReadHookResult<D> = {
 	data: D

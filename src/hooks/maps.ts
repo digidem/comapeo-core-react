@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 
-import { mapStyleJsonUrlQueryOptions } from '../lib/react-query/maps'
-import { useClientApi } from './client'
+import { mapStyleJsonUrlQueryOptions } from '../lib/react-query/maps.js'
+import { useClientApi } from './client.js'
 
 /**
  * Get a URL that points to a StyleJSON resource served by the embedded HTTP server.

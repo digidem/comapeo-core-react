@@ -2,7 +2,7 @@ import type { MapeoProjectApi } from '@comapeo/ipc'
 import type { MapeoDoc } from '@comapeo/schema'
 import { queryOptions } from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared'
+import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
 
 export type DocumentType = Extract<
 	MapeoDoc['schemaName'],

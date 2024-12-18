@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useContext } from 'react'
 
-import { ClientApiContext } from '../contexts/ClientApi'
+import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
 	isArchiveDeviceQueryOptions,
-} from '../lib/react-query/client'
+} from '../lib/react-query/client.js'
 
 /**
  * Access a client API instance. If a ClientApiContext provider is not

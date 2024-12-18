@@ -2,8 +2,11 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
 import { MapeoManager } from '@comapeo/core'
-import { closeMapeoClient, createMapeoClient } from '@comapeo/ipc/dist/client'
-import { createMapeoServer } from '@comapeo/ipc/dist/server'
+import {
+	closeMapeoClient,
+	createMapeoClient,
+} from '@comapeo/ipc/dist/client.js'
+import { createMapeoServer } from '@comapeo/ipc/dist/server.js'
 import { KeyManager } from '@mapeo/crypto'
 import Fastify from 'fastify'
 import RAM from 'random-access-memory'

@@ -3,9 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
 import { assert, assertType, test } from 'vitest'
 
-import { useClientApi } from '../../src/hooks/client'
-import { setupCoreIpc } from '../helpers/ipc'
-import { createClientApiWrapper } from '../helpers/react'
+import { useClientApi } from '../../src/hooks/client.js'
+import { setupCoreIpc } from '../helpers/ipc.js'
+import { createClientApiWrapper } from '../helpers/react.js'
 
 test('useClientApi() throws when ClientApiProvider is not set up', () => {
 	const queryClient = new QueryClient()

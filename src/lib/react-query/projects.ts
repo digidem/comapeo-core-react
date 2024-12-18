@@ -1,9 +1,9 @@
-import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api'
+import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api.js'
 import type { BlobId } from '@comapeo/core/dist/types.js'
 import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import { queryOptions } from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared'
+import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
 
 export function getProjectsQueryKey() {
 	return [ROOT_QUERY_KEY, 'projects'] as const

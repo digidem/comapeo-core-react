@@ -1,5 +1,5 @@
-import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api'
-import type { BlobId } from '@comapeo/core/dist/types'
+import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api.js'
+import type { BlobId } from '@comapeo/core/dist/types.js'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 import {
@@ -11,8 +11,8 @@ import {
 	projectMembersQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
-} from '../lib/react-query/projects'
-import { useClientApi } from './client'
+} from '../lib/react-query/projects.js'
+import { useClientApi } from './client.js'
 
 /**
  * Retrieve the project settings for a project.
