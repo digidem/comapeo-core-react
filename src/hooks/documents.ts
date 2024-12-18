@@ -1,4 +1,4 @@
-import type { MapeoDoc } from '@comapeo/schema'
+import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 import {

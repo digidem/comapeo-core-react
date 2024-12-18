@@ -1,5 +1,5 @@
-import type { MapeoProjectApi } from '@comapeo/ipc'
-import type { MapeoDoc } from '@comapeo/schema'
+import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import { queryOptions } from '@tanstack/react-query'
 
 import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'

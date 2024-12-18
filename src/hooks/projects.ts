@@ -1,5 +1,8 @@
-import type { BitmapOpts, SvgOpts } from '@comapeo/core/dist/icon-api.js'
-import type { BlobId } from '@comapeo/core/dist/types.js'
+import type {
+	BitmapOpts,
+	SvgOpts,
+} from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
+import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 import {
