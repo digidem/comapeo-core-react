@@ -58,7 +58,7 @@ export function useRejectInvite() {
 
 export function useSendInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
-	const projectApi = useSingleProject({ projectId })
+	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { mutate, status, reset } = useMutation({
 		mutationFn: async ({
@@ -70,7 +70,7 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 			roleId: RoleIdForNewInvite
 			roleName?: string
 		}) => {
-			return projectApi.data.$member.invite(deviceId, role)
+			return projectApi.$member.invite(deviceId, role)
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -91,11 +91,11 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 
 export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
-	const projectApi = useSingleProject({ projectId })
+	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { mutate, status, reset } = useMutation({
 		mutationFn: async ({ deviceId }: { deviceId: string }) => {
-			return projectApi.data.$member.requestCancelInvite(deviceId)
+			return projectApi.$member.requestCancelInvite(deviceId)
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({

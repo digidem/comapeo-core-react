@@ -336,7 +336,7 @@ export function useDocumentCreatedBy({
 
 export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
-	const projectApi = useSingleProject({ projectId })
+	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { mutate, reset, status } = useMutation({
 		mutationFn: async ({
@@ -346,7 +346,7 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 			baseUrl: string
 			dangerouslyAllowInsecureConnections?: boolean
 		}) => {
-			return projectApi.data.$member.addServerPeer(baseUrl, {
+			return projectApi.$member.addServerPeer(baseUrl, {
 				dangerouslyAllowInsecureConnections,
 			})
 		},
