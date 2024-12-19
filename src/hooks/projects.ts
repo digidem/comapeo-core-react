@@ -3,11 +3,16 @@ import type {
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
-import { useSuspenseQuery } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 
 import {
 	attachmentUrlQueryOptions,
 	documentCreatedByQueryOptions,
+	getMembersQueryKey,
 	iconUrlQueryOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
@@ -326,4 +331,34 @@ export function useDocumentCreatedBy({
 	)
 
 	return { data, error, isRefetching }
+}
+
+export function useAddServerPeerMutation({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const projectApi = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation({
+		mutationFn: async ({
+			baseUrl,
+			dangerouslyAllowInsecureConnections,
+		}: {
+			baseUrl: string
+			dangerouslyAllowInsecureConnections?: boolean
+		}) => {
+			return projectApi.data.$member.addServerPeer(baseUrl, {
+				dangerouslyAllowInsecureConnections,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
 }
