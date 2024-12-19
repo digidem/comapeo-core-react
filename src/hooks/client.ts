@@ -10,6 +10,7 @@ import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
 	getDeviceInfoQueryKey,
+	getIsArchiveDeviceQueryKey,
 	isArchiveDeviceQueryOptions,
 } from '../lib/react-query/client.js'
 import { getProjectsQueryKey } from '../lib/react-query/projects.js'
@@ -175,6 +176,28 @@ export function useLeaveProjectMutation() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useSetIsArchiveDeviceMutation() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async (isArchiveDevice: boolean) => {
+			return clientApi.setIsArchiveDevice(isArchiveDevice)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getIsArchiveDeviceQueryKey(),
 			})
 		},
 	})
