@@ -28,3 +28,25 @@ export function useAcceptInvite() {
 		status,
 	}
 }
+
+export function useRejectInvite() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async ({ inviteId }: { inviteId: string }) => {
+			return clientApi.invite.reject({ inviteId })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
