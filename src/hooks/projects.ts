@@ -393,7 +393,7 @@ export function useLeaveProjectMutation() {
 	const clientApi = useClientApi()
 
 	const { mutate, status, reset } = useMutation({
-		mutationFn: async (projectPublicId: string) => {
+		mutationFn: async ({ projectPublicId }: { projectPublicId: string }) => {
 			return clientApi.leaveProject(projectPublicId)
 		},
 		onSuccess: () => {

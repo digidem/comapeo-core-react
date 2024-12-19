@@ -120,11 +120,14 @@ export function useSetOwnDeviceInfoMutation() {
 	const clientApi = useClientApi()
 
 	const { mutate, status, reset } = useMutation({
-		mutationFn: async (value: {
+		mutationFn: async ({
+			name,
+			deviceType,
+		}: {
 			name: string
 			deviceType: DeviceInfo['deviceType']
 		}) => {
-			return clientApi.setDeviceInfo(value)
+			return clientApi.setDeviceInfo({ name, deviceType })
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -145,7 +148,7 @@ export function useSetIsArchiveDeviceMutation() {
 	const clientApi = useClientApi()
 
 	const { mutate, status, reset } = useMutation({
-		mutationFn: async (isArchiveDevice: boolean) => {
+		mutationFn: async ({ isArchiveDevice }: { isArchiveDevice: boolean }) => {
 			return clientApi.setIsArchiveDevice(isArchiveDevice)
 		},
 		onSuccess: () => {
