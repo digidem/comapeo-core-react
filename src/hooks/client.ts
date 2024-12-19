@@ -1,9 +1,15 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { DeviceInfo } from '@comapeo/schema'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 import { useContext } from 'react'
 
 import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
+	getDeviceInfoQueryKey,
 	isArchiveDeviceQueryOptions,
 } from '../lib/react-query/client.js'
 
@@ -82,4 +88,53 @@ export function useIsArchiveDevice() {
 	)
 
 	return { data, error, isRefetching }
+}
+
+/**
+ * Update the device info for the current device.
+ *
+ * @example
+ * ```tsx
+ * function Example() {
+ *   const { mutate, status } = useSetOwnDeviceInfoMutation()
+ *
+ *   return (
+ *     <button
+ *       className={status === 'pending' ? 'loading' : undefined}
+ * 		 onClick={() => {
+ * 		   mutate({
+ * 		     name: 'Bob',
+ * 		     deviceType: 'mobile',
+ * 		   })
+ * 		 }}
+ * 	   >
+ * 	     Press Me!
+ *     </button>
+ *   )
+ * }
+ * ```
+ */
+export function useSetOwnDeviceInfoMutation() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async (value: {
+			name: string
+			deviceType: DeviceInfo['deviceType']
+		}) => {
+			return clientApi.setDeviceInfo(value)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDeviceInfoQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
 }
