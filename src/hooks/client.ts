@@ -97,7 +97,7 @@ export function useIsArchiveDevice() {
  * @example
  * ```tsx
  * function Example() {
- *   const { mutate, status } = useSetOwnDeviceInfoMutation()
+ *   const { mutate, status } = useSetOwnDeviceInfo()
  *
  *   return (
  *     <button
@@ -115,7 +115,7 @@ export function useIsArchiveDevice() {
  * }
  * ```
  */
-export function useSetOwnDeviceInfoMutation() {
+export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
@@ -143,7 +143,7 @@ export function useSetOwnDeviceInfoMutation() {
 	}
 }
 
-export function useSetIsArchiveDeviceMutation() {
+export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 

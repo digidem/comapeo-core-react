@@ -334,7 +334,7 @@ export function useDocumentCreatedBy({
 	return { data, error, isRefetching }
 }
 
-export function useAddServerPeerMutation({ projectId }: { projectId: string }) {
+export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const projectApi = useSingleProject({ projectId })
 
@@ -364,7 +364,7 @@ export function useAddServerPeerMutation({ projectId }: { projectId: string }) {
 	}
 }
 
-export function useCreateProjectMutation() {
+export function useCreateProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
@@ -388,7 +388,7 @@ export function useCreateProjectMutation() {
 	}
 }
 
-export function useLeaveProjectMutation() {
+export function useLeaveProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 

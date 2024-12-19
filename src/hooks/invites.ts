@@ -4,7 +4,7 @@ import { getInvitesQueryKey } from '../lib/react-query/invites.js'
 import { getProjectsQueryKey } from '../lib/react-query/projects.js'
 import { useClientApi } from './client.js'
 
-export function useAcceptInviteMutation() {
+export function useAcceptInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
