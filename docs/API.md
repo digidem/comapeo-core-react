@@ -1,40 +1,9 @@
 ## Functions
 
 - [ClientApiProvider](#clientapiprovider)
-- [baseQueryOptions](#basequeryoptions)
-- [getClientQueryKey](#getclientquerykey)
-- [getDeviceInfoQueryKey](#getdeviceinfoquerykey)
-- [getIsArchiveDeviceQueryKey](#getisarchivedevicequerykey)
-- [deviceInfoQueryOptions](#deviceinfoqueryoptions)
-- [isArchiveDeviceQueryOptions](#isarchivedevicequeryoptions)
 - [useClientApi](#useclientapi)
 - [useOwnDeviceInfo](#useowndeviceinfo)
 - [useIsArchiveDevice](#useisarchivedevice)
-- [getDocumentsQueryKey](#getdocumentsquerykey)
-- [getManyDocumentsQueryKey](#getmanydocumentsquerykey)
-- [getDocumentByDocIdQueryKey](#getdocumentbydocidquerykey)
-- [getDocumentByVersionIdQueryKey](#getdocumentbyversionidquerykey)
-- [documentsQueryOptions](#documentsqueryoptions)
-- [documentByDocumentIdQueryOptions](#documentbydocumentidqueryoptions)
-- [documentByVersionIdQueryOptions](#documentbyversionidqueryoptions)
-- [getProjectsQueryKey](#getprojectsquerykey)
-- [getProjectByIdQueryKey](#getprojectbyidquerykey)
-- [getProjectSettingsQueryKey](#getprojectsettingsquerykey)
-- [getProjectRoleQueryKey](#getprojectrolequerykey)
-- [getMembersQueryKey](#getmembersquerykey)
-- [getMemberByIdQueryKey](#getmemberbyidquerykey)
-- [getIconUrlQueryKey](#geticonurlquerykey)
-- [getDocumentCreatedByQueryKey](#getdocumentcreatedbyquerykey)
-- [getAttachmentUrlQueryKey](#getattachmenturlquerykey)
-- [projectsQueryOptions](#projectsqueryoptions)
-- [projectByIdQueryOptions](#projectbyidqueryoptions)
-- [projectSettingsQueryOptions](#projectsettingsqueryoptions)
-- [projectMembersQueryOptions](#projectmembersqueryoptions)
-- [projectMemberByIdQueryOptions](#projectmemberbyidqueryoptions)
-- [projectOwnRoleQueryOptions](#projectownrolequeryoptions)
-- [iconUrlQueryOptions](#iconurlqueryoptions)
-- [documentCreatedByQueryOptions](#documentcreatedbyqueryoptions)
-- [attachmentUrlQueryOptions](#attachmenturlqueryoptions)
 - [useProjectSettings](#useprojectsettings)
 - [useSingleProject](#usesingleproject)
 - [useManyProjects](#usemanyprojects)
@@ -46,13 +15,7 @@
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
-- [getMapsQueryKey](#getmapsquerykey)
-- [getStyleJsonUrlQueryKey](#getstylejsonurlquerykey)
-- [mapStyleJsonUrlQueryOptions](#mapstylejsonurlqueryoptions)
 - [useMapStyleUrl](#usemapstyleurl)
-- [getInvitesQueryKey](#getinvitesquerykey)
-- [getPendingInvitesQueryKey](#getpendinginvitesquerykey)
-- [pendingInvitesQueryOptions](#pendinginvitesqueryoptions)
 
 ### ClientApiProvider
 
@@ -67,42 +30,6 @@ Parameters:
 * `opts.children`: React children node
 * `opts.clientApi`: Client API instance
 
-
-### baseQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `baseQueryOptions` | `() => { networkMode: "always"; retry: number; }` |
-
-### getClientQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getClientQueryKey` | `() => readonly ["@comapeo/core-react", "client"]` |
-
-### getDeviceInfoQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getDeviceInfoQueryKey` | `() => readonly ["@comapeo/core-react", "client", "device_info"]` |
-
-### getIsArchiveDeviceQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getIsArchiveDeviceQueryKey` | `() => readonly ["@comapeo/core-react", "client", "is_archive_device"]` |
-
-### deviceInfoQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `deviceInfoQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<{ deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<...>, Error, { ...; } and Partial<...>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### isArchiveDeviceQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `isArchiveDeviceQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<boolean, Error, boolean, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
 
 ### useClientApi
 
@@ -166,156 +93,6 @@ function IsArchiveDeviceExample() {
 }
 ```
 
-
-### getDocumentsQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, }: { projectId: string; docType: D; }) => readonly ["@comapeo/core-react", "projects", string, D]` |
-
-### getManyDocumentsQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getManyDocumentsQueryKey` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, { ...; }]` |
-
-### getDocumentByDocIdQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getDocumentByDocIdQueryKey` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, string, { readonly lang: string or undefined; }]` |
-
-### getDocumentByVersionIdQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getDocumentByVersionIdQueryKey` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => readonly ["@comapeo/core-react", "projects", string, D, string, { readonly lang: string or undefined; }]` |
-
-### documentsQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `documentsQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, includeDeleted, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => OmitKeyof<...> and ... 1 more ... and { ...; }` |
-
-### documentByDocumentIdQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `documentByDocumentIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, docId, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; docId: string; lang?: string or undefined; }) => OmitKeyof<UseQueryOptions<({ schemaName: "track"; ... 9 more ...; deleted: boolean; } and { ...; }) or ({ ...; } and { ...; }) or ...` |
-
-### documentByVersionIdQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `documentByVersionIdQueryOptions` | `<D extends DocumentType>({ projectApi, projectId, docType, versionId, lang, }: { projectApi: ClientApi<MapeoProject>; projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => OmitKeyof<UseQueryOptions<{ schemaName: "track"; ... 9 more ...; deleted: boolean; } or { ...; } or { ...; } or { ...; ...` |
-
-### getProjectsQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getProjectsQueryKey` | `() => readonly ["@comapeo/core-react", "projects"]` |
-
-### getProjectByIdQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getProjectByIdQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string]` |
-
-### getProjectSettingsQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getProjectSettingsQueryKey` | `({ projectId, }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "project_settings"]` |
-
-### getProjectRoleQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getProjectRoleQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "role"]` |
-
-### getMembersQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getMembersQueryKey` | `({ projectId }: { projectId: string; }) => readonly ["@comapeo/core-react", "projects", string, "members"]` |
-
-### getMemberByIdQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getMemberByIdQueryKey` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => readonly ["@comapeo/core-react", "projects", string, "members", string]` |
-
-### getIconUrlQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getIconUrlQueryKey` | `({ projectId, iconId, ...mimeBasedOpts }: { projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => readonly ["@comapeo/core-react", "projects", string, "icons", string, { mimeType: "image/png"; pixelDensity: 2 or ... 1 more ... or 1; size: ValidSizes; } or { ...; }]` |
-
-### getDocumentCreatedByQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getDocumentCreatedByQueryKey` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => readonly ["@comapeo/core-react", "projects", string, "document_created_by", string]` |
-
-### getAttachmentUrlQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getAttachmentUrlQueryKey` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => readonly ["@comapeo/core-react", "projects", string, "attachments", BlobId]` |
-
-### projectsQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectsQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<(Pick<{ schemaName: "projectSettings"; name?: string or undefined; defaultPresets?: { point: string[]; area: string[]; vertex: string[]; line: string[]; relation: string[]; } or undefined; configMetadata?: { ...; } or undefined; }, "name"> and ...` |
-
-### projectByIdQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectByIdQueryOptions` | `({ clientApi, projectId, }: { clientApi: MapeoClientApi; projectId: string; }) => OmitKeyof<UseQueryOptions<ClientApi<MapeoProject>, Error, ClientApi<MapeoProject>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### projectSettingsQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectSettingsQueryOptions` | `({ projectApi, projectId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; }) => OmitKeyof<UseQueryOptions<EditableProjectSettings, Error, EditableProjectSettings, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### projectMembersQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectMembersQueryOptions` | `({ projectApi, projectId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; }) => OmitKeyof<UseQueryOptions<MemberInfo[], Error, MemberInfo[], QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### projectMemberByIdQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectMemberByIdQueryOptions` | `({ projectApi, projectId, deviceId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; deviceId: string; }) => OmitKeyof<UseQueryOptions<MemberInfo, Error, MemberInfo, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### projectOwnRoleQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `projectOwnRoleQueryOptions` | `({ projectApi, projectId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; }) => OmitKeyof<UseQueryOptions<Role<"a12a6702b93bd7ff" or "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9" or "8ced989b1904606b" or "08e4251e36f6e7ed">, Error, Role<...>, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### iconUrlQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `iconUrlQueryOptions` | `({ projectApi, projectId, iconId, ...mimeBasedOpts }: { projectApi: ClientApi<MapeoProject>; projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### documentCreatedByQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `documentCreatedByQueryOptions` | `({ projectApi, projectId, originalVersionId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; originalVersionId: string; }) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
-### attachmentUrlQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `attachmentUrlQueryOptions` | `({ projectApi, projectId, blobId, }: { projectApi: ClientApi<MapeoProject>; projectId: string; blobId: BlobId; }) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
 
 ### useProjectSettings
 
@@ -677,24 +454,6 @@ function useAllPresets(opts) {
 ```
 
 
-### getMapsQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getMapsQueryKey` | `() => readonly ["@comapeo/core-react", "maps"]` |
-
-### getStyleJsonUrlQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getStyleJsonUrlQueryKey` | `({ refreshToken, }: { refreshToken?: string or undefined; }) => readonly ["@comapeo/core-react", "maps", "stylejson_url", { readonly refreshToken: string or undefined; }]` |
-
-### mapStyleJsonUrlQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `mapStyleJsonUrlQueryOptions` | `({ clientApi, refreshToken, }: { clientApi: MapeoClientApi; refreshToken?: string or undefined; }) => OmitKeyof<UseQueryOptions<string, Error, string, QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
 ### useMapStyleUrl
 
 Get a URL that points to a StyleJSON resource served by the embedded HTTP server.
@@ -731,29 +490,10 @@ function ExampleWithRefreshToken() {
 ```
 
 
-### getInvitesQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getInvitesQueryKey` | `() => readonly ["@comapeo/core-react", "invites"]` |
-
-### getPendingInvitesQueryKey
-
-| Function | Type |
-| ---------- | ---------- |
-| `getPendingInvitesQueryKey` | `() => readonly ["@comapeo/core-react", "invites", { readonly status: "pending"; }]` |
-
-### pendingInvitesQueryOptions
-
-| Function | Type |
-| ---------- | ---------- |
-| `pendingInvitesQueryOptions` | `({ clientApi, }: { clientApi: MapeoClientApi; }) => OmitKeyof<UseQueryOptions<MapBuffers<InviteInternal>[], Error, MapBuffers<InviteInternal>[], QueryKey>, "queryFn"> and { ...; } and { ...; }` |
-
 
 ## Constants
 
 - [ClientApiContext](#clientapicontext)
-- [ROOT_QUERY_KEY](#root_query_key)
 
 ### ClientApiContext
 
@@ -761,21 +501,4 @@ function ExampleWithRefreshToken() {
 | ---------- | ---------- |
 | `ClientApiContext` | `Context<MapeoClientApi or null>` |
 
-### ROOT_QUERY_KEY
-
-| Constant | Type |
-| ---------- | ---------- |
-| `ROOT_QUERY_KEY` | `"@comapeo/core-react"` |
-
-
-
-## Types
-
-- [DocumentType](#documenttype)
-
-### DocumentType
-
-| Type | Type |
-| ---------- | ---------- |
-| `DocumentType` | `Extract< MapeoDoc['schemaName'], 'field' or 'observation' or 'preset' or 'track' or 'remoteDetectionAlert' >` |
 

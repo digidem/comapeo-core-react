@@ -57,7 +57,7 @@
 		"types": "tsc",
 		"test:unit": "vitest run",
 		"test": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output types test:*",
-		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/*,src/lib/react-query/* --dest=docs/API.md --noemoji --types"
+		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/* --dest=docs/API.md --noemoji --types"
 	},
 	"peerDependencies": {
 		"@comapeo/core": "*",
