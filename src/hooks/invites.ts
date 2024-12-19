@@ -88,3 +88,25 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 		status,
 	}
 }
+
+export function useRequestCancelInvite({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const projectApi = useSingleProject({ projectId })
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async ({ deviceId }: { deviceId: string }) => {
+			return projectApi.data.$member.requestCancelInvite(deviceId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
