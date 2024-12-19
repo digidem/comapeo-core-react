@@ -13,6 +13,7 @@ import {
 	attachmentUrlQueryOptions,
 	documentCreatedByQueryOptions,
 	getMembersQueryKey,
+	getProjectByIdQueryKey,
 	getProjectsQueryKey,
 	iconUrlQueryOptions,
 	projectByIdQueryOptions,
@@ -399,6 +400,29 @@ export function useLeaveProject() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useImportProjectConfig({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: ({ configPath }: { configPath: string }) => {
+			return projectApi.importConfig({ configPath })
+		},
+		onSuccess: () => {
+			// TODO: Should we return this?
+			queryClient.invalidateQueries({
+				queryKey: getProjectByIdQueryKey({ projectId }),
 			})
 		},
 	})
