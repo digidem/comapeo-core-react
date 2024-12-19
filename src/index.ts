@@ -21,16 +21,11 @@ export {
 	useSingleProject,
 } from './hooks/projects.js'
 export {
-	deviceInfoQueryOptions,
 	getClientQueryKey,
 	getDeviceInfoQueryKey,
 	getIsArchiveDeviceQueryKey,
-	isArchiveDeviceQueryOptions,
 } from './lib/react-query/client.js'
 export {
-	documentByDocumentIdQueryOptions,
-	documentByVersionIdQueryOptions,
-	documentsQueryOptions,
 	getDocumentByDocIdQueryKey,
 	getDocumentByVersionIdQueryKey,
 	getDocumentsQueryKey,
@@ -40,16 +35,12 @@ export {
 export {
 	getInvitesQueryKey,
 	getPendingInvitesQueryKey,
-	pendingInvitesQueryOptions,
 } from './lib/react-query/invites.js'
 export {
 	getMapsQueryKey,
 	getStyleJsonUrlQueryKey,
-	mapStyleJsonUrlQueryOptions,
 } from './lib/react-query/maps.js'
 export {
-	attachmentUrlQueryOptions,
-	documentCreatedByQueryOptions,
 	getAttachmentUrlQueryKey,
 	getDocumentCreatedByQueryKey,
 	getIconUrlQueryKey,
@@ -59,11 +50,5 @@ export {
 	getProjectRoleQueryKey,
 	getProjectSettingsQueryKey,
 	getProjectsQueryKey,
-	iconUrlQueryOptions,
-	projectByIdQueryOptions,
-	projectMembersQueryOptions,
-	projectOwnRoleQueryOptions,
-	projectSettingsQueryOptions,
-	projectsQueryOptions,
 } from './lib/react-query/projects.js'
-export { ROOT_QUERY_KEY, baseQueryOptions } from './lib/react-query/shared.js'
+export { ROOT_QUERY_KEY } from './lib/react-query/shared.js'
