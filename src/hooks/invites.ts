@@ -1,8 +1,13 @@
+import { RoleIdForNewInvite } from '@comapeo/core/dist/roles.js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { getInvitesQueryKey } from '../lib/react-query/invites.js'
-import { getProjectsQueryKey } from '../lib/react-query/projects.js'
+import {
+	getMembersQueryKey,
+	getProjectsQueryKey,
+} from '../lib/react-query/projects.js'
 import { useClientApi } from './client.js'
+import { useSingleProject } from './projects.js'
 
 export function useAcceptInvite() {
 	const queryClient = useQueryClient()
@@ -40,6 +45,39 @@ export function useRejectInvite() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: getInvitesQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useSendInvite({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const projectApi = useSingleProject({ projectId })
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async ({
+			deviceId,
+			...role
+		}: {
+			deviceId: string
+			roleDescription?: string
+			roleId: RoleIdForNewInvite
+			roleName?: string
+		}) => {
+			return projectApi.data.$member.invite(deviceId, role)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
 			})
 		},
 	})
