@@ -13,6 +13,7 @@ import {
 	attachmentUrlQueryOptions,
 	documentCreatedByQueryOptions,
 	getMembersQueryKey,
+	getProjectsQueryKey,
 	iconUrlQueryOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
@@ -352,6 +353,52 @@ export function useAddServerPeerMutation({ projectId }: { projectId: string }) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useCreateProjectMutation() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async (opts?: { name?: string; configPath?: string }) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return opts ? clientApi.createProject(opts) : clientApi.createProject()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useLeaveProjectMutation() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async (projectPublicId: string) => {
+			return clientApi.leaveProject(projectPublicId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
 			})
 		},
 	})
