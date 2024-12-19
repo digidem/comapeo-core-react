@@ -163,3 +163,25 @@ export function useCreateProjectMutation() {
 		status,
 	}
 }
+
+export function useLeaveProjectMutation() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation({
+		mutationFn: async (projectPublicId: string) => {
+			return clientApi.leaveProject(projectPublicId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
