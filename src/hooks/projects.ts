@@ -420,7 +420,6 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 			return projectApi.importConfig({ configPath })
 		},
 		onSuccess: () => {
-			// TODO: Should we return this?
 			queryClient.invalidateQueries({
 				queryKey: getProjectByIdQueryKey({ projectId }),
 			})
