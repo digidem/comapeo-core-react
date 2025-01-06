@@ -362,6 +362,9 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 	return { mutate, reset, status }
 }
 
+/**
+ * Create a new project.
+ */
 export function useCreateProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
@@ -382,6 +385,9 @@ export function useCreateProject() {
 	return { mutate, reset, status }
 }
 
+/**
+ * Leave an existing project.
+ */
 export function useLeaveProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
@@ -400,6 +406,11 @@ export function useLeaveProject() {
 	return { mutate, reset, status }
 }
 
+/**
+ * Update the configuration of a project using an external file.
+ *
+ * @param opts.projectId Public ID of the project to apply changes to.
+ */
 export function useImportProjectConfig({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -419,6 +430,11 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 	return { mutate, reset, status }
 }
 
+/**
+ * Update the settings of a project.
+ *
+ * @param opts.projectId Public ID of the project to apply changes to.
+ */
 export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })

@@ -93,27 +93,6 @@ export function useIsArchiveDevice() {
 
 /**
  * Update the device info for the current device.
- *
- * @example
- * ```tsx
- * function Example() {
- *   const { mutate, status } = useSetOwnDeviceInfo()
- *
- *   return (
- *     <button
- *       className={status === 'pending' ? 'loading' : undefined}
- * 		 onClick={() => {
- * 		   mutate({
- * 		     name: 'Bob',
- * 		     deviceType: 'mobile',
- * 		   })
- * 		 }}
- * 	   >
- * 	     Press Me!
- *     </button>
- *   )
- * }
- * ```
  */
 export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
@@ -139,6 +118,9 @@ export function useSetOwnDeviceInfo() {
 	return { mutate, reset, status }
 }
 
+/**
+ * Set or unset the current device as an archive device.
+ */
 export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
