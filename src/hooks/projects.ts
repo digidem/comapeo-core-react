@@ -3,6 +3,7 @@ import type {
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
+import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
@@ -423,6 +424,32 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 			// TODO: Should we return this?
 			queryClient.invalidateQueries({
 				queryKey: getProjectByIdQueryKey({ projectId }),
+			})
+		},
+	})
+
+	return {
+		mutate,
+		reset,
+		status,
+	}
+}
+
+export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation({
+		mutationFn: async (value: {
+			name?: ProjectSettings['name']
+			configMetadata?: ProjectSettings['configMetadata']
+			defaultPresets?: ProjectSettings['defaultPresets']
+		}) => {
+			return projectApi.$setProjectSettings(value)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
 			})
 		},
 	})
