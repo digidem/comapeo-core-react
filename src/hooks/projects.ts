@@ -359,11 +359,7 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useCreateProject() {
@@ -383,11 +379,7 @@ export function useCreateProject() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useLeaveProject() {
@@ -405,11 +397,7 @@ export function useLeaveProject() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useImportProjectConfig({ projectId }: { projectId: string }) {
@@ -428,11 +416,7 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
@@ -454,9 +438,5 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }

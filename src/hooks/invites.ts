@@ -27,11 +27,7 @@ export function useAcceptInvite() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useRejectInvite() {
@@ -49,11 +45,7 @@ export function useRejectInvite() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useSendInvite({ projectId }: { projectId: string }) {
@@ -82,11 +74,7 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useRequestCancelInvite({ projectId }: { projectId: string }) {
@@ -104,9 +92,5 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }

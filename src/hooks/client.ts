@@ -136,11 +136,7 @@ export function useSetOwnDeviceInfo() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
 
 export function useSetIsArchiveDevice() {
@@ -158,9 +154,5 @@ export function useSetIsArchiveDevice() {
 		},
 	})
 
-	return {
-		mutate,
-		reset,
-		status,
-	}
+	return { mutate, reset, status }
 }
