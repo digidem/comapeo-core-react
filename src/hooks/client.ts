@@ -1,4 +1,4 @@
-import { DeviceInfo } from '@comapeo/schema'
+import type { DeviceInfo } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,

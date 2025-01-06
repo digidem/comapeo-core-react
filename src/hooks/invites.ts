@@ -1,4 +1,4 @@
-import { RoleIdForNewInvite } from '@comapeo/core/dist/roles.js'
+import type { RoleIdForNewInvite } from '@comapeo/core/dist/roles.js' with { 'resolution-mode': 'import' }
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { getInvitesQueryKey } from '../lib/react-query/invites.js'
