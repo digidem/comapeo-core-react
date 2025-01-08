@@ -19,6 +19,7 @@
 - [useLeaveProject](#useleaveproject)
 - [useImportProjectConfig](#useimportprojectconfig)
 - [useUpdateProjectSettings](#useupdateprojectsettings)
+- [useCreateBlob](#usecreateblob)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -389,7 +390,7 @@ Leave an existing project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useLeaveProject` | `() => { mutate: UseMutateFunction<void, Error, { projectPublicId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useLeaveProject` | `() => { mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
 
 ### useImportProjectConfig
 
@@ -415,6 +416,19 @@ Update the settings of a project.
 Parameters:
 
 * `opts.projectId`: Public ID of the project to apply changes to.
+
+
+### useCreateBlob
+
+Create a blob for a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<{ driveId: string; name: string; type: "audio" or "video" or "photo"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status: "pending" or ...` |
+
+Parameters:
+
+* `opts.projectId`: Public project ID of project to apply to changes to.
 
 
 ### useSingleDocByDocId
