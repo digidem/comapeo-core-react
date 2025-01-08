@@ -1,10 +1,8 @@
-import type { Metadata } from '@comapeo/core/dist/blob-api.js' with { 'resolution-mode': 'import' }
 import type {
 	BitmapOpts,
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
-import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
@@ -12,17 +10,20 @@ import {
 } from '@tanstack/react-query'
 
 import {
+	addServerPeerMutationOptions,
 	attachmentUrlQueryOptions,
+	createBlobMutationOptions,
+	createProjectMutationOptions,
 	documentCreatedByQueryOptions,
-	getMembersQueryKey,
-	getProjectByIdQueryKey,
-	getProjectsQueryKey,
 	iconUrlQueryOptions,
+	importProjectConfigMutationOptions,
+	leaveProjectMutationOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
 	projectMembersQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	updateProjectSettingsMutationOptions,
 } from '../lib/react-query/projects.js'
 import { useClientApi } from './client.js'
 
@@ -341,24 +342,9 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation({
-		mutationFn: async ({
-			baseUrl,
-			dangerouslyAllowInsecureConnections,
-		}: {
-			baseUrl: string
-			dangerouslyAllowInsecureConnections?: boolean
-		}) => {
-			return projectApi.$member.addServerPeer(baseUrl, {
-				dangerouslyAllowInsecureConnections,
-			})
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-		},
-	})
+	const { mutate, reset, status } = useMutation(
+		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -370,18 +356,9 @@ export function useCreateProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation({
-		mutationFn: async (opts?: { name?: string; configPath?: string }) => {
-			// Have to avoid passing `undefined` explicitly
-			// See https://github.com/digidem/rpc-reflector/issues/21
-			return opts ? clientApi.createProject(opts) : clientApi.createProject()
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	const { mutate, status, reset } = useMutation(
+		createProjectMutationOptions({ clientApi, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -393,16 +370,9 @@ export function useLeaveProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation({
-		mutationFn: async ({ projectPublicId }: { projectPublicId: string }) => {
-			return clientApi.leaveProject(projectPublicId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	const { mutate, status, reset } = useMutation(
+		leaveProjectMutationOptions({ clientApi, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -416,16 +386,9 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, status, reset } = useMutation({
-		mutationFn: ({ configPath }: { configPath: string }) => {
-			return projectApi.importConfig({ configPath })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectByIdQueryKey({ projectId }),
-			})
-		},
-	})
+	const { mutate, status, reset } = useMutation(
+		importProjectConfigMutationOptions({ queryClient, projectApi, projectId }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -439,20 +402,9 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation({
-		mutationFn: async (value: {
-			name?: ProjectSettings['name']
-			configMetadata?: ProjectSettings['configMetadata']
-			defaultPresets?: ProjectSettings['defaultPresets']
-		}) => {
-			return projectApi.$setProjectSettings(value)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	const { mutate, reset, status } = useMutation(
+		updateProjectSettingsMutationOptions({ projectApi, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -460,29 +412,14 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 /**
  * Create a blob for a project.
  *
- * @param opts.projectId Public project ID of project to apply to changes to
+ * @param opts.projectId Public project ID of project to apply to changes to.
  */
 export function useCreateBlob({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation({
-		mutationFn: async ({
-			original,
-			preview,
-			thumbnail,
-			metadata,
-		}: {
-			original: string
-			preview?: string
-			thumbnail?: string
-			metadata: Metadata
-		}) => {
-			return projectApi.$blobs.create(
-				{ original, preview, thumbnail },
-				metadata,
-			)
-		},
-	})
+	const { mutate, reset, status } = useMutation(
+		createBlobMutationOptions({ projectApi }),
+	)
 
 	return { mutate, reset, status }
 }

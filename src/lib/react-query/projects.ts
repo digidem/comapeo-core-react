@@ -1,15 +1,26 @@
+import type { Metadata } from '@comapeo/core/dist/blob-api.js' with { 'resolution-mode': 'import' }
 import type {
 	BitmapOpts,
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
+import type { EditableProjectSettings } from '@comapeo/core/dist/mapeo-project.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
 import type {
 	MapeoClientApi,
 	MapeoProjectApi,
 } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import { queryOptions } from '@tanstack/react-query'
+import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import {
+	queryOptions,
+	type QueryClient,
+	type UseMutationOptions,
+} from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
+import {
+	baseMutationOptions,
+	baseQueryOptions,
+	ROOT_QUERY_KEY,
+} from './shared.js'
 
 export function getProjectsQueryKey() {
 	return [ROOT_QUERY_KEY, 'projects'] as const
@@ -242,4 +253,163 @@ export function attachmentUrlQueryOptions({
 			return projectApi.$blobs.getUrl(blobId)
 		},
 	})
+}
+
+export function addServerPeerMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ baseUrl, dangerouslyAllowInsecureConnections }) => {
+			return projectApi.$member.addServerPeer(baseUrl, {
+				dangerouslyAllowInsecureConnections,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{ baseUrl: string; dangerouslyAllowInsecureConnections?: boolean }
+	>
+}
+
+export function createProjectMutationOptions({
+	clientApi,
+	queryClient,
+}: {
+	clientApi: MapeoClientApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return opts
+				? clientApi.createProject({
+						configPath: opts.configPath,
+						name: opts.name,
+					})
+				: clientApi.createProject()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	} satisfies UseMutationOptions<
+		string,
+		Error,
+		{ name?: string; configPath?: string } | undefined
+	>
+}
+
+export function leaveProjectMutationOptions({
+	clientApi,
+	queryClient,
+}: {
+	clientApi: MapeoClientApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ projectId }) => {
+			return clientApi.leaveProject(projectId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	} satisfies UseMutationOptions<void, Error, { projectId: string }>
+}
+
+export function importProjectConfigMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: ({ configPath }) => {
+			return projectApi.importConfig({ configPath })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectByIdQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<Array<Error>, Error, { configPath: string }>
+}
+
+export function updateProjectSettingsMutationOptions({
+	projectApi,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (value) => {
+			return projectApi.$setProjectSettings(value)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	} satisfies UseMutationOptions<
+		EditableProjectSettings,
+		Error,
+		{
+			name?: ProjectSettings['name']
+			configMetadata?: ProjectSettings['configMetadata']
+			defaultPresets?: ProjectSettings['defaultPresets']
+		}
+	>
+}
+
+export function createBlobMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ original, preview, thumbnail, metadata }) => {
+			return projectApi.$blobs.create(
+				{ original, preview, thumbnail },
+				metadata,
+			)
+		},
+	} satisfies UseMutationOptions<
+		{
+			driveId: string
+			name: string
+			type: 'photo' | 'audio' | 'video'
+			hash: string
+		},
+		Error,
+		{
+			original: string
+			preview?: string
+			thumbnail?: string
+			metadata: Metadata
+		}
+	>
 }
