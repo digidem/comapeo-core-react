@@ -1,4 +1,3 @@
-import type { DeviceInfo } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
@@ -9,9 +8,9 @@ import { useContext } from 'react'
 import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
-	getDeviceInfoQueryKey,
-	getIsArchiveDeviceQueryKey,
 	isArchiveDeviceQueryOptions,
+	setIsArchiveDeviceMutationOptions,
+	setOwnDeviceInfoMutationOptions,
 } from '../lib/react-query/client.js'
 
 /**
@@ -98,22 +97,9 @@ export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation({
-		mutationFn: async ({
-			name,
-			deviceType,
-		}: {
-			name: string
-			deviceType: DeviceInfo['deviceType']
-		}) => {
-			return clientApi.setDeviceInfo({ name, deviceType })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getDeviceInfoQueryKey(),
-			})
-		},
-	})
+	const { mutate, status, reset } = useMutation(
+		setOwnDeviceInfoMutationOptions({ clientApi, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
@@ -125,16 +111,9 @@ export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation({
-		mutationFn: async ({ isArchiveDevice }: { isArchiveDevice: boolean }) => {
-			return clientApi.setIsArchiveDevice(isArchiveDevice)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getIsArchiveDeviceQueryKey(),
-			})
-		},
-	})
+	const { mutate, status, reset } = useMutation(
+		setIsArchiveDeviceMutationOptions({ clientApi, queryClient }),
+	)
 
 	return { mutate, reset, status }
 }
