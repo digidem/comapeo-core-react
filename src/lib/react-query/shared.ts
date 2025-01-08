@@ -19,6 +19,7 @@ export function baseQueryOptions() {
 
 export function baseMutationOptions() {
 	return {
+		networkMode: 'always',
 		retry: false,
 	} satisfies UseMutationOptions
 }
