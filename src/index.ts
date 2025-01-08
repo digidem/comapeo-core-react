@@ -21,6 +21,7 @@ export { useMapStyleUrl } from './hooks/maps.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
+	useCreateBlob,
 	useCreateProject,
 	useDocumentCreatedBy,
 	useIconUrl,
@@ -31,6 +32,7 @@ export {
 	useProjectSettings,
 	useSingleMember,
 	useSingleProject,
+	useUpdateProjectSettings,
 } from './hooks/projects.js'
 export {
 	getClientQueryKey,
