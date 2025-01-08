@@ -13,7 +13,7 @@ export const ROOT_QUERY_KEY = '@comapeo/core-react'
 export function baseQueryOptions() {
 	return {
 		networkMode: 'always',
-		retry: 0,
+		retry: false,
 	} satisfies QueryOptions
 }
 
