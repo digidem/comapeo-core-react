@@ -1,10 +1,16 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 import { useContext } from 'react'
 
 import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
 	isArchiveDeviceQueryOptions,
+	setIsArchiveDeviceMutationOptions,
+	setOwnDeviceInfoMutationOptions,
 } from '../lib/react-query/client.js'
 
 /**
@@ -82,4 +88,32 @@ export function useIsArchiveDevice() {
 	)
 
 	return { data, error, isRefetching }
+}
+
+/**
+ * Update the device info for the current device.
+ */
+export function useSetOwnDeviceInfo() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation(
+		setOwnDeviceInfoMutationOptions({ clientApi, queryClient }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Set or unset the current device as an archive device.
+ */
+export function useSetIsArchiveDevice() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation(
+		setIsArchiveDeviceMutationOptions({ clientApi, queryClient }),
+	)
+
+	return { mutate, reset, status }
 }

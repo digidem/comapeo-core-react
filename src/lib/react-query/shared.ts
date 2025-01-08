@@ -1,4 +1,7 @@
-import { type QueryOptions } from '@tanstack/react-query'
+import type {
+	QueryOptions,
+	UseMutationOptions,
+} from '@tanstack/react-query' with { 'resolution-mode': 'import' }
 
 export const ROOT_QUERY_KEY = '@comapeo/core-react'
 
@@ -12,4 +15,11 @@ export function baseQueryOptions() {
 		networkMode: 'always',
 		retry: 0,
 	} satisfies QueryOptions
+}
+
+export function baseMutationOptions() {
+	return {
+		networkMode: 'always',
+		retry: false,
+	} satisfies UseMutationOptions
 }

@@ -3,17 +3,27 @@ import type {
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
-import { useSuspenseQuery } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 
 import {
+	addServerPeerMutationOptions,
 	attachmentUrlQueryOptions,
+	createBlobMutationOptions,
+	createProjectMutationOptions,
 	documentCreatedByQueryOptions,
 	iconUrlQueryOptions,
+	importProjectConfigMutationOptions,
+	leaveProjectMutationOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
 	projectMembersQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	updateProjectSettingsMutationOptions,
 } from '../lib/react-query/projects.js'
 import { useClientApi } from './client.js'
 
@@ -326,4 +336,90 @@ export function useDocumentCreatedBy({
 	)
 
 	return { data, error, isRefetching }
+}
+
+export function useAddServerPeer({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Create a new project.
+ */
+export function useCreateProject() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation(
+		createProjectMutationOptions({ clientApi, queryClient }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Leave an existing project.
+ */
+export function useLeaveProject() {
+	const queryClient = useQueryClient()
+	const clientApi = useClientApi()
+
+	const { mutate, status, reset } = useMutation(
+		leaveProjectMutationOptions({ clientApi, queryClient }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Update the configuration of a project using an external file.
+ *
+ * @param opts.projectId Public ID of the project to apply changes to.
+ */
+export function useImportProjectConfig({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, status, reset } = useMutation(
+		importProjectConfigMutationOptions({ queryClient, projectApi, projectId }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Update the settings of a project.
+ *
+ * @param opts.projectId Public ID of the project to apply changes to.
+ */
+export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		updateProjectSettingsMutationOptions({ projectApi, queryClient }),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Create a blob for a project.
+ *
+ * @param opts.projectId Public project ID of project to apply to changes to.
+ */
+export function useCreateBlob({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		createBlobMutationOptions({ projectApi }),
+	)
+
+	return { mutate, reset, status }
 }

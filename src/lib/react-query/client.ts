@@ -1,7 +1,16 @@
 import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import { queryOptions } from '@tanstack/react-query'
+import type { DeviceInfo } from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import {
+	queryOptions,
+	type MutationOptions,
+	type QueryClient,
+} from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
+import {
+	baseMutationOptions,
+	baseQueryOptions,
+	ROOT_QUERY_KEY,
+} from './shared.js'
 
 export function getClientQueryKey() {
 	return [ROOT_QUERY_KEY, 'client'] as const
@@ -41,4 +50,48 @@ export function isArchiveDeviceQueryOptions({
 			return clientApi.getIsArchiveDevice()
 		},
 	})
+}
+
+export function setOwnDeviceInfoMutationOptions({
+	clientApi,
+	queryClient,
+}: {
+	clientApi: MapeoClientApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ name, deviceType }) => {
+			return clientApi.setDeviceInfo({ name, deviceType })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDeviceInfoQueryKey(),
+			})
+		},
+	} satisfies MutationOptions<
+		void,
+		Error,
+		{ name: string; deviceType: DeviceInfo['deviceType'] }
+	>
+}
+
+export function setIsArchiveDeviceMutationOptions({
+	clientApi,
+	queryClient,
+}: {
+	clientApi: MapeoClientApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ isArchiveDevice }) => {
+			return clientApi.setIsArchiveDevice(isArchiveDevice)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getIsArchiveDeviceQueryKey(),
+			})
+		},
+	} satisfies MutationOptions<void, Error, { isArchiveDevice: boolean }>
 }
