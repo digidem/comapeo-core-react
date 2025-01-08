@@ -1,3 +1,4 @@
+import type { Metadata } from '@comapeo/core/dist/blob-api.js' with { 'resolution-mode': 'import' }
 import type {
 	BitmapOpts,
 	SvgOpts,
@@ -450,6 +451,36 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 			queryClient.invalidateQueries({
 				queryKey: getProjectsQueryKey(),
 			})
+		},
+	})
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Create a blob for a project.
+ *
+ * @param opts.projectId Public project ID of project to apply to changes to
+ */
+export function useCreateBlob({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation({
+		mutationFn: async ({
+			original,
+			preview,
+			thumbnail,
+			metadata,
+		}: {
+			original: string
+			preview?: string
+			thumbnail?: string
+			metadata: Metadata
+		}) => {
+			return projectApi.$blobs.create(
+				{ original, preview, thumbnail },
+				metadata,
+			)
 		},
 	})
 
