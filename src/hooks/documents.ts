@@ -1,11 +1,18 @@
 import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
-import { useSuspenseQuery } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 
 import {
+	createDocumentMutationOptions,
+	deleteDocumentMutationOptions,
 	documentByDocumentIdQueryOptions,
 	documentByVersionIdQueryOptions,
 	documentsQueryOptions,
-	type DocumentType,
+	updateDocumentMutationOptions,
+	type MutableDocumentType,
 } from '../lib/react-query/documents.js'
 import { useSingleProject } from './projects.js'
 
@@ -38,7 +45,7 @@ type ReadHookResult<D> = {
  * }
  * ```
  */
-export function useSingleDocByDocId<D extends DocumentType>({
+export function useSingleDocByDocId<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	docId,
@@ -94,7 +101,7 @@ export function useSingleDocByDocId<D extends DocumentType>({
  * }
  * ```
  */
-export function useSingleDocByVersionId<D extends DocumentType>({
+export function useSingleDocByVersionId<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	versionId,
@@ -159,7 +166,7 @@ export function useSingleDocByVersionId<D extends DocumentType>({
  * }
  * ```
  */
-export function useManyDocs<D extends DocumentType>({
+export function useManyDocs<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -188,4 +195,88 @@ export function useManyDocs<D extends DocumentType>({
 		error,
 		isRefetching,
 	}
+}
+
+/**
+ * Create a document for a project.
+ *
+ * @param opts.docType Document type to create.
+ * @param opts.projectId Public ID of project to create document for.
+ */
+export function useCreateDocument<D extends MutableDocumentType>({
+	docType,
+	projectId,
+}: {
+	docType: D
+	projectId: string
+}) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		createDocumentMutationOptions({
+			docType,
+			projectApi,
+			projectId,
+			queryClient,
+		}),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Update a document within a project.
+ *
+ * @param opts.docType Document type to update.
+ * @param opts.projectId Public ID of project document belongs to.
+ */
+export function useUpdateDocument<D extends MutableDocumentType>({
+	docType,
+	projectId,
+}: {
+	docType: D
+	projectId: string
+}) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		updateDocumentMutationOptions({
+			docType,
+			projectApi,
+			projectId,
+			queryClient,
+		}),
+	)
+
+	return { mutate, reset, status }
+}
+
+/**
+ * Delete a document within a project.
+ *
+ * @param opts.docType Document type to delete.
+ * @param opts.projectId Public ID of project document belongs to.
+ */
+export function useDeleteDocument<D extends MutableDocumentType>({
+	docType,
+	projectId,
+}: {
+	docType: D
+	projectId: string
+}) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		deleteDocumentMutationOptions({
+			docType,
+			projectApi,
+			projectId,
+			queryClient,
+		}),
+	)
+
+	return { mutate, reset, status }
 }

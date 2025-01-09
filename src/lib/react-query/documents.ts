@@ -1,15 +1,34 @@
 import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
-import { queryOptions } from '@tanstack/react-query'
+import type {
+	MapeoDoc,
+	MapeoValue,
+} from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import {
+	queryOptions,
+	type QueryClient,
+	type UseMutationOptions,
+} from '@tanstack/react-query'
 
-import { baseQueryOptions, ROOT_QUERY_KEY } from './shared.js'
+import {
+	baseMutationOptions,
+	baseQueryOptions,
+	ROOT_QUERY_KEY,
+} from './shared.js'
 
-export type DocumentType = Extract<
+export type MutableDocumentType = Extract<
 	MapeoDoc['schemaName'],
 	'field' | 'observation' | 'preset' | 'track' | 'remoteDetectionAlert'
 >
+export type MutableValue<D extends MutableDocumentType> = Extract<
+	MapeoValue,
+	{ schemaName: D }
+>
+export type MutableDocument<D extends MutableDocumentType> = Extract<
+	MapeoDoc,
+	{ schemaName: D }
+>
 
-export function getDocumentsQueryKey<D extends DocumentType>({
+export function getDocumentsQueryKey<D extends MutableDocumentType>({
 	projectId,
 	docType,
 }: {
@@ -19,7 +38,7 @@ export function getDocumentsQueryKey<D extends DocumentType>({
 	return [ROOT_QUERY_KEY, 'projects', projectId, docType] as const
 }
 
-export function getManyDocumentsQueryKey<D extends DocumentType>({
+export function getManyDocumentsQueryKey<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -39,7 +58,7 @@ export function getManyDocumentsQueryKey<D extends DocumentType>({
 	] as const
 }
 
-export function getDocumentByDocIdQueryKey<D extends DocumentType>({
+export function getDocumentByDocIdQueryKey<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	docId,
@@ -60,7 +79,7 @@ export function getDocumentByDocIdQueryKey<D extends DocumentType>({
 	] as const
 }
 
-export function getDocumentByVersionIdQueryKey<D extends DocumentType>({
+export function getDocumentByVersionIdQueryKey<D extends MutableDocumentType>({
 	projectId,
 	docType,
 	versionId,
@@ -81,7 +100,7 @@ export function getDocumentByVersionIdQueryKey<D extends DocumentType>({
 	] as const
 }
 
-export function documentsQueryOptions<D extends DocumentType>({
+export function documentsQueryOptions<D extends MutableDocumentType>({
 	projectApi,
 	projectId,
 	docType,
@@ -111,7 +130,9 @@ export function documentsQueryOptions<D extends DocumentType>({
 	})
 }
 
-export function documentByDocumentIdQueryOptions<D extends DocumentType>({
+export function documentByDocumentIdQueryOptions<
+	D extends MutableDocumentType,
+>({
 	projectApi,
 	projectId,
 	docType,
@@ -142,7 +163,7 @@ export function documentByDocumentIdQueryOptions<D extends DocumentType>({
 	})
 }
 
-export function documentByVersionIdQueryOptions<D extends DocumentType>({
+export function documentByVersionIdQueryOptions<D extends MutableDocumentType>({
 	projectApi,
 	projectId,
 	docType,
@@ -167,4 +188,113 @@ export function documentByVersionIdQueryOptions<D extends DocumentType>({
 			return projectApi[docType].getByVersionId(versionId, { lang })
 		},
 	})
+}
+
+export function createDocumentMutationOptions<D extends MutableDocumentType>({
+	docType,
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	docType: D
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			value,
+		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+			// @ts-expect-error TS not handling this well
+			return projectApi[docType].create({
+				...value,
+				schemaName: docType,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	} satisfies UseMutationOptions<
+		MutableDocument<D> & { forks: Array<string> },
+		Error,
+		{ value: Omit<MutableValue<D>, 'schemaName'> }
+	>
+}
+
+export function updateDocumentMutationOptions<D extends MutableDocumentType>({
+	docType,
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	docType: D
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			versionId,
+			value,
+		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+			// @ts-expect-error TS not handling this well
+			return projectApi[docType].update(versionId, value)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	} satisfies UseMutationOptions<
+		MutableDocument<D> & { forks: Array<string> },
+		Error,
+		{
+			versionId: string
+			value: Omit<MutableValue<D>, 'schemaName'>
+		}
+	>
+}
+
+export function deleteDocumentMutationOptions<D extends MutableDocumentType>({
+	docType,
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	docType: D
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			docId,
+		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+			// @ts-expect-error TS not handling this well
+			return projectApi[docType].delete(docId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	} satisfies UseMutationOptions<
+		MutableDocument<D> & { forks: Array<string> },
+		Error,
+		{ docId: string }
+	>
 }
