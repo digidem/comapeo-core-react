@@ -15,20 +15,20 @@ import {
 	ROOT_QUERY_KEY,
 } from './shared.js'
 
-export type MutableDocumentType = Extract<
+export type WriteableDocumentType = Extract<
 	MapeoDoc['schemaName'],
 	'field' | 'observation' | 'preset' | 'track' | 'remoteDetectionAlert'
 >
-export type MutableValue<D extends MutableDocumentType> = Extract<
+export type WriteableValue<D extends WriteableDocumentType> = Extract<
 	MapeoValue,
 	{ schemaName: D }
 >
-export type MutableDocument<D extends MutableDocumentType> = Extract<
+export type WriteableDocument<D extends WriteableDocumentType> = Extract<
 	MapeoDoc,
 	{ schemaName: D }
 >
 
-export function getDocumentsQueryKey<D extends MutableDocumentType>({
+export function getDocumentsQueryKey<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 }: {
@@ -38,7 +38,7 @@ export function getDocumentsQueryKey<D extends MutableDocumentType>({
 	return [ROOT_QUERY_KEY, 'projects', projectId, docType] as const
 }
 
-export function getManyDocumentsQueryKey<D extends MutableDocumentType>({
+export function getManyDocumentsQueryKey<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -58,7 +58,7 @@ export function getManyDocumentsQueryKey<D extends MutableDocumentType>({
 	] as const
 }
 
-export function getDocumentByDocIdQueryKey<D extends MutableDocumentType>({
+export function getDocumentByDocIdQueryKey<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 	docId,
@@ -79,7 +79,9 @@ export function getDocumentByDocIdQueryKey<D extends MutableDocumentType>({
 	] as const
 }
 
-export function getDocumentByVersionIdQueryKey<D extends MutableDocumentType>({
+export function getDocumentByVersionIdQueryKey<
+	D extends WriteableDocumentType,
+>({
 	projectId,
 	docType,
 	versionId,
@@ -100,7 +102,7 @@ export function getDocumentByVersionIdQueryKey<D extends MutableDocumentType>({
 	] as const
 }
 
-export function documentsQueryOptions<D extends MutableDocumentType>({
+export function documentsQueryOptions<D extends WriteableDocumentType>({
 	projectApi,
 	projectId,
 	docType,
@@ -131,7 +133,7 @@ export function documentsQueryOptions<D extends MutableDocumentType>({
 }
 
 export function documentByDocumentIdQueryOptions<
-	D extends MutableDocumentType,
+	D extends WriteableDocumentType,
 >({
 	projectApi,
 	projectId,
@@ -163,7 +165,9 @@ export function documentByDocumentIdQueryOptions<
 	})
 }
 
-export function documentByVersionIdQueryOptions<D extends MutableDocumentType>({
+export function documentByVersionIdQueryOptions<
+	D extends WriteableDocumentType,
+>({
 	projectApi,
 	projectId,
 	docType,
@@ -190,7 +194,7 @@ export function documentByVersionIdQueryOptions<D extends MutableDocumentType>({
 	})
 }
 
-export function createDocumentMutationOptions<D extends MutableDocumentType>({
+export function createDocumentMutationOptions<D extends WriteableDocumentType>({
 	docType,
 	projectApi,
 	projectId,
@@ -205,7 +209,7 @@ export function createDocumentMutationOptions<D extends MutableDocumentType>({
 		...baseMutationOptions(),
 		mutationFn: async ({
 			value,
-		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].create({
 				...value,
@@ -221,13 +225,13 @@ export function createDocumentMutationOptions<D extends MutableDocumentType>({
 			})
 		},
 	} satisfies UseMutationOptions<
-		MutableDocument<D> & { forks: Array<string> },
+		WriteableDocument<D> & { forks: Array<string> },
 		Error,
-		{ value: Omit<MutableValue<D>, 'schemaName'> }
+		{ value: Omit<WriteableValue<D>, 'schemaName'> }
 	>
 }
 
-export function updateDocumentMutationOptions<D extends MutableDocumentType>({
+export function updateDocumentMutationOptions<D extends WriteableDocumentType>({
 	docType,
 	projectApi,
 	projectId,
@@ -243,7 +247,7 @@ export function updateDocumentMutationOptions<D extends MutableDocumentType>({
 		mutationFn: async ({
 			versionId,
 			value,
-		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].update(versionId, value)
 		},
@@ -256,16 +260,16 @@ export function updateDocumentMutationOptions<D extends MutableDocumentType>({
 			})
 		},
 	} satisfies UseMutationOptions<
-		MutableDocument<D> & { forks: Array<string> },
+		WriteableDocument<D> & { forks: Array<string> },
 		Error,
 		{
 			versionId: string
-			value: Omit<MutableValue<D>, 'schemaName'>
+			value: Omit<WriteableValue<D>, 'schemaName'>
 		}
 	>
 }
 
-export function deleteDocumentMutationOptions<D extends MutableDocumentType>({
+export function deleteDocumentMutationOptions<D extends WriteableDocumentType>({
 	docType,
 	projectApi,
 	projectId,
@@ -280,7 +284,7 @@ export function deleteDocumentMutationOptions<D extends MutableDocumentType>({
 		...baseMutationOptions(),
 		mutationFn: async ({
 			docId,
-		}): Promise<MutableDocument<D> & { forks: Array<string> }> => {
+		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].delete(docId)
 		},
@@ -293,7 +297,7 @@ export function deleteDocumentMutationOptions<D extends MutableDocumentType>({
 			})
 		},
 	} satisfies UseMutationOptions<
-		MutableDocument<D> & { forks: Array<string> },
+		WriteableDocument<D> & { forks: Array<string> },
 		Error,
 		{ docId: string }
 	>

@@ -12,7 +12,7 @@ import {
 	documentByVersionIdQueryOptions,
 	documentsQueryOptions,
 	updateDocumentMutationOptions,
-	type MutableDocumentType,
+	type WriteableDocumentType,
 } from '../lib/react-query/documents.js'
 import { useSingleProject } from './projects.js'
 
@@ -45,7 +45,7 @@ type ReadHookResult<D> = {
  * }
  * ```
  */
-export function useSingleDocByDocId<D extends MutableDocumentType>({
+export function useSingleDocByDocId<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 	docId,
@@ -101,7 +101,7 @@ export function useSingleDocByDocId<D extends MutableDocumentType>({
  * }
  * ```
  */
-export function useSingleDocByVersionId<D extends MutableDocumentType>({
+export function useSingleDocByVersionId<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 	versionId,
@@ -166,7 +166,7 @@ export function useSingleDocByVersionId<D extends MutableDocumentType>({
  * }
  * ```
  */
-export function useManyDocs<D extends MutableDocumentType>({
+export function useManyDocs<D extends WriteableDocumentType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -203,7 +203,7 @@ export function useManyDocs<D extends MutableDocumentType>({
  * @param opts.docType Document type to create.
  * @param opts.projectId Public ID of project to create document for.
  */
-export function useCreateDocument<D extends MutableDocumentType>({
+export function useCreateDocument<D extends WriteableDocumentType>({
 	docType,
 	projectId,
 }: {
@@ -231,7 +231,7 @@ export function useCreateDocument<D extends MutableDocumentType>({
  * @param opts.docType Document type to update.
  * @param opts.projectId Public ID of project document belongs to.
  */
-export function useUpdateDocument<D extends MutableDocumentType>({
+export function useUpdateDocument<D extends WriteableDocumentType>({
 	docType,
 	projectId,
 }: {
@@ -259,7 +259,7 @@ export function useUpdateDocument<D extends MutableDocumentType>({
  * @param opts.docType Document type to delete.
  * @param opts.projectId Public ID of project document belongs to.
  */
-export function useDeleteDocument<D extends MutableDocumentType>({
+export function useDeleteDocument<D extends WriteableDocumentType>({
 	docType,
 	projectId,
 }: {

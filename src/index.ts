@@ -47,9 +47,9 @@ export {
 	getDocumentByVersionIdQueryKey,
 	getDocumentsQueryKey,
 	getManyDocumentsQueryKey,
-	type MutableDocument,
-	type MutableDocumentType,
-	type MutableValue,
+	type WriteableDocument,
+	type WriteableDocumentType,
+	type WriteableValue,
 } from './lib/react-query/documents.js'
 export {
 	getInvitesQueryKey,
