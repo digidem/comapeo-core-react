@@ -262,10 +262,7 @@ export function updateDocumentMutationOptions<D extends WriteableDocumentType>({
 	} satisfies UseMutationOptions<
 		WriteableDocument<D> & { forks: Array<string> },
 		Error,
-		{
-			versionId: string
-			value: Omit<WriteableValue<D>, 'schemaName'>
-		}
+		{ versionId: string; value: Omit<WriteableValue<D>, 'schemaName'> }
 	>
 }
 
