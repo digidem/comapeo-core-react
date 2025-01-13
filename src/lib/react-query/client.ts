@@ -6,6 +6,7 @@ import {
 	type QueryClient,
 } from '@tanstack/react-query'
 
+import { getProjectsQueryKey } from './projects.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
@@ -67,6 +68,9 @@ export function setOwnDeviceInfoMutationOptions({
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: getDeviceInfoQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
 			})
 		},
 	} satisfies MutationOptions<
