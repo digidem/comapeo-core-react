@@ -176,7 +176,7 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	docType: D
 	includeDeleted?: boolean
 	lang?: string
-}): ReadHookResult<Extract<MapeoDoc, { schemaName: D }>> {
+}): ReadHookResult<Array<Extract<MapeoDoc, { schemaName: D }>>> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
