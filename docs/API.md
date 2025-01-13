@@ -508,7 +508,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNI...` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGN...` |
 
 Parameters:
 
