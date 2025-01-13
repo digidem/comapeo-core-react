@@ -69,7 +69,7 @@
 	"devDependencies": {
 		"@eslint/compat": "1.2.5",
 		"@eslint/js": "9.18.0",
-		"@ianvs/prettier-plugin-sort-imports": "4.4.0",
+		"@ianvs/prettier-plugin-sort-imports": "4.4.1",
 		"@mapeo/crypto": "1.0.0-alpha.10",
 		"@tanstack/eslint-plugin-query": "5.62.16",
 		"@testing-library/dom": "10.4.0",
