@@ -27,7 +27,12 @@ export function mapStyleJsonUrlQueryOptions({
 		queryKey: getStyleJsonUrlQueryKey({ refreshToken }),
 		queryFn: async () => {
 			const result = await clientApi.getMapStyleJsonUrl()
-			return refreshToken ? result + `?refresh_token=${refreshToken}` : result
+
+			if (!refreshToken) return result
+
+			const u = new URL(result)
+			u.searchParams.set('refresh_token', refreshToken)
+			return u.href
 		},
 	})
 }
