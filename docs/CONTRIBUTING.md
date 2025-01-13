@@ -12,4 +12,4 @@ npm install
 
 ## Running tests
 
-Unit tests can be run using `npm test` (or `npm t`).
+Tests can be run using `npm test` (or `npm t`).
