@@ -23,6 +23,9 @@
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
+- [useCreateDocument](#usecreatedocument)
+- [useUpdateDocument](#useupdatedocument)
+- [useDeleteDocument](#usedeletedocument)
 - [useAcceptInvite](#useacceptinvite)
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
@@ -439,7 +442,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends DocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; deleted: boolean; }...` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; deleted: b...` |
 
 Parameters:
 
@@ -472,7 +475,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends DocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; deleted: bo...` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; de...` |
 
 Parameters:
 
@@ -505,7 +508,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends DocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ......` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNI...` |
 
 Parameters:
 
@@ -541,6 +544,48 @@ function useAllPresets(opts) {
   })
 }
 ```
+
+
+### useCreateDocument
+
+Create a document for a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { value: Omit<WriteableValue<D>, "schemaName">; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+
+Parameters:
+
+* `opts.docType`: Document type to create.
+* `opts.projectId`: Public ID of project to create document for.
+
+
+### useUpdateDocument
+
+Update a document within a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { versionId: string; value: Omit<...>; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+
+Parameters:
+
+* `opts.docType`: Document type to update.
+* `opts.projectId`: Public ID of project document belongs to.
+
+
+### useDeleteDocument
+
+Delete a document within a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { docId: string; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+
+Parameters:
+
+* `opts.docType`: Document type to delete.
+* `opts.projectId`: Public ID of project document belongs to.
 
 
 ### useAcceptInvite

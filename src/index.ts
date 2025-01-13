@@ -7,9 +7,12 @@ export {
 	useSetOwnDeviceInfo,
 } from './hooks/client.js'
 export {
+	useCreateDocument,
+	useDeleteDocument,
 	useManyDocs,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
+	useUpdateDocument,
 } from './hooks/documents.js'
 export {
 	useAcceptInvite,
@@ -44,7 +47,9 @@ export {
 	getDocumentByVersionIdQueryKey,
 	getDocumentsQueryKey,
 	getManyDocumentsQueryKey,
-	type DocumentType,
+	type WriteableDocument,
+	type WriteableDocumentType,
+	type WriteableValue,
 } from './lib/react-query/documents.js'
 export {
 	getInvitesQueryKey,
