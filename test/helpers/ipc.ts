@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
-import { MapeoManager } from '@comapeo/core'
+import { FastifyController, MapeoManager } from '@comapeo/core'
 import {
 	closeMapeoClient,
 	createMapeoClient,
@@ -28,13 +28,15 @@ const clientMigrationsFolder = path.join(
 export function setupCoreIpc() {
 	const { port1, port2 } = new MessageChannel()
 
+	const fastify = Fastify()
+
 	const manager = new MapeoManager({
 		rootKey: KeyManager.generateRootKey(),
 		dbFolder: ':memory:',
 		coreStorage: () => new RAM(),
 		projectMigrationsFolder,
 		clientMigrationsFolder,
-		fastify: Fastify(),
+		fastify,
 	})
 
 	const server = createMapeoServer(manager, port1)
@@ -43,13 +45,17 @@ export function setupCoreIpc() {
 	port1.start()
 	port2.start()
 
+	const fastifyController = new FastifyController({ fastify })
+
 	return {
 		port1,
 		port2,
 		server,
 		client,
+		fastifyController,
 		cleanup: async () => {
 			server.close()
+			fastifyController.stop()
 			await closeMapeoClient(client)
 			port1.close()
 			port2.close()
