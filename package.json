@@ -35,7 +35,6 @@
 	"types": "./dist/commonjs/index.d.ts",
 	"module": "./dist/esm/index.js",
 	"files": [
-		"CHANGELOG.md",
 		"dist/",
 		"docs/API.md"
 	],
@@ -81,7 +80,6 @@
 		"@types/node": "22.10.5",
 		"@types/react": "19.0.6",
 		"@types/react-dom": "19.0.3",
-		"commit-and-tag-version": "12.5.0",
 		"eslint": "9.18.0",
 		"fastify": "4.29.0",
 		"globals": "15.14.0",
