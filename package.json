@@ -87,7 +87,7 @@
 		"prettier": "3.4.2",
 		"random-access-memory": "6.2.1",
 		"react": "19.0.0",
-		"tsdoc-markdown": "1.1.0",
+		"tsdoc-markdown": "1.1.1",
 		"tshy": "3.0.2",
 		"typescript": "5.7.3",
 		"typescript-eslint": "8.21.0",
