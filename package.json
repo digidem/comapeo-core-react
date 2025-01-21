@@ -72,7 +72,7 @@
 		"@ianvs/prettier-plugin-sort-imports": "4.4.1",
 		"@mapeo/crypto": "1.0.0-alpha.10",
 		"@tanstack/eslint-plugin-query": "5.64.2",
-		"@tanstack/react-query": "5.64.1",
+		"@tanstack/react-query": "5.64.2",
 		"@testing-library/dom": "10.4.0",
 		"@testing-library/react": "16.1.0",
 		"@types/node": "22.10.7",
