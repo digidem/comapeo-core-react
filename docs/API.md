@@ -26,6 +26,7 @@
 - [useCreateDocument](#usecreatedocument)
 - [useUpdateDocument](#useupdatedocument)
 - [useDeleteDocument](#usedeletedocument)
+- [useInvalidateRead](#useinvalidateread)
 - [useAcceptInvite](#useacceptinvite)
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
@@ -586,6 +587,34 @@ Parameters:
 
 * `opts.docType`: Document type to delete.
 * `opts.projectId`: Public ID of project document belongs to.
+
+
+### useInvalidateRead
+
+Provides a function that invalidates a specified read when called.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useInvalidateRead` | `() => <Path extends keyof typeof PATH_TO_QUERY_KEY_FACTORY>(path: Path, params: Parameters<{ readonly '/': () => string; readonly '/maps': () => readonly ["@comapeo/core-react", "maps"]; readonly '/maps/styleJsonUrl': ({ refreshToken, }: { refreshToken?: string or undefined; }) => readonly [...]; ... 16 more ...; rea...` |
+
+Examples:
+
+```tsx
+function App() {
+  const invalidateRead = useInvalidateRead()
+
+  return (
+    <button
+      onClick={() => {
+        // Invalidate all reads!
+        invalidateRead('/', undefined)
+      }}
+    >
+      Invalidate everything!
+    </button>
+  )
+}
+```
 
 
 ### useAcceptInvite

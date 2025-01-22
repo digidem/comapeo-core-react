@@ -11,7 +11,7 @@ export function getStyleJsonUrlQueryKey({
 	refreshToken,
 }: {
 	refreshToken?: string
-}) {
+} = {}) {
 	return [ROOT_QUERY_KEY, 'maps', 'stylejson_url', { refreshToken }] as const
 }
 
