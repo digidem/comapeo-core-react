@@ -66,6 +66,7 @@
 	},
 	"devDependencies": {
 		"@comapeo/core": "2.3.1",
+		"@comapeo/ipc": "2.1.0",
 		"@comapeo/schema": "1.4.1",
 		"@eslint/compat": "1.2.5",
 		"@eslint/js": "9.19.0",
