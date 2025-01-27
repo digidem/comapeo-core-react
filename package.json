@@ -68,7 +68,7 @@
 		"@comapeo/core": "2.3.1",
 		"@comapeo/schema": "1.4.1",
 		"@eslint/compat": "1.2.5",
-		"@eslint/js": "9.18.0",
+		"@eslint/js": "9.19.0",
 		"@ianvs/prettier-plugin-sort-imports": "4.4.1",
 		"@mapeo/crypto": "1.0.0-alpha.10",
 		"@tanstack/eslint-plugin-query": "5.64.2",
@@ -78,7 +78,7 @@
 		"@types/node": "22.10.7",
 		"@types/react": "19.0.7",
 		"@types/react-dom": "19.0.3",
-		"eslint": "9.18.0",
+		"eslint": "9.19.0",
 		"fastify": "4.29.0",
 		"globals": "15.14.0",
 		"husky": "9.1.7",
@@ -90,7 +90,7 @@
 		"tsdoc-markdown": "1.1.1",
 		"tshy": "3.0.2",
 		"typescript": "5.7.3",
-		"typescript-eslint": "8.21.0",
+		"typescript-eslint": "8.22.0",
 		"vitest": "3.0.3"
 	}
 }
