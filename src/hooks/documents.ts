@@ -12,8 +12,8 @@ import {
 	documentByVersionIdQueryOptions,
 	documentsQueryOptions,
 	updateDocumentMutationOptions,
-	type WriteableDocumentType,
 } from '../lib/react-query/documents.js'
+import type { WriteableDocumentType } from '../lib/types.js' with { 'resolution-mode': 'import' }
 import { useSingleProject } from './projects.js'
 
 type ReadHookResult<D> = {
