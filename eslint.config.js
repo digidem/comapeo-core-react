@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url'
 import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
+// @ts-expect-error - no type defs
+import pluginReactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -23,6 +25,9 @@ export default tseslint.config(
 	{
 		name: 'typescript',
 		extends: tseslint.configs.recommended,
+		plugins: {
+			'react-hooks': pluginReactHooks,
+		},
 		rules: {
 			'@typescript-eslint/array-type': ['warn', { default: 'generic' }],
 			// Allow unused vars if prefixed with `_` (https://typescript-eslint.io/rules/no-unused-vars/)
@@ -38,6 +43,8 @@ export default tseslint.config(
 					ignoreRestSiblings: true,
 				},
 			],
+			'react-hooks/rules-of-hooks': 'error',
+			'react-hooks/exhaustive-deps': 'error',
 		},
 	},
 	...pluginQuery.configs['flat/recommended'],

@@ -80,6 +80,7 @@
 		"@types/react": "19.0.8",
 		"@types/react-dom": "19.0.3",
 		"eslint": "9.19.0",
+		"eslint-plugin-react-hooks": "^5.1.0",
 		"fastify": "4.29.0",
 		"globals": "15.14.0",
 		"husky": "9.1.7",
