@@ -39,15 +39,15 @@ import {
  *
  */
 export function useClientApi() {
-	const clientApi = useContext(ClientApiContext)
+	const contextValue = useContext(ClientApiContext)
 
-	if (!clientApi) {
+	if (!contextValue) {
 		throw new Error(
 			'No client API set. Make sure you set up the ClientApiContext provider properly',
 		)
 	}
 
-	return clientApi
+	return contextValue.clientApi
 }
 
 /**
