@@ -1,8 +1,4 @@
 import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import type {
-	MapeoDoc,
-	MapeoValue,
-} from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	queryOptions,
 	type QueryClient,
@@ -10,23 +6,15 @@ import {
 } from '@tanstack/react-query'
 
 import {
+	WriteableDocument,
+	WriteableDocumentType,
+	WriteableValue,
+} from '../types.js'
+import {
 	baseMutationOptions,
 	baseQueryOptions,
 	ROOT_QUERY_KEY,
 } from './shared.js'
-
-export type WriteableDocumentType = Extract<
-	MapeoDoc['schemaName'],
-	'field' | 'observation' | 'preset' | 'track' | 'remoteDetectionAlert'
->
-export type WriteableValue<D extends WriteableDocumentType> = Extract<
-	MapeoValue,
-	{ schemaName: D }
->
-export type WriteableDocument<D extends WriteableDocumentType> = Extract<
-	MapeoDoc,
-	{ schemaName: D }
->
 
 export function getDocumentsQueryKey<D extends WriteableDocumentType>({
 	projectId,

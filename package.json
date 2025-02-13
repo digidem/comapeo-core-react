@@ -55,7 +55,7 @@
 		"lint": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output lint:*",
 		"types": "tsc",
 		"test": "vitest run",
-		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/* --dest=docs/API.md --noemoji --types"
+		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/*,src/lib/types.ts --dest=docs/API.md --noemoji --types"
 	},
 	"peerDependencies": {
 		"@comapeo/core": "*",
