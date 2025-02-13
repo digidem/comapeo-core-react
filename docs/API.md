@@ -678,3 +678,28 @@ function ExampleWithRefreshToken() {
 | `ClientApiContext` | `Context<MapeoClientApi or null>` |
 
 
+
+## Types
+
+- [WriteableDocumentType](#writeabledocumenttype)
+- [WriteableValue](#writeablevalue)
+- [WriteableDocument](#writeabledocument)
+
+### WriteableDocumentType
+
+| Type | Type |
+| ---------- | ---------- |
+| `WriteableDocumentType` | `Extract< MapeoDoc['schemaName'], 'field' or 'observation' or 'preset' or 'track' or 'remoteDetectionAlert' >` |
+
+### WriteableValue
+
+| Type | Type |
+| ---------- | ---------- |
+| `WriteableValue` | `Extract< MapeoValue, { schemaName: D } >` |
+
+### WriteableDocument
+
+| Type | Type |
+| ---------- | ---------- |
+| `WriteableDocument` | `Extract< MapeoDoc, { schemaName: D } >` |
+
