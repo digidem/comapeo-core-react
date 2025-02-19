@@ -413,3 +413,35 @@ export function createBlobMutationOptions({
 		}
 	>
 }
+
+export function startSyncMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return opts ? projectApi.$sync.start(opts) : projectApi.$sync.start()
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{ autostopDataSyncAfter: number | null } | undefined
+	>
+}
+
+export function stopSyncMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.stop()
+		},
+	} satisfies UseMutationOptions<void, Error, void>
+}
