@@ -47,9 +47,8 @@
 		}
 	},
 	"scripts": {
-		"prepare:husky": "husky",
-		"prepare:tshy": "tshy",
-		"prepare": "npm-run-all --parallel prepare:*",
+		"preprepare": "husky",
+		"prepare": "tshy",
 		"lint:eslint": "eslint --cache .",
 		"lint:format": "prettier --cache --check .",
 		"lint": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output lint:*",
