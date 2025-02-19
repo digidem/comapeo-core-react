@@ -3,11 +3,13 @@ import type {
 	SvgOpts,
 } from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
 import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
+import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 
 import {
 	addServerPeerMutationOptions,
@@ -23,8 +25,11 @@ import {
 	projectMembersQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	startSyncMutationOptions,
+	stopSyncMutationOptions,
 	updateProjectSettingsMutationOptions,
 } from '../lib/react-query/projects.js'
+import { SyncStore, type SyncState } from '../lib/sync.js'
 import { useClientApi } from './client.js'
 
 /**
@@ -419,6 +424,89 @@ export function useCreateBlob({ projectId }: { projectId: string }) {
 
 	const { mutate, reset, status } = useMutation(
 		createBlobMutationOptions({ projectApi }),
+	)
+
+	return { mutate, reset, status }
+}
+
+const PROJECT_SYNC_STORE_MAP = new WeakMap<MapeoProjectApi, SyncStore>()
+
+function useSyncStore({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	let syncStore = PROJECT_SYNC_STORE_MAP.get(projectApi)
+
+	if (!syncStore) {
+		syncStore = new SyncStore(projectApi)
+		PROJECT_SYNC_STORE_MAP.set(projectApi, syncStore)
+	}
+
+	return syncStore
+}
+
+/**
+ * Hook to subscribe to the current sync state.
+ *
+ * Creates a global singleton for each project, to minimize traffic over IPC -
+ * this hook can safely be used in more than one place without attaching
+ * additional listeners across the IPC channel.
+ *
+ * @example
+ * ```ts
+ * function Example() {
+ *     const syncState = useSyncState({ projectId });
+ *
+ *     if (!syncState) {
+ *         // Sync information hasn't been loaded yet
+ *     }
+ *
+ *     // Actual info about sync state is available...
+ * }
+ * ```
+ *
+ * @param opts.projectId Project public ID
+ */
+export function useSyncState({
+	projectId,
+}: {
+	projectId: string
+}): SyncState | null {
+	const syncStore = useSyncStore({ projectId })
+
+	const { subscribe, getStateSnapshot } = syncStore
+
+	return useSyncExternalStore(subscribe, getStateSnapshot)
+}
+
+/**
+ * Provides the progress of data sync for sync-enabled connected peers
+ *
+ * @returns `null` if no sync state events have been received. Otherwise returns a value between 0 and 1 (inclusive)
+ */
+export function useDataSyncProgress({
+	projectId,
+}: {
+	projectId: string
+}): number | null {
+	const { subscribe, getDataProgressSnapshot } = useSyncStore({ projectId })
+	return useSyncExternalStore(subscribe, getDataProgressSnapshot)
+}
+
+export function useStartSync({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		startSyncMutationOptions({ projectApi }),
+	)
+
+	return { mutate, reset, status }
+}
+
+export function useStopSync({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { mutate, reset, status } = useMutation(
+		stopSyncMutationOptions({ projectApi }),
 	)
 
 	return { mutate, reset, status }
