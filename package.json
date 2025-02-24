@@ -84,7 +84,7 @@
 		"husky": "9.1.7",
 		"lint-staged": "15.4.3",
 		"npm-run-all2": "7.0.2",
-		"prettier": "3.5.1",
+		"prettier": "3.5.2",
 		"random-access-memory": "6.2.1",
 		"react": "19.0.0",
 		"tsdoc-markdown": "1.1.1",
