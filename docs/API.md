@@ -38,7 +38,7 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: { children: ReactNode; clientApi: MapeoClientApi; }) => FunctionComponentElement<ProviderProps<MapeoClientApi or null>>` |
+| `ClientApiProvider` | `({ children, clientApi, }: { children: ReactNode; clientApi: MapeoClientApi; }) => Element` |
 
 Parameters:
 
@@ -427,7 +427,7 @@ Create a blob for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<{ driveId: string; name: string; type: "audio" or "video" or "photo"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status: "pending" or ...` |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status: "pending" or ...` |
 
 Parameters:
 
