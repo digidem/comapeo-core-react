@@ -47,14 +47,14 @@
 		}
 	},
 	"scripts": {
-		"preprepare": "husky",
-		"prepare": "tshy",
+		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/*,src/lib/types.ts --dest=docs/API.md --noemoji --types",
 		"lint:eslint": "eslint --cache .",
 		"lint:format": "prettier --cache --check .",
 		"lint": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output lint:*",
-		"types": "tsc",
+		"prepack": "tshy",
+		"prepare": "husky",
 		"test": "vitest run",
-		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/*,src/lib/types.ts --dest=docs/API.md --noemoji --types"
+		"types": "tsc"
 	},
 	"peerDependencies": {
 		"@comapeo/core": "*",
