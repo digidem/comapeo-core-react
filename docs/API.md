@@ -20,6 +20,10 @@
 - [useImportProjectConfig](#useimportprojectconfig)
 - [useUpdateProjectSettings](#useupdateprojectsettings)
 - [useCreateBlob](#usecreateblob)
+- [useSyncState](#usesyncstate)
+- [useDataSyncProgress](#usedatasyncprogress)
+- [useStartSync](#usestartsync)
+- [useStopSync](#usestopsync)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -433,6 +437,58 @@ Parameters:
 
 * `opts.projectId`: Public project ID of project to apply to changes to.
 
+
+### useSyncState
+
+Hook to subscribe to the current sync state.
+
+Creates a global singleton for each project, to minimize traffic over IPC -
+this hook can safely be used in more than one place without attaching
+additional listeners across the IPC channel.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSyncState` | `({ projectId, }: { projectId: string; }) => State or null` |
+
+Parameters:
+
+* `opts.projectId`: Project public ID
+
+
+Examples:
+
+```ts
+function Example() {
+    const syncState = useSyncState({ projectId });
+
+    if (!syncState) {
+        // Sync information hasn't been loaded yet
+    }
+
+    // Actual info about sync state is available...
+}
+```
+
+
+### useDataSyncProgress
+
+Provides the progress of data sync for sync-enabled connected peers
+
+| Function | Type |
+| ---------- | ---------- |
+| `useDataSyncProgress` | `({ projectId, }: { projectId: string; }) => number or null` |
+
+### useStartSync
+
+| Function | Type |
+| ---------- | ---------- |
+| `useStartSync` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+
+### useStopSync
+
+| Function | Type |
+| ---------- | ---------- |
+| `useStopSync` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, void, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
 
 ### useSingleDocByDocId
 
