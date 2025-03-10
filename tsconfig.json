@@ -3,6 +3,7 @@
 		"allowJs": true,
 		"checkJs": true,
 		"declaration": false,
+		"erasableSyntaxOnly": true,
 		"esModuleInterop": true,
 		"isolatedModules": true,
 		"jsx": "react-jsx",
