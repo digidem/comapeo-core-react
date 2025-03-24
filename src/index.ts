@@ -26,6 +26,7 @@ export {
 	useAttachmentUrl,
 	useCreateBlob,
 	useCreateProject,
+	useDataSyncProgress,
 	useDocumentCreatedBy,
 	useIconUrl,
 	useImportProjectConfig,
@@ -35,8 +36,12 @@ export {
 	useProjectSettings,
 	useSingleMember,
 	useSingleProject,
+	useStartSync,
+	useStopSync,
+	useSyncState,
 	useUpdateProjectSettings,
 } from './hooks/projects.js'
+export { type SyncState } from './lib/sync.js'
 export {
 	type WriteableDocument,
 	type WriteableDocumentType,
