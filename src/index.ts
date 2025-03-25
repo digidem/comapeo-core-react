@@ -33,6 +33,7 @@ export {
 	useLeaveProject,
 	useManyMembers,
 	useManyProjects,
+	useOwnRoleInProject,
 	useProjectSettings,
 	useSingleMember,
 	useSingleProject,
