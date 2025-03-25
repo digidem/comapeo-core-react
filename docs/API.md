@@ -14,6 +14,7 @@
 - [useIconUrl](#useiconurl)
 - [useAttachmentUrl](#useattachmenturl)
 - [useDocumentCreatedBy](#usedocumentcreatedby)
+- [useOwnRoleInProject](#useownroleinproject)
 - [useAddServerPeer](#useaddserverpeer)
 - [useCreateProject](#usecreateproject)
 - [useLeaveProject](#useleaveproject)
@@ -372,6 +373,31 @@ function BasicExample() {
   const { data } = useDocumentCreatedBy({
     projectId: '...',
     originalVersionId: '...',
+  })
+}
+```
+
+
+### useOwnRoleInProject
+
+Get the role for the current device in a specified project.
+This is a more convenient alternative to using the `useOwnDeviceInfo` and `useManyMembers` hooks.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useOwnRoleInProject` | `({ projectId }: { projectId: string; }) => { data: Role<"a12a6702b93bd7ff" or "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9" or "8ced989b1904606b" or "08e4251e36f6e7ed">; error: Error or null; isRefetching: boolean; }` |
+
+Parameters:
+
+* `opts.projectId`: Project public ID
+
+
+Examples:
+
+```tsx
+function BasicExample() {
+  const { data } = useOwnRoleInProject({
+    projectId: '...',
   })
 }
 ```

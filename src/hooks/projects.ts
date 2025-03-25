@@ -23,6 +23,7 @@ import {
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
 	projectMembersQueryOptions,
+	projectOwnRoleQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
 	startSyncMutationOptions,
@@ -338,6 +339,31 @@ export function useDocumentCreatedBy({
 
 	const { data, error, isRefetching } = useSuspenseQuery(
 		documentCreatedByQueryOptions({ projectApi, projectId, originalVersionId }),
+	)
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Get the role for the current device in a specified project.
+ * This is a more convenient alternative to using the `useOwnDeviceInfo` and `useManyMembers` hooks.
+ *
+ * @param opts.projectId Project public ID
+ *
+ * @example
+ * ```tsx
+ * function BasicExample() {
+ *   const { data } = useOwnRoleInProject({
+ *     projectId: '...',
+ *   })
+ * }
+ * ```
+ */
+export function useOwnRoleInProject({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { data, error, isRefetching } = useSuspenseQuery(
+		projectOwnRoleQueryOptions({ projectApi, projectId }),
 	)
 
 	return { data, error, isRefetching }
