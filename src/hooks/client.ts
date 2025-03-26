@@ -97,11 +97,13 @@ export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		setOwnDeviceInfoMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -111,9 +113,11 @@ export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, status, reset } = useMutation(
 		setIsArchiveDeviceMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }

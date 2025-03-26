@@ -213,7 +213,7 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		createDocumentMutationOptions({
 			docType,
 			projectApi,
@@ -222,7 +222,9 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 		}),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -241,7 +243,7 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		updateDocumentMutationOptions({
 			docType,
 			projectApi,
@@ -250,7 +252,9 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
 		}),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -269,7 +273,7 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		deleteDocumentMutationOptions({
 			docType,
 			projectApi,
@@ -278,5 +282,7 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 		}),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }

@@ -120,7 +120,7 @@ Update the device info for the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetOwnDeviceInfo` | `() => { mutate: UseMutateFunction<void, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSetIsArchiveDevice
 
@@ -128,7 +128,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetIsArchiveDevice` | `() => { mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<...>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
 
 ### useProjectSettings
 
@@ -407,7 +407,7 @@ function BasicExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useCreateProject
 
@@ -415,7 +415,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateProject` | `() => { mutate: UseMutateFunction<string, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useLeaveProject
 
@@ -423,7 +423,7 @@ Leave an existing project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useLeaveProject` | `() => { mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useLeaveProject` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
 
 ### useImportProjectConfig
 
@@ -431,7 +431,7 @@ Update the configuration of a project using an external file.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<Error[], Error, { configPath: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<Error[], Error, { configPath: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -444,7 +444,7 @@ Update the settings of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { name: string; buildDate: string; importDate: string; fileVersion: string; } or undefined; defaultPresets?: { ...; } or undefined; }, unknown>; reset: () => void; status...` |
+| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -457,7 +457,7 @@ Create a blob for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status: "pending" or ...` |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status...` |
 
 Parameters:
 
@@ -508,13 +508,13 @@ Provides the progress of data sync for sync-enabled connected peers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStartSync` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useStartSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useStopSync
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStopSync` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, void, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<...>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
 
 ### useSingleDocByDocId
 
@@ -634,7 +634,7 @@ Create a document for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { value: Omit<WriteableValue<D>, "schemaName">; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -648,7 +648,7 @@ Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { versionId: string; value: Omit<...>; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -662,7 +662,7 @@ Delete a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { docId: string; }, unknown>; reset: () => void; status: "pending" or ... 2 more ... or "idle"; }` |
+| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -676,7 +676,7 @@ Accept an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAcceptInvite` | `() => { mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useAcceptInvite` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<string, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
 
 ### useRejectInvite
 
@@ -684,7 +684,7 @@ Reject an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRejectInvite` | `() => { mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useRejectInvite` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
 
 ### useSendInvite
 
@@ -692,7 +692,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; reset: () => void; status: "pendin...` |
+| `useSendInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; reset: () => void; s...` |
 
 Parameters:
 
@@ -705,7 +705,7 @@ Request a cancellation of an invite sent to another device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { mutate: UseMutateFunction<void, Error, { deviceId: string; }, unknown>; reset: () => void; status: "pending" or "error" or "success" or "idle"; }` |
+| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { deviceId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 

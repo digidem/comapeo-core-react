@@ -373,11 +373,13 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -387,11 +389,13 @@ export function useCreateProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		createProjectMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -401,11 +405,13 @@ export function useLeaveProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		leaveProjectMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -417,11 +423,13 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		importProjectConfigMutationOptions({ queryClient, projectApi, projectId }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -433,11 +441,13 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		updateProjectSettingsMutationOptions({ projectApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -448,11 +458,13 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 export function useCreateBlob({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		createBlobMutationOptions({ projectApi }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 const PROJECT_SYNC_STORE_MAP = new WeakMap<MapeoProjectApi, SyncStore>()
@@ -521,19 +533,23 @@ export function useDataSyncProgress({
 export function useStartSync({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { mutate, reset, status, error } = useMutation(
 		startSyncMutationOptions({ projectApi }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 export function useStopSync({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, reset, status } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		stopSyncMutationOptions({ projectApi }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
