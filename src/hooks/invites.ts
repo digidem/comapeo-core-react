@@ -16,11 +16,13 @@ export function useAcceptInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		acceptInviteMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -30,11 +32,13 @@ export function useRejectInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		rejectInviteMutationOptions({ clientApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -46,11 +50,13 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		sendInviteMutationOptions({ projectApi, projectId, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
 
 /**
@@ -62,9 +68,11 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { mutate, status, reset } = useMutation(
+	const { error, mutate, reset, status } = useMutation(
 		requestCancelInviteMutationOptions({ projectApi, queryClient }),
 	)
 
-	return { mutate, reset, status }
+	return status === 'error'
+		? { error, mutate, reset, status }
+		: { error: null, mutate, reset, status }
 }
