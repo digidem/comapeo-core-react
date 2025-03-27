@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
+import * as pluginReactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -19,10 +20,16 @@ const gitExcludePath = path.resolve(
 )
 
 export default tseslint.config(
+	includeIgnoreFile(gitignorePath),
+	includeIgnoreFile(gitExcludePath),
 	js.configs.recommended,
 	{
-		name: 'typescript',
-		extends: tseslint.configs.recommended,
+		files: ['**/*.{js,ts,jsx,tsx}'],
+		extends: [
+			tseslint.configs.recommended,
+			pluginQuery.configs['flat/recommended'],
+			pluginReactHooks.configs['recommended-latest'],
+		],
 		rules: {
 			'@typescript-eslint/array-type': ['warn', { default: 'generic' }],
 			// Allow unused vars if prefixed with `_` (https://typescript-eslint.io/rules/no-unused-vars/)
@@ -38,14 +45,13 @@ export default tseslint.config(
 					ignoreRestSiblings: true,
 				},
 			],
+			'react-hooks/exhaustive-deps': 'error',
+			'react-hooks/rules-of-hooks': 'error',
 		},
 	},
-	...pluginQuery.configs['flat/recommended'],
-	{ files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
-	{ languageOptions: { globals: { ...globals.browser, ...globals.node } } },
 	{
 		name: 'node',
-		files: ['**/*.config.js'],
+		files: ['**/*.config.js', 'test/**/*'],
 		languageOptions: {
 			globals: {
 				...globals.node,
@@ -54,6 +60,4 @@ export default tseslint.config(
 			},
 		},
 	},
-	includeIgnoreFile(gitignorePath),
-	includeIgnoreFile(gitExcludePath),
 )
