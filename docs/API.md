@@ -31,6 +31,8 @@
 - [useCreateDocument](#usecreatedocument)
 - [useUpdateDocument](#useupdatedocument)
 - [useDeleteDocument](#usedeletedocument)
+- [useManyInvites](#usemanyinvites)
+- [useSingleInvite](#usesingleinvite)
 - [useAcceptInvite](#useacceptinvite)
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
@@ -668,6 +670,45 @@ Parameters:
 
 * `opts.docType`: Document type to delete.
 * `opts.projectId`: Public ID of project document belongs to.
+
+
+### useManyInvites
+
+Get all invites that the device has received.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyInvites` | `() => { data: Invite[]; error: Error or null; isRefetching: boolean; }` |
+
+Examples:
+
+```ts
+function Example() {
+  const { data } = useManyInvites()
+}
+```
+
+
+### useSingleInvite
+
+Get a single invite based on its ID.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSingleInvite` | `({ inviteId }: { inviteId: string; }) => { data: Invite; error: Error or null; isRefetching: boolean; }` |
+
+Parameters:
+
+* `opts.inviteId`: ID of invite
+
+
+Examples:
+
+```ts
+function Example() {
+  const { data } = useSingleInvite({ inviteId: '...' })
+}
+```
 
 
 ### useAcceptInvite

@@ -1,13 +1,60 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 
 import {
 	acceptInviteMutationOptions,
+	getInviteByIdQueryOptions,
+	getInvitesQueryOptions,
 	rejectInviteMutationOptions,
 	requestCancelInviteMutationOptions,
 	sendInviteMutationOptions,
 } from '../lib/react-query/invites.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
+
+/**
+ * Get all invites that the device has received.
+ *
+ * @example
+ * ```ts
+ * function Example() {
+ *   const { data } = useManyInvites()
+ * }
+ * ```
+ */
+export function useManyInvites() {
+	const clientApi = useClientApi()
+	const { data, error, isRefetching } = useSuspenseQuery(
+		getInvitesQueryOptions({ clientApi }),
+	)
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Get a single invite based on its ID.
+ *
+ * @param opts.inviteId ID of invite
+ *
+ * @example
+ * ```ts
+ * function Example() {
+ *   const { data } = useSingleInvite({ inviteId: '...' })
+ * }
+ * ```
+ */
+export function useSingleInvite({ inviteId }: { inviteId: string }) {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery(
+		getInviteByIdQueryOptions({ clientApi, inviteId }),
+	)
+
+	return { data, error, isRefetching }
+}
 
 /**
  * Accept an invite that has been received.

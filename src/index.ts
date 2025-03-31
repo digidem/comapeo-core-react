@@ -16,9 +16,11 @@ export {
 } from './hooks/documents.js'
 export {
 	useAcceptInvite,
+	useManyInvites,
 	useRejectInvite,
 	useRequestCancelInvite,
 	useSendInvite,
+	useSingleInvite,
 } from './hooks/invites.js'
 export { useMapStyleUrl } from './hooks/maps.js'
 export {
