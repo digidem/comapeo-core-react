@@ -31,6 +31,7 @@
 - [useCreateDocument](#usecreatedocument)
 - [useUpdateDocument](#useupdatedocument)
 - [useDeleteDocument](#usedeletedocument)
+- [useInvitesListeners](#useinviteslisteners)
 - [useManyInvites](#usemanyinvites)
 - [useSingleInvite](#usesingleinvite)
 - [useAcceptInvite](#useacceptinvite)
@@ -88,7 +89,7 @@ Retrieve info about the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
+| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -122,7 +123,7 @@ Update the device info for the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSetIsArchiveDevice
 
@@ -526,7 +527,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; deleted: b...` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: boolean;...` |
 
 Parameters:
 
@@ -559,7 +560,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; de...` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: ...` |
 
 Parameters:
 
@@ -592,7 +593,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGN...` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ...` |
 
 Parameters:
 
@@ -670,6 +671,28 @@ Parameters:
 
 * `opts.docType`: Document type to delete.
 * `opts.projectId`: Public ID of project document belongs to.
+
+
+### useInvitesListeners
+
+Set up listeners for received and updated invites.
+It is necessary to use this if you want the invites-related read hooks to update
+based on invites that are received or changed in the background.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useInvitesListeners` | `() => void` |
+
+Examples:
+
+```tsx
+function App() {
+  // Use this somewhere near the root of the application
+  useInvitesListener()
+
+  return <RestOfApp />
+}
+```
 
 
 ### useManyInvites
