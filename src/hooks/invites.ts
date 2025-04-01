@@ -16,13 +16,13 @@ export function useAcceptInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, reset, status } = useMutation(
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		acceptInviteMutationOptions({ clientApi, queryClient }),
 	)
 
 	return status === 'error'
-		? { error, mutate, reset, status }
-		: { error: null, mutate, reset, status }
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
 }
 
 /**
@@ -32,13 +32,13 @@ export function useRejectInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, reset, status } = useMutation(
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		rejectInviteMutationOptions({ clientApi, queryClient }),
 	)
 
 	return status === 'error'
-		? { error, mutate, reset, status }
-		: { error: null, mutate, reset, status }
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
 }
 
 /**
@@ -50,13 +50,13 @@ export function useSendInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, reset, status } = useMutation(
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		sendInviteMutationOptions({ projectApi, projectId, queryClient }),
 	)
 
 	return status === 'error'
-		? { error, mutate, reset, status }
-		: { error: null, mutate, reset, status }
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
 }
 
 /**
@@ -68,11 +68,11 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, reset, status } = useMutation(
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		requestCancelInviteMutationOptions({ projectApi, queryClient }),
 	)
 
 	return status === 'error'
-		? { error, mutate, reset, status }
-		: { error: null, mutate, reset, status }
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
 }
