@@ -31,7 +31,7 @@
 - [useCreateDocument](#usecreatedocument)
 - [useUpdateDocument](#useupdatedocument)
 - [useDeleteDocument](#usedeletedocument)
-- [useInvitesListeners](#useinviteslisteners)
+- [useSetUpInvitesListeners](#usesetupinviteslisteners)
 - [useManyInvites](#usemanyinvites)
 - [useSingleInvite](#usesingleinvite)
 - [useAcceptInvite](#useacceptinvite)
@@ -673,7 +673,7 @@ Parameters:
 * `opts.projectId`: Public ID of project document belongs to.
 
 
-### useInvitesListeners
+### useSetUpInvitesListeners
 
 Set up listeners for received and updated invites.
 It is necessary to use this if you want the invites-related read hooks to update
@@ -681,14 +681,14 @@ based on invites that are received or changed in the background.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useInvitesListeners` | `() => void` |
+| `useSetUpInvitesListeners` | `() => void` |
 
 Examples:
 
 ```tsx
 function App() {
   // Use this somewhere near the root of the application
-  useInvitesListener()
+  useSetUpInvitesListeners()
 
   return <RestOfApp />
 }

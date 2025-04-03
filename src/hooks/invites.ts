@@ -26,13 +26,13 @@ import { useSingleProject } from './projects.js'
  * ```tsx
  * function App() {
  *   // Use this somewhere near the root of the application
- *   useInvitesListener()
+ *   useSetUpInvitesListeners()
  *
  *   return <RestOfApp />
  * }
  * ```
  */
-export function useInvitesListeners() {
+export function useSetUpInvitesListeners() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 

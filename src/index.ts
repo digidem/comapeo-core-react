@@ -16,7 +16,7 @@ export {
 } from './hooks/documents.js'
 export {
 	useAcceptInvite,
-	useInvitesListeners,
+	useSetUpInvitesListeners,
 	useManyInvites,
 	useRejectInvite,
 	useRequestCancelInvite,
