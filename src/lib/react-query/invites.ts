@@ -20,20 +20,36 @@ export function getInvitesQueryKey() {
 	return [ROOT_QUERY_KEY, 'invites'] as const
 }
 
-export function getPendingInvitesQueryKey() {
-	return [ROOT_QUERY_KEY, 'invites', { status: 'pending' }] as const
+export function getInvitesByIdQueryKey({ inviteId }: { inviteId: string }) {
+	return [ROOT_QUERY_KEY, 'invites', { inviteId }] as const
 }
 
-export function pendingInvitesQueryOptions({
+export function getInvitesQueryOptions({
 	clientApi,
 }: {
 	clientApi: MapeoClientApi
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getPendingInvitesQueryKey(),
+		queryKey: getInvitesQueryKey(),
 		queryFn: async () => {
-			return clientApi.invite.getPending()
+			return clientApi.invite.getMany()
+		},
+	})
+}
+
+export function getInviteByIdQueryOptions({
+	clientApi,
+	inviteId,
+}: {
+	clientApi: MapeoClientApi
+	inviteId: string
+}) {
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: getInvitesByIdQueryKey({ inviteId }),
+		queryFn: async () => {
+			return clientApi.invite.getById(inviteId)
 		},
 	})
 }
