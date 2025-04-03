@@ -31,6 +31,9 @@
 - [useCreateDocument](#usecreatedocument)
 - [useUpdateDocument](#useupdatedocument)
 - [useDeleteDocument](#usedeletedocument)
+- [useSetUpInvitesListeners](#usesetupinviteslisteners)
+- [useManyInvites](#usemanyinvites)
+- [useSingleInvite](#usesingleinvite)
 - [useAcceptInvite](#useacceptinvite)
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
@@ -86,7 +89,7 @@ Retrieve info about the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
+| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -120,7 +123,7 @@ Update the device info for the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSetIsArchiveDevice
 
@@ -128,7 +131,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<...>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
+| `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useProjectSettings
 
@@ -407,7 +410,7 @@ function BasicExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useCreateProject
 
@@ -415,7 +418,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useLeaveProject
 
@@ -423,7 +426,7 @@ Leave an existing project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useLeaveProject` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
+| `useLeaveProject` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useImportProjectConfig
 
@@ -431,7 +434,7 @@ Update the configuration of a project using an external file.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<Error[], Error, { configPath: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<Error[], Error, { configPath: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<Error[], Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -444,7 +447,7 @@ Update the settings of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } ...` |
 
 Parameters:
 
@@ -457,7 +460,7 @@ Create a blob for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; reset: () => void; status...` |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; mutateAsync: UseMutateAsy...` |
 
 Parameters:
 
@@ -508,13 +511,13 @@ Provides the progress of data sync for sync-enabled connected peers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStartSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useStartSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useStopSync
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<...>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
+| `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSingleDocByDocId
 
@@ -524,7 +527,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; deleted: b...` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: boolean;...` |
 
 Parameters:
 
@@ -557,7 +560,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGNIZED"; ... 7 more ...; de...` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: ...` |
 
 Parameters:
 
@@ -590,7 +593,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "device_type_unspecified" or ... 4 more ... or "UNRECOGN...` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ...` |
 
 Parameters:
 
@@ -634,7 +637,7 @@ Create a document for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -648,7 +651,7 @@ Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -662,12 +665,73 @@ Delete a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
 * `opts.docType`: Document type to delete.
 * `opts.projectId`: Public ID of project document belongs to.
+
+
+### useSetUpInvitesListeners
+
+Set up listeners for received and updated invites.
+It is necessary to use this if you want the invites-related read hooks to update
+based on invites that are received or changed in the background.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSetUpInvitesListeners` | `() => void` |
+
+Examples:
+
+```tsx
+function App() {
+  // Use this somewhere near the root of the application
+  useSetUpInvitesListeners()
+
+  return <RestOfApp />
+}
+```
+
+
+### useManyInvites
+
+Get all invites that the device has received.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyInvites` | `() => { data: Invite[]; error: Error or null; isRefetching: boolean; }` |
+
+Examples:
+
+```ts
+function Example() {
+  const { data } = useManyInvites()
+}
+```
+
+
+### useSingleInvite
+
+Get a single invite based on its ID.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSingleInvite` | `({ inviteId }: { inviteId: string; }) => { data: Invite; error: Error or null; isRefetching: boolean; }` |
+
+Parameters:
+
+* `opts.inviteId`: ID of invite
+
+
+Examples:
+
+```ts
+function Example() {
+  const { data } = useSingleInvite({ inviteId: '...' })
+}
+```
 
 
 ### useAcceptInvite
@@ -676,7 +740,7 @@ Accept an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAcceptInvite` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<string, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
+| `useAcceptInvite` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<string, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useRejectInvite
 
@@ -684,7 +748,7 @@ Reject an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRejectInvite` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { error: null; mutate: UseMutateFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "pending" or ... 1 more ... or "idle"; }` |
+| `useRejectInvite` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSendInvite
 
@@ -692,7 +756,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; reset: () => void; s...` |
+| `useSendInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; mutateAsync: UseMuta...` |
 
 Parameters:
 
@@ -705,7 +769,7 @@ Request a cancellation of an invite sent to another device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { deviceId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { deviceId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
