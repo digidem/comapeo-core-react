@@ -16,20 +16,22 @@ export {
 } from './hooks/documents.js'
 export {
 	useAcceptInvite,
-	useSetUpInvitesListeners,
 	useManyInvites,
 	useRejectInvite,
 	useRequestCancelInvite,
 	useSendInvite,
+	useSetUpInvitesListeners,
 	useSingleInvite,
 } from './hooks/invites.js'
 export { useMapStyleUrl } from './hooks/maps.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
+	useConnectSyncServers,
 	useCreateBlob,
 	useCreateProject,
 	useDataSyncProgress,
+	useDisconnectSyncServers,
 	useDocumentCreatedBy,
 	useIconUrl,
 	useImportProjectConfig,
@@ -39,6 +41,7 @@ export {
 	useOwnRoleInProject,
 	useProjectSettings,
 	useRemoveServerPeer,
+	useSetAutostopDataSyncTimeout,
 	useSingleMember,
 	useSingleProject,
 	useStartSync,

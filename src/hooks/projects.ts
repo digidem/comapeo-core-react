@@ -14,8 +14,10 @@ import { useSyncExternalStore } from 'react'
 import {
 	addServerPeerMutationOptions,
 	attachmentUrlQueryOptions,
+	connectSyncServersMutationOptions,
 	createBlobMutationOptions,
 	createProjectMutationOptions,
+	disconnectSyncServersMutationOptions,
 	documentCreatedByQueryOptions,
 	iconUrlQueryOptions,
 	importProjectConfigMutationOptions,
@@ -27,6 +29,7 @@ import {
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
 	removeServerPeerMutationOptions,
+	setAutostopDataSyncTimeoutMutationOptions,
 	startSyncMutationOptions,
 	stopSyncMutationOptions,
 	updateProjectSettingsMutationOptions,
@@ -561,6 +564,46 @@ export function useStopSync({ projectId }: { projectId: string }) {
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		stopSyncMutationOptions({ projectApi }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+export function useConnectSyncServers({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		connectSyncServersMutationOptions({ projectApi }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+export function useDisconnectSyncServers({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		disconnectSyncServersMutationOptions({ projectApi }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+export function useSetAutostopDataSyncTimeout({
+	projectId,
+}: {
+	projectId: string
+}) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		setAutostopDataSyncTimeoutMutationOptions({ projectApi }),
 	)
 
 	return status === 'error'

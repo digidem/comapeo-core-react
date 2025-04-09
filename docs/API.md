@@ -26,6 +26,9 @@
 - [useDataSyncProgress](#usedatasyncprogress)
 - [useStartSync](#usestartsync)
 - [useStopSync](#usestopsync)
+- [useConnectSyncServers](#useconnectsyncservers)
+- [useDisconnectSyncServers](#usedisconnectsyncservers)
+- [useSetAutostopDataSyncTimeout](#usesetautostopdatasynctimeout)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -525,6 +528,24 @@ Provides the progress of data sync for sync-enabled connected peers
 | Function | Type |
 | ---------- | ---------- |
 | `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useConnectSyncServers
+
+| Function | Type |
+| ---------- | ---------- |
+| `useConnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useDisconnectSyncServers
+
+| Function | Type |
+| ---------- | ---------- |
+| `useDisconnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useSetAutostopDataSyncTimeout
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { after: number or null; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSingleDocByDocId
 
