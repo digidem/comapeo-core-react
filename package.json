@@ -64,9 +64,9 @@
 		"react": "^18 || ^19"
 	},
 	"devDependencies": {
-		"@comapeo/core": "3.0.0",
+		"@comapeo/core": "3.1.0",
 		"@comapeo/ipc": "3.0.0",
-		"@comapeo/schema": "1.4.1",
+		"@comapeo/schema": "1.5.0",
 		"@eslint/compat": "1.2.7",
 		"@eslint/js": "9.23.0",
 		"@ianvs/prettier-plugin-sort-imports": "4.4.1",
