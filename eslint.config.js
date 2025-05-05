@@ -3,7 +3,9 @@ import { fileURLToPath } from 'node:url'
 import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
+import pluginVitest from '@vitest/eslint-plugin'
 import * as pluginReactHooks from 'eslint-plugin-react-hooks'
+import pluginTestingLibrary from 'eslint-plugin-testing-library'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -47,6 +49,19 @@ export default tseslint.config(
 			],
 			'react-hooks/exhaustive-deps': 'error',
 			'react-hooks/rules-of-hooks': 'error',
+		},
+	},
+	{
+		name: 'test',
+		files: ['test/**/*.{js,ts,jsx,tsx}'],
+		extends: [
+			pluginVitest.configs.recommended,
+			pluginTestingLibrary.configs['flat/dom'],
+			pluginTestingLibrary.configs['flat/react'],
+		],
+		rules: {
+			// Not as useful when using renderHook() in tests
+			'testing-library/render-result-naming-convention': 'off',
 		},
 	},
 	{
