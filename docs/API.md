@@ -16,6 +16,7 @@
 - [useDocumentCreatedBy](#usedocumentcreatedby)
 - [useOwnRoleInProject](#useownroleinproject)
 - [useAddServerPeer](#useaddserverpeer)
+- [useRemoveServerPeer](#useremoveserverpeer)
 - [useCreateProject](#usecreateproject)
 - [useLeaveProject](#useleaveproject)
 - [useImportProjectConfig](#useimportprojectconfig)
@@ -388,7 +389,7 @@ This is a more convenient alternative to using the `useOwnDeviceInfo` and `useMa
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnRoleInProject` | `({ projectId }: { projectId: string; }) => { data: Role<"a12a6702b93bd7ff" or "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9" or "8ced989b1904606b" or "08e4251e36f6e7ed">; error: Error or null; isRefetching: boolean; }` |
+| `useOwnRoleInProject` | `({ projectId }: { projectId: string; }) => { data: Role<"a12a6702b93bd7ff" or "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9" or "8ced989b1904606b" or "a24eaca65ab5d5d0" or "08e4251e36f6e7ed">; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -411,6 +412,12 @@ function BasicExample() {
 | Function | Type |
 | ---------- | ---------- |
 | `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useRemoveServerPeer
+
+| Function | Type |
+| ---------- | ---------- |
+| `useRemoveServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useCreateProject
 
