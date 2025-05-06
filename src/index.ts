@@ -38,6 +38,7 @@ export {
 	useManyProjects,
 	useOwnRoleInProject,
 	useProjectSettings,
+	useRemoveServerPeer,
 	useSingleMember,
 	useSingleProject,
 	useStartSync,
