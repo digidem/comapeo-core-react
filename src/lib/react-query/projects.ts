@@ -476,3 +476,42 @@ export function stopSyncMutationOptions({
 		},
 	} satisfies UseMutationOptions<void, Error, void>
 }
+
+export function connectSyncServersMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.connectServers()
+		},
+	} satisfies UseMutationOptions<void, Error, void>
+}
+
+export function disconnectSyncServersMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.disconnectServers()
+		},
+	} satisfies UseMutationOptions<void, Error, void>
+}
+
+export function setAutostopDataSyncTimeoutMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ after }) => {
+			return projectApi.$sync.setAutostopDataSyncTimeout(after)
+		},
+	} satisfies UseMutationOptions<void, Error, { after: number | null }>
+}
