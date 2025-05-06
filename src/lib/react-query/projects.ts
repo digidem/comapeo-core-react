@@ -283,6 +283,37 @@ export function addServerPeerMutationOptions({
 	>
 }
 
+export function removeServerPeerMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			serverDeviceId,
+			dangerouslyAllowInsecureConnections,
+		}) => {
+			return projectApi.$member.removeServerPeer(serverDeviceId, {
+				dangerouslyAllowInsecureConnections,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{ serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean }
+	>
+}
+
 export function createProjectMutationOptions({
 	clientApi,
 	queryClient,

@@ -26,6 +26,7 @@ import {
 	projectOwnRoleQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	removeServerPeerMutationOptions,
 	startSyncMutationOptions,
 	stopSyncMutationOptions,
 	updateProjectSettingsMutationOptions,
@@ -375,6 +376,19 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+export function useRemoveServerPeer({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		removeServerPeerMutationOptions({ projectApi, projectId, queryClient }),
 	)
 
 	return status === 'error'
