@@ -411,6 +411,8 @@ export function updateProjectSettingsMutationOptions({
 			name?: ProjectSettings['name']
 			configMetadata?: ProjectSettings['configMetadata']
 			defaultPresets?: ProjectSettings['defaultPresets']
+			projectColor?: ProjectSettings['projectColor']
+			projectDescription?: ProjectSettings['projectDescription']
 		}
 	>
 }

@@ -457,7 +457,7 @@ Update the settings of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } ...` |
+| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; projectColor?: string or undefined; projectDescription?: string or undefined; }, unknown>; muta...` |
 
 Parameters:
 
