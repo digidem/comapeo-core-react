@@ -82,7 +82,7 @@
 		"eslint": "9.27.0",
 		"eslint-plugin-react-hooks": "5.2.0",
 		"eslint-plugin-testing-library": "7.2.1",
-		"fastify": "4.29.0",
+		"fastify": "4.29.1",
 		"globals": "16.1.0",
 		"husky": "9.1.7",
 		"lint-staged": "15.5.1",
