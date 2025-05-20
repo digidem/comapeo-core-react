@@ -48,6 +48,8 @@ export {
 	useStopSync,
 	useSyncState,
 	useUpdateProjectSettings,
+	useExportGeoJSON,
+	useExportZipFile,
 } from './hooks/projects.js'
 export { type SyncState } from './lib/sync.js'
 export {

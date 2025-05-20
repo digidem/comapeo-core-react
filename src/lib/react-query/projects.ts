@@ -517,3 +517,52 @@ export function setAutostopDataSyncTimeoutMutationOptions({
 		},
 	} satisfies UseMutationOptions<void, Error, { after: number | null }>
 }
+
+export function exportGeoJSONMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			return projectApi.exportGeoJSONFile(opts.path, opts.exportOptions)
+		},
+	} satisfies UseMutationOptions<
+		string,
+		Error,
+		{
+			path: string
+			exportOptions: {
+				observations?: boolean
+				tracks?: boolean
+				lang?: string
+			}
+		}
+	>
+}
+
+export function exportZipFileMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			return projectApi.exportZipFile(opts.path, opts.exportOptions)
+		},
+	} satisfies UseMutationOptions<
+		string,
+		Error,
+		{
+			path: string
+			exportOptions: {
+				observations?: boolean
+				tracks?: boolean
+				lang?: string
+				attachments?: boolean
+			}
+		}
+	>
+}
