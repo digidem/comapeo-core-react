@@ -534,9 +534,9 @@ export function exportGeoJSONMutationOptions({
 		{
 			path: string
 			exportOptions: {
-				observations: boolean
-				tracks: boolean
-				lang: string
+				observations?: boolean
+				tracks?: boolean
+				lang?: string
 			}
 		}
 	>
@@ -550,10 +550,7 @@ export function exportZipFileMutationOptions({
 	return {
 		...baseMutationOptions(),
 		mutationFn: async (opts) => {
-			return projectApi.exportZipFile(opts.path, {
-				...opts.exportOptions,
-				attachments: true,
-			})
+			return projectApi.exportZipFile(opts.path, opts.exportOptions)
 		},
 	} satisfies UseMutationOptions<
 		string,
@@ -561,9 +558,10 @@ export function exportZipFileMutationOptions({
 		{
 			path: string
 			exportOptions: {
-				observations: boolean
-				tracks: boolean
-				lang: string
+				observations?: boolean
+				tracks?: boolean
+				lang?: string
+				attachments?: boolean
 			}
 		}
 	>
