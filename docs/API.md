@@ -29,6 +29,8 @@
 - [useConnectSyncServers](#useconnectsyncservers)
 - [useDisconnectSyncServers](#usedisconnectsyncservers)
 - [useSetAutostopDataSyncTimeout](#usesetautostopdatasynctimeout)
+- [useExportGeoJSON](#useexportgeojson)
+- [useExportZipFile](#useexportzipfile)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -546,6 +548,32 @@ Provides the progress of data sync for sync-enabled connected peers
 | Function | Type |
 | ---------- | ---------- |
 | `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { after: number or null; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useExportGeoJSON
+
+Creates a GeoJson file with all the observations and/or tracks in the project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useExportGeoJSON` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error...` |
+
+Parameters:
+
+* `opts.projectId`: Public ID of the project to apply changes to.
+
+
+### useExportZipFile
+
+Creates a zip file containing a GeoJson file with all the observations and/or tracks in the project and all associated attachments (photos and audio).
+
+| Function | Type |
+| ---------- | ---------- |
+| `useExportZipFile` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; attachments?: boolean or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>...` |
+
+Parameters:
+
+* `opts.projectId`: Public ID of the project to apply changes to.
+
 
 ### useSingleDocByDocId
 
