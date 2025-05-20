@@ -20,6 +20,7 @@ import {
 	disconnectSyncServersMutationOptions,
 	documentCreatedByQueryOptions,
 	exportGeoJSONMutationOptions,
+	exportZipFileMutationOptions,
 	iconUrlQueryOptions,
 	importProjectConfigMutationOptions,
 	leaveProjectMutationOptions,
@@ -622,6 +623,23 @@ export function useExportGeoJSON({ projectId }: { projectId: string }) {
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		exportGeoJSONMutationOptions({ projectApi }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Creates a zip file containing a GeoJson file with all the observations and/or tracks in the project and all associated attachments (photos and audio).
+ *
+ * @param opts.projectId Public ID of the project to apply changes to.
+ */
+export function useExportZipFile({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		exportZipFileMutationOptions({ projectApi }),
 	)
 
 	return status === 'error'

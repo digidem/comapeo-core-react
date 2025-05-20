@@ -541,3 +541,30 @@ export function exportGeoJSONMutationOptions({
 		}
 	>
 }
+
+export function exportZipFileMutationOptions({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			return projectApi.exportZipFile(opts.path, {
+				...opts.exportOptions,
+				attachments: true,
+			})
+		},
+	} satisfies UseMutationOptions<
+		string,
+		Error,
+		{
+			path: string
+			exportOptions: {
+				observations: boolean
+				tracks: boolean
+				lang: string
+			}
+		}
+	>
+}
