@@ -1,10 +1,18 @@
 import { QueryClient } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
-import { assert, test } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { afterAll, assert, beforeAll, test, vi } from 'vitest'
 
 import { useMapStyleUrl } from '../../src/index.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
 import { createClientApiWrapper } from '../helpers/react.js'
+
+beforeAll(() => {
+	vi.useFakeTimers({ shouldAdvanceTime: true })
+})
+
+afterAll(() => {
+	vi.useRealTimers()
+})
 
 test('basic read works', async (t) => {
 	const { client, cleanup, fastifyController } = setupCoreIpc()
@@ -26,9 +34,7 @@ test('basic read works', async (t) => {
 		wrapper,
 	})
 
-	await waitFor(() => {
-		assert(mapStyleUrlHook.result.current.data !== null)
-	})
+	await act(() => vi.advanceTimersByTimeAsync(10))
 
 	const url1 = new URL(mapStyleUrlHook.result.current.data)
 
@@ -36,10 +42,7 @@ test('basic read works', async (t) => {
 
 	mapStyleUrlHook.rerender({ refreshToken: 'abc_123' })
 
-	// TODO: Ideally check for isRefetching === true before this
-	await waitFor(() => {
-		assert(mapStyleUrlHook.result.current.isRefetching === false)
-	})
+	await act(() => vi.advanceTimersByTimeAsync(10))
 
 	const url2 = new URL(mapStyleUrlHook.result.current.data)
 
