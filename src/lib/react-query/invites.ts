@@ -1,4 +1,4 @@
-import type { RoleIdForNewInvite } from '@comapeo/core/dist/roles.js' with { 'resolution-mode': 'import' }
+import type { MemberApi } from '@comapeo/core' with { 'resolution-mode': 'import' }
 import type {
 	MapeoClientApi,
 	MapeoProjectApi,
@@ -125,7 +125,7 @@ export function sendInviteMutationOptions({
 		{
 			deviceId: string
 			roleDescription?: string
-			roleId: RoleIdForNewInvite
+			roleId: MemberApi.RoleIdForNewInvite
 			roleName?: string
 		}
 	>
