@@ -14,6 +14,7 @@ import {
 	queryOptions,
 	type QueryClient,
 	type UseMutationOptions,
+	type UseSuspenseQueryOptions,
 } from '@tanstack/react-query'
 
 import {
@@ -120,11 +121,16 @@ export function projectByIdQueryOptions({
 }: {
 	clientApi: MapeoClientApi
 	projectId: string
-}) {
+}): UseSuspenseQueryOptions<
+	MapeoProjectApi,
+	Error,
+	MapeoProjectApi,
+	ReturnType<typeof getProjectByIdQueryKey>
+> {
 	return queryOptions({
 		...baseQueryOptions(),
 		queryKey: getProjectByIdQueryKey({ projectId }),
-		queryFn: async () => {
+		queryFn: async (): Promise<MapeoProjectApi> => {
 			return clientApi.getProject(projectId)
 		},
 	})

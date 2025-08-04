@@ -87,7 +87,11 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useSingleProject({ projectId }: { projectId: string }) {
+export function useSingleProject({ projectId }: { projectId: string }): {
+	data: MapeoProjectApi
+	error: Error | null
+	isRefetching: boolean
+} {
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery({

@@ -1,3 +1,4 @@
+import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
@@ -38,7 +39,7 @@ import {
  * ```
  *
  */
-export function useClientApi() {
+export function useClientApi(): MapeoClientApi {
 	const clientApi = useContext(ClientApiContext)
 
 	if (!clientApi) {
