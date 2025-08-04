@@ -11,8 +11,8 @@ import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode':
 import {
 	queryOptions,
 	type QueryClient,
+	type UnusedSkipTokenOptions,
 	type UseMutationOptions,
-	type UseSuspenseQueryOptions,
 } from '@tanstack/react-query'
 
 import {
@@ -119,7 +119,7 @@ export function projectByIdQueryOptions({
 }: {
 	clientApi: MapeoClientApi
 	projectId: string
-}): UseSuspenseQueryOptions<
+}): UnusedSkipTokenOptions<
 	MapeoProjectApi,
 	Error,
 	MapeoProjectApi,
