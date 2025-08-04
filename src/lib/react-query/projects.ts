@@ -1,10 +1,8 @@
-import type { Metadata } from '@comapeo/core/dist/blob-api.js' with { 'resolution-mode': 'import' }
 import type {
-	BitmapOpts,
-	SvgOpts,
-} from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
-import type { EditableProjectSettings } from '@comapeo/core/dist/mapeo-project.js' with { 'resolution-mode': 'import' }
-import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
+	BlobApi,
+	EditableProjectSettings,
+	IconApi,
+} from '@comapeo/core' with { 'resolution-mode': 'import' }
 import type {
 	MapeoClientApi,
 	MapeoProjectApi,
@@ -13,6 +11,7 @@ import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode':
 import {
 	queryOptions,
 	type QueryClient,
+	type UnusedSkipTokenOptions,
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
@@ -63,7 +62,7 @@ export function getIconUrlQueryKey({
 }: {
 	projectId: string
 	iconId: string
-} & (BitmapOpts | SvgOpts)) {
+} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	return [
 		ROOT_QUERY_KEY,
 		'projects',
@@ -95,7 +94,7 @@ export function getAttachmentUrlQueryKey({
 	blobId,
 }: {
 	projectId: string
-	blobId: BlobId
+	blobId: BlobApi.BlobId
 }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'attachments', blobId] as const
 }
@@ -120,11 +119,16 @@ export function projectByIdQueryOptions({
 }: {
 	clientApi: MapeoClientApi
 	projectId: string
-}) {
+}): UnusedSkipTokenOptions<
+	MapeoProjectApi,
+	Error,
+	MapeoProjectApi,
+	ReturnType<typeof getProjectByIdQueryKey>
+> {
 	return queryOptions({
 		...baseQueryOptions(),
 		queryKey: getProjectByIdQueryKey({ projectId }),
-		queryFn: async () => {
+		queryFn: async (): Promise<MapeoProjectApi> => {
 			return clientApi.getProject(projectId)
 		},
 	})
@@ -205,7 +209,7 @@ export function iconUrlQueryOptions({
 	projectApi: MapeoProjectApi
 	projectId: string
 	iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
-} & (BitmapOpts | SvgOpts)) {
+} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	return queryOptions({
 		...baseQueryOptions(),
 		queryKey: getIconUrlQueryKey({ ...mimeBasedOpts, projectId, iconId }),
@@ -243,7 +247,7 @@ export function attachmentUrlQueryOptions({
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
-	blobId: BlobId
+	blobId: BlobApi.BlobId
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
@@ -442,7 +446,7 @@ export function createBlobMutationOptions({
 			original: string
 			preview?: string
 			thumbnail?: string
-			metadata: Metadata
+			metadata: BlobApi.Metadata
 		}
 	>
 }

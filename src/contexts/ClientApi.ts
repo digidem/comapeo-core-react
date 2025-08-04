@@ -1,7 +1,14 @@
 import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import { createContext, createElement, type JSX, type ReactNode } from 'react'
+import {
+	createContext,
+	createElement,
+	type Context,
+	type JSX,
+	type ReactNode,
+} from 'react'
 
-export const ClientApiContext = createContext<MapeoClientApi | null>(null)
+export const ClientApiContext: Context<MapeoClientApi | null> =
+	createContext<MapeoClientApi | null>(null)
 
 /**
  * Create a context provider that holds a CoMapeo API client instance.

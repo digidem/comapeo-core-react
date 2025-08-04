@@ -1,8 +1,7 @@
 import type {
-	BitmapOpts,
-	SvgOpts,
-} from '@comapeo/core/dist/icon-api.js' with { 'resolution-mode': 'import' }
-import type { BlobId } from '@comapeo/core/dist/types.js' with { 'resolution-mode': 'import' }
+	BlobApi,
+	IconApi,
+} from '@comapeo/core' with { 'resolution-mode': 'import' }
 import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
@@ -87,7 +86,11 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useSingleProject({ projectId }: { projectId: string }) {
+export function useSingleProject({ projectId }: { projectId: string }): {
+	data: MapeoProjectApi
+	error: Error | null
+	isRefetching: boolean
+} {
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery({
@@ -231,7 +234,7 @@ export function useIconUrl({
 }: {
 	projectId: string
 	iconId: string
-} & (BitmapOpts | SvgOpts)) {
+} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
@@ -302,7 +305,7 @@ export function useAttachmentUrl({
 	blobId,
 }: {
 	projectId: string
-	blobId: BlobId
+	blobId: BlobApi.BlobId
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
