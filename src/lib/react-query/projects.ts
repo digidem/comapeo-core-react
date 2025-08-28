@@ -75,8 +75,8 @@ export function getDocumentCreatedByQueryKey({
  * exposed right now, but it is the same for all projects, so no need for
  * scoping the query key to the project
  */
-export function getMediaServerPortQueryKey() {
-	return [ROOT_QUERY_KEY, 'media_server_port'] as const
+export function getMediaServerOriginQueryKey() {
+	return [ROOT_QUERY_KEY, 'media_server_origin'] as const
 }
 
 export function projectsQueryOptions({
@@ -211,21 +211,21 @@ const FAKE_BLOB_ID: BlobApi.BlobId = {
 	driveId: 'drive-id',
 }
 
-export function mediaServerPortQueryOptions({
+export function mediaServerOriginQueryOptions({
 	projectApi,
 }: {
 	projectApi: MapeoProjectApi
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		// HACK: The server doesn't yet expose a method to get its port, so we use
-		// the existing $blobs.getUrl() to get the port with a fake BlobId. The port
+		// HACK: The server doesn't yet expose a method to get its origin, so we use
+		// the existing $blobs.getUrl() to get the origin with a fake BlobId. The origin
 		// is the same regardless of the blobId, so it's not necessary to include it
 		// as a dep for the query key.
-		queryKey: getMediaServerPortQueryKey(),
+		queryKey: getMediaServerOriginQueryKey(),
 		queryFn: async () => {
 			const url = await projectApi.$blobs.getUrl(FAKE_BLOB_ID)
-			return new URL(url).port
+			return new URL(url).origin
 		},
 		staleTime: 'static',
 		gcTime: Infinity,

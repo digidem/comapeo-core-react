@@ -1,5 +1,11 @@
 // TODO: Move these into a separate "@comapeo/asset-server" module which can
 // export them to be imported directly in a client.
+//
+// NB: The URL construction is fragile right now - it must match the
+// implementation in the @comapeo/core fastify plugins
+// [blobServerPlugin](https://github.com/digidem/comapeo-core/blob/main/src/fastify-plugins/blobs.js)
+// and
+// [iconServerPlugin](https://github.com/digidem/comapeo-core/blob/main/src/fastify-plugins/icons.js)
 
 import type { BlobApi, IconApi } from '@comapeo/core'
 
@@ -12,26 +18,26 @@ const MIME_TO_EXTENSION = {
  * Get a url for a blob based on its BlobId
  */
 export function getBlobUrl({
-	serverPort,
+	serverOrigin,
 	projectId,
 	blobId,
 }: {
-	serverPort: number
+	serverOrigin: string
 	projectId: string
 	blobId: BlobApi.BlobId
 }) {
 	const { driveId, type, variant, name } = blobId
 
-	return `http://localhost:${serverPort}/blobs/${projectId}/${driveId}/${type}/${variant}/${name}`
+	return `${serverOrigin}/blobs/${projectId}/${driveId}/${type}/${variant}/${name}`
 }
 
 export function getIconUrl({
-	serverPort,
+	serverOrigin,
 	iconId,
 	projectId,
 	mimeBasedOpts,
 }: {
-	serverPort: number
+	serverOrigin: string
 	iconId: string
 	projectId: string
 	mimeBasedOpts: IconApi.BitmapOpts | IconApi.SvgOpts
@@ -47,7 +53,7 @@ export function getIconUrl({
 			: mimeBasedOpts.pixelDensity
 
 	return (
-		`http://localhost:${serverPort}/icons/${projectId}/` +
+		`${serverOrigin}/icons/${projectId}/` +
 		constructIconPath({
 			pixelDensity,
 			size: mimeBasedOpts.size,
