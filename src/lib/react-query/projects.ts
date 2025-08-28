@@ -237,6 +237,8 @@ export function documentCreatedByQueryOptions({
 		queryFn: async () => {
 			return projectApi.$originalVersionIdToDeviceId(originalVersionId)
 		},
+		staleTime: 'static',
+		gcTime: Infinity,
 	})
 }
 
