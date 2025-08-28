@@ -201,27 +201,28 @@ export function documentCreatedByQueryOptions({
 	})
 }
 
+// Used as a placeholder so that we can read the server port from the $blobs.getUrl() method
+const FAKE_BLOB_ID: BlobApi.BlobId = {
+	type: 'photo',
+	variant: 'original',
+	name: 'name',
+	driveId: 'drive-id',
+}
+
 export function mediaServerPortQueryOptions({
 	projectApi,
 }: {
 	projectApi: MapeoProjectApi
 }) {
-	const fakeBlobId: BlobApi.BlobId = {
-		type: 'photo',
-		variant: 'original',
-		name: 'name',
-		driveId: 'drive-id',
-	}
 	return queryOptions({
 		...baseQueryOptions(),
 		// HACK: The server doesn't yet expose a method to get its port, so we use
 		// the existing $blobs.getUrl() to get the port with a fake BlobId. The port
 		// is the same regardless of the blobId, so it's not necessary to include it
 		// as a dep for the query key.
-		// eslint-disable-next-line @tanstack/query/exhaustive-deps
 		queryKey: getMediaServerPortQueryKey(),
 		queryFn: async () => {
-			const url = await projectApi.$blobs.getUrl(fakeBlobId)
+			const url = await projectApi.$blobs.getUrl(FAKE_BLOB_ID)
 			return new URL(url).port
 		},
 		staleTime: 'static',
