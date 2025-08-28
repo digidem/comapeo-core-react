@@ -45,4 +45,4 @@ jobs:
           notify-linked-issues: false
           npm-token: ${{ secrets.NPM_TOKEN }}
           build-command: |
-            npm ci
+            npm ci --ignore-scripts
