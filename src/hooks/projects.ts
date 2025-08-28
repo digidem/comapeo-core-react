@@ -12,7 +12,6 @@ import { useSyncExternalStore } from 'react'
 
 import {
 	addServerPeerMutationOptions,
-	attachmentUrlQueryOptions,
 	connectSyncServersMutationOptions,
 	createBlobMutationOptions,
 	createProjectMutationOptions,
@@ -20,9 +19,9 @@ import {
 	documentCreatedByQueryOptions,
 	exportGeoJSONMutationOptions,
 	exportZipFileMutationOptions,
-	iconUrlQueryOptions,
 	importProjectConfigMutationOptions,
 	leaveProjectMutationOptions,
+	mediaServerPortQueryOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
 	projectMembersQueryOptions,
@@ -36,6 +35,7 @@ import {
 	updateProjectSettingsMutationOptions,
 } from '../lib/react-query/projects.js'
 import { SyncStore, type SyncState } from '../lib/sync.js'
+import { getBlobUrl, getIconUrl } from '../lib/urls.js'
 import { useClientApi } from './client.js'
 
 /**
@@ -237,16 +237,11 @@ export function useIconUrl({
 } & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		iconUrlQueryOptions({
-			...mimeBasedOpts,
-			projectApi,
-			projectId,
-			iconId,
-		}),
-	)
+	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
+	const baseUrl = `http://127.0.0.1:${port}`
+	const iconUrl = getIconUrl(baseUrl, iconId, mimeBasedOpts)
 
-	return { data, error, isRefetching }
+	return { data: iconUrl, error, isRefetching }
 }
 
 /**
@@ -309,11 +304,21 @@ export function useAttachmentUrl({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
+	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
+	const baseUrl = `http://127.0.0.1:${port}`
+	const blobUrl = getBlobUrl(baseUrl, blobId)
+
+	return { data: blobUrl, error, isRefetching }
+}
+
+/**
+ * @internal
+ * Hack to retrieve the media server port.
+ */
+function useMediaServerPort({ projectApi }: { projectApi: MapeoProjectApi }) {
 	const { data, error, isRefetching } = useSuspenseQuery(
-		attachmentUrlQueryOptions({
+		mediaServerPortQueryOptions({
 			projectApi,
-			projectId,
-			blobId,
 		}),
 	)
 
