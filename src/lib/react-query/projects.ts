@@ -1,7 +1,6 @@
 import type {
 	BlobApi,
 	EditableProjectSettings,
-	IconApi,
 } from '@comapeo/core' with { 'resolution-mode': 'import' }
 import type {
 	MapeoClientApi,
@@ -55,24 +54,6 @@ export function getMemberByIdQueryKey({
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'members', deviceId] as const
 }
 
-export function getIconUrlQueryKey({
-	projectId,
-	iconId,
-	...mimeBasedOpts
-}: {
-	projectId: string
-	iconId: string
-} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
-	return [
-		ROOT_QUERY_KEY,
-		'projects',
-		projectId,
-		'icons',
-		iconId,
-		mimeBasedOpts,
-	] as const
-}
-
 export function getDocumentCreatedByQueryKey({
 	projectId,
 	originalVersionId,
@@ -89,14 +70,13 @@ export function getDocumentCreatedByQueryKey({
 	] as const
 }
 
-export function getAttachmentUrlQueryKey({
-	projectId,
-	blobId,
-}: {
-	projectId: string
-	blobId: BlobApi.BlobId
-}) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, 'attachments', blobId] as const
+/**
+ * We call this within a project hook, because that's the only place the API is
+ * exposed right now, but it is the same for all projects, so no need for
+ * scoping the query key to the project
+ */
+export function getMediaServerPortQueryKey() {
+	return [ROOT_QUERY_KEY, 'media_server_port'] as const
 }
 
 export function projectsQueryOptions({
@@ -200,25 +180,6 @@ export function projectOwnRoleQueryOptions({
 	})
 }
 
-export function iconUrlQueryOptions({
-	projectApi,
-	projectId,
-	iconId,
-	...mimeBasedOpts
-}: {
-	projectApi: MapeoProjectApi
-	projectId: string
-	iconId: Parameters<MapeoProjectApi['$icons']['getIconUrl']>[0]
-} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
-	return queryOptions({
-		...baseQueryOptions(),
-		queryKey: getIconUrlQueryKey({ ...mimeBasedOpts, projectId, iconId }),
-		queryFn: async () => {
-			return projectApi.$icons.getIconUrl(iconId, mimeBasedOpts)
-		},
-	})
-}
-
 export function documentCreatedByQueryOptions({
 	projectApi,
 	projectId,
@@ -242,22 +203,32 @@ export function documentCreatedByQueryOptions({
 	})
 }
 
-export function attachmentUrlQueryOptions({
+// Used as a placeholder so that we can read the server port from the $blobs.getUrl() method
+const FAKE_BLOB_ID: BlobApi.BlobId = {
+	type: 'photo',
+	variant: 'original',
+	name: 'name',
+	driveId: 'drive-id',
+}
+
+export function mediaServerPortQueryOptions({
 	projectApi,
-	projectId,
-	blobId,
 }: {
 	projectApi: MapeoProjectApi
-	projectId: string
-	blobId: BlobApi.BlobId
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getAttachmentUrlQueryKey({ projectId, blobId }),
+		// HACK: The server doesn't yet expose a method to get its port, so we use
+		// the existing $blobs.getUrl() to get the port with a fake BlobId. The port
+		// is the same regardless of the blobId, so it's not necessary to include it
+		// as a dep for the query key.
+		queryKey: getMediaServerPortQueryKey(),
 		queryFn: async () => {
-			// TODO: Might need a refresh token? (similar to map style url)
-			return projectApi.$blobs.getUrl(blobId)
+			const url = await projectApi.$blobs.getUrl(FAKE_BLOB_ID)
+			return new URL(url).port
 		},
+		staleTime: 'static',
+		gcTime: Infinity,
 	})
 }
 
