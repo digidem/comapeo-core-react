@@ -21,7 +21,7 @@ import {
 	exportZipFileMutationOptions,
 	importProjectConfigMutationOptions,
 	leaveProjectMutationOptions,
-	mediaServerPortQueryOptions,
+	mediaServerOriginQueryOptions,
 	projectByIdQueryOptions,
 	projectMemberByIdQueryOptions,
 	projectMembersQueryOptions,
@@ -237,9 +237,17 @@ export function useIconUrl({
 } & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
-	const baseUrl = `http://127.0.0.1:${port}`
-	const iconUrl = getIconUrl(baseUrl, iconId, mimeBasedOpts)
+	const {
+		data: serverOrigin,
+		error,
+		isRefetching,
+	} = useMediaServerOrigin({ projectApi })
+	const iconUrl = getIconUrl({
+		serverOrigin,
+		iconId,
+		projectId,
+		mimeBasedOpts,
+	})
 
 	return { data: iconUrl, error, isRefetching }
 }
@@ -304,20 +312,23 @@ export function useAttachmentUrl({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
-	const baseUrl = `http://127.0.0.1:${port}`
-	const blobUrl = getBlobUrl(baseUrl, blobId)
+	const {
+		data: serverOrigin,
+		error,
+		isRefetching,
+	} = useMediaServerOrigin({ projectApi })
+	const blobUrl = getBlobUrl({ serverOrigin, projectId, blobId })
 
 	return { data: blobUrl, error, isRefetching }
 }
 
 /**
  * @internal
- * Hack to retrieve the media server port.
+ * Hack to retrieve the media server origin (protocol + host).
  */
-function useMediaServerPort({ projectApi }: { projectApi: MapeoProjectApi }) {
+function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
 	const { data, error, isRefetching } = useSuspenseQuery(
-		mediaServerPortQueryOptions({
+		mediaServerOriginQueryOptions({
 			projectApi,
 		}),
 	)

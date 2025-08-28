@@ -1,5 +1,11 @@
 // TODO: Move these into a separate "@comapeo/asset-server" module which can
 // export them to be imported directly in a client.
+//
+// NB: The URL construction is fragile right now - it must match the
+// implementation in the @comapeo/core fastify plugins
+// [blobServerPlugin](https://github.com/digidem/comapeo-core/blob/main/src/fastify-plugins/blobs.js)
+// and
+// [iconServerPlugin](https://github.com/digidem/comapeo-core/blob/main/src/fastify-plugins/icons.js)
 
 import type { BlobApi, IconApi } from '@comapeo/core'
 
@@ -11,46 +17,46 @@ const MIME_TO_EXTENSION = {
 /**
  * Get a url for a blob based on its BlobId
  */
-export function getBlobUrl(baseUrl: string, blobId: BlobApi.BlobId) {
+export function getBlobUrl({
+	serverOrigin,
+	projectId,
+	blobId,
+}: {
+	serverOrigin: string
+	projectId: string
+	blobId: BlobApi.BlobId
+}) {
 	const { driveId, type, variant, name } = blobId
 
-	if (!baseUrl.endsWith('/')) {
-		baseUrl += '/'
-	}
-
-	return baseUrl + `${driveId}/${type}/${variant}/${name}`
+	return `${serverOrigin}/blobs/${projectId}/${driveId}/${type}/${variant}/${name}`
 }
 
-/**
- * @param {string} iconId
- * @param {BitmapOpts | SvgOpts} opts
- *
- * @returns {Promise<string>}
- */
-export function getIconUrl(
-	baseUrl: string,
-	iconId: string,
-	opts: IconApi.BitmapOpts | IconApi.SvgOpts,
-) {
-	if (!baseUrl.endsWith('/')) {
-		baseUrl += '/'
-	}
-
-	const mimeExtension = MIME_TO_EXTENSION[opts.mimeType]
+export function getIconUrl({
+	serverOrigin,
+	iconId,
+	projectId,
+	mimeBasedOpts,
+}: {
+	serverOrigin: string
+	iconId: string
+	projectId: string
+	mimeBasedOpts: IconApi.BitmapOpts | IconApi.SvgOpts
+}) {
+	const mimeExtension = MIME_TO_EXTENSION[mimeBasedOpts.mimeType]
 
 	const pixelDensity =
-		opts.mimeType === 'image/svg+xml' ||
+		mimeBasedOpts.mimeType === 'image/svg+xml' ||
 		// if the pixel density is 1, we can omit the density suffix in the resulting url
 		// and assume the pixel density is 1 for applicable mime types when using the url
-		opts.pixelDensity === 1
+		mimeBasedOpts.pixelDensity === 1
 			? undefined
-			: opts.pixelDensity
+			: mimeBasedOpts.pixelDensity
 
 	return (
-		baseUrl +
+		`${serverOrigin}/icons/${projectId}/` +
 		constructIconPath({
 			pixelDensity,
-			size: opts.size,
+			size: mimeBasedOpts.size,
 			extension: mimeExtension,
 			iconId,
 		})
