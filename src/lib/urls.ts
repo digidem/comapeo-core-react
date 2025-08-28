@@ -11,46 +11,46 @@ const MIME_TO_EXTENSION = {
 /**
  * Get a url for a blob based on its BlobId
  */
-export function getBlobUrl(baseUrl: string, blobId: BlobApi.BlobId) {
+export function getBlobUrl({
+	serverPort,
+	projectId,
+	blobId,
+}: {
+	serverPort: number
+	projectId: string
+	blobId: BlobApi.BlobId
+}) {
 	const { driveId, type, variant, name } = blobId
 
-	if (!baseUrl.endsWith('/')) {
-		baseUrl += '/'
-	}
-
-	return baseUrl + `${driveId}/${type}/${variant}/${name}`
+	return `http://localhost:${serverPort}/blobs/${projectId}/${driveId}/${type}/${variant}/${name}`
 }
 
-/**
- * @param {string} iconId
- * @param {BitmapOpts | SvgOpts} opts
- *
- * @returns {Promise<string>}
- */
-export function getIconUrl(
-	baseUrl: string,
-	iconId: string,
-	opts: IconApi.BitmapOpts | IconApi.SvgOpts,
-) {
-	if (!baseUrl.endsWith('/')) {
-		baseUrl += '/'
-	}
-
-	const mimeExtension = MIME_TO_EXTENSION[opts.mimeType]
+export function getIconUrl({
+	serverPort,
+	iconId,
+	projectId,
+	mimeBasedOpts,
+}: {
+	serverPort: number
+	iconId: string
+	projectId: string
+	mimeBasedOpts: IconApi.BitmapOpts | IconApi.SvgOpts
+}) {
+	const mimeExtension = MIME_TO_EXTENSION[mimeBasedOpts.mimeType]
 
 	const pixelDensity =
-		opts.mimeType === 'image/svg+xml' ||
+		mimeBasedOpts.mimeType === 'image/svg+xml' ||
 		// if the pixel density is 1, we can omit the density suffix in the resulting url
 		// and assume the pixel density is 1 for applicable mime types when using the url
-		opts.pixelDensity === 1
+		mimeBasedOpts.pixelDensity === 1
 			? undefined
-			: opts.pixelDensity
+			: mimeBasedOpts.pixelDensity
 
 	return (
-		baseUrl +
+		`http://localhost:${serverPort}/icons/${projectId}/` +
 		constructIconPath({
 			pixelDensity,
-			size: opts.size,
+			size: mimeBasedOpts.size,
 			extension: mimeExtension,
 			iconId,
 		})

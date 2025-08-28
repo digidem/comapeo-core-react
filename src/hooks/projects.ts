@@ -237,9 +237,17 @@ export function useIconUrl({
 } & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
-	const baseUrl = `http://127.0.0.1:${port}`
-	const iconUrl = getIconUrl(baseUrl, iconId, mimeBasedOpts)
+	const {
+		data: serverPort,
+		error,
+		isRefetching,
+	} = useMediaServerPort({ projectApi })
+	const iconUrl = getIconUrl({
+		serverPort,
+		iconId,
+		projectId,
+		mimeBasedOpts,
+	})
 
 	return { data: iconUrl, error, isRefetching }
 }
@@ -304,9 +312,12 @@ export function useAttachmentUrl({
 }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data: port, error, isRefetching } = useMediaServerPort({ projectApi })
-	const baseUrl = `http://127.0.0.1:${port}`
-	const blobUrl = getBlobUrl(baseUrl, blobId)
+	const {
+		data: serverPort,
+		error,
+		isRefetching,
+	} = useMediaServerPort({ projectApi })
+	const blobUrl = getBlobUrl({ serverPort, projectId, blobId })
 
 	return { data: blobUrl, error, isRefetching }
 }
@@ -322,7 +333,7 @@ function useMediaServerPort({ projectApi }: { projectApi: MapeoProjectApi }) {
 		}),
 	)
 
-	return { data, error, isRefetching }
+	return { data: +data, error, isRefetching }
 }
 
 // TODO: Eventually remove in favor of this information being provided by the backend when retrieving documents
