@@ -7,6 +7,8 @@ import {
 import { useContext } from 'react'
 
 import { ClientApiContext } from '../contexts/ClientApi.js'
+import { EXPOSED_MUTATION_PROPS } from '../lib/constants.js'
+import { pick } from '../lib/pick.js'
 import {
 	deviceInfoQueryOptions,
 	isArchiveDeviceQueryOptions,
@@ -114,11 +116,8 @@ export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, status, reset } = useMutation(
-		setIsArchiveDeviceMutationOptions({ clientApi, queryClient }),
+	return pick(
+		useMutation(setIsArchiveDeviceMutationOptions({ clientApi, queryClient })),
+		EXPOSED_MUTATION_PROPS,
 	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
 }
