@@ -10,6 +10,8 @@ import {
 } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 
+import { EXPOSED_MUTATION_PROPS } from '../lib/constants.js'
+import { pick } from '../lib/pick.js'
 import {
 	addServerPeerMutationOptions,
 	connectSyncServersMutationOptions,
@@ -398,13 +400,12 @@ export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
+	return pick(
+		useMutation(
+			addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
+		),
+		EXPOSED_MUTATION_PROPS,
 	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
 }
 
 export function useRemoveServerPeer({ projectId }: { projectId: string }) {
