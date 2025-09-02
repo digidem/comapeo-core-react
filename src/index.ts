@@ -57,3 +57,11 @@ export {
 	type WriteableDocumentType,
 	type WriteableValue,
 } from './lib/types.js'
+export {
+	prefetchProjects,
+	prefetchProjectApi,
+	prefetchProjectSettings,
+	prefetchOwnRoleInProject,
+	prefetchMembers,
+	prefetchIsArchiveDevice,
+} from './lib/react-query/prefetch.js'
