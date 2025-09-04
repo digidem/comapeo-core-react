@@ -48,6 +48,7 @@ export {
 	useStopSync,
 	useSyncState,
 	useUpdateProjectSettings,
+	useChangeMemberRole,
 	useExportGeoJSON,
 	useExportZipFile,
 } from './hooks/projects.js'

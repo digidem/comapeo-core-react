@@ -1,6 +1,7 @@
 import type {
 	BlobApi,
 	EditableProjectSettings,
+	MemberApi,
 } from '@comapeo/core' with { 'resolution-mode': 'import' }
 import type {
 	MapeoClientApi,
@@ -391,6 +392,44 @@ export function updateProjectSettingsMutationOptions({
 			projectColor?: ProjectSettings['projectColor']
 			projectDescription?: ProjectSettings['projectDescription']
 		}
+	>
+}
+
+export function changeMemberRoleMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			deviceId,
+			roleId,
+		}: {
+			deviceId: string
+			roleId: MemberApi.RoleIdForNewInvite
+		}) => {
+			return projectApi.$member.assignRole(deviceId, roleId)
+		},
+		onSuccess: (_data, { deviceId }) => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getMemberByIdQueryKey({ projectId, deviceId }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectRoleQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{ deviceId: string; roleId: MemberApi.RoleIdForNewInvite }
 	>
 }
 
