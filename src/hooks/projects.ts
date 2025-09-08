@@ -12,6 +12,7 @@ import { useSyncExternalStore } from 'react'
 
 import {
 	addServerPeerMutationOptions,
+	changeMemberRoleMutationOptions,
 	connectSyncServersMutationOptions,
 	createBlobMutationOptions,
 	createProjectMutationOptions,
@@ -481,6 +482,33 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		updateProjectSettingsMutationOptions({ projectApi, queryClient }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Change a project member's role.
+ *
+ * @param opts.projectId Project public ID
+ *
+ * @example
+ * ```tsx
+ * function BasicExample() {
+ *   const { mutate } = useChangeMemberRole({ projectId: '...' })
+ *   // Use one of: COORDINATOR_ROLE_ID, MEMBER_ROLE_ID, BLOCKED_ROLE_ID
+ *   mutate({ deviceId: '...', roleId: COORDINATOR_ROLE_ID })
+ * }
+ * ```
+ */
+export function useChangeMemberRole({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		changeMemberRoleMutationOptions({ projectApi, projectId, queryClient }),
 	)
 
 	return status === 'error'

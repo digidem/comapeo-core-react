@@ -394,6 +394,44 @@ export function updateProjectSettingsMutationOptions({
 	>
 }
 
+export function changeMemberRoleMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({
+			deviceId,
+			roleId,
+		}: {
+			deviceId: string
+			roleId: Parameters<MapeoProjectApi['$member']['assignRole']>[1]
+		}) => {
+			return projectApi.$member.assignRole(deviceId, roleId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectRoleQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{
+			deviceId: string
+			roleId: Parameters<MapeoProjectApi['$member']['assignRole']>[1]
+		}
+	>
+}
+
 export function createBlobMutationOptions({
 	projectApi,
 }: {
