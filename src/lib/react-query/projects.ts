@@ -406,13 +406,7 @@ export function changeMemberRoleMutationOptions({
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({
-			deviceId,
-			roleId,
-		}: {
-			deviceId: string
-			roleId: MemberApi.RoleIdAssignableToOthers
-		}) => {
+		mutationFn: async ({ deviceId, roleId }) => {
 			return projectApi.$member.assignRole(deviceId, roleId)
 		},
 		onSuccess: () => {
