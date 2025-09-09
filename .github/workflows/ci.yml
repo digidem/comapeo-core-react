@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         run: npm run test
 
-  prepack:
+  build:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 10
