@@ -7,7 +7,6 @@ import type {
 	MapeoClientApi,
 	MapeoProjectApi,
 } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	queryOptions,
 	type QueryClient,
@@ -385,13 +384,7 @@ export function updateProjectSettingsMutationOptions({
 	} satisfies UseMutationOptions<
 		EditableProjectSettings,
 		Error,
-		{
-			name?: ProjectSettings['name']
-			configMetadata?: ProjectSettings['configMetadata']
-			defaultPresets?: ProjectSettings['defaultPresets']
-			projectColor?: ProjectSettings['projectColor']
-			projectDescription?: ProjectSettings['projectDescription']
-		}
+		EditableProjectSettings
 	>
 }
 
