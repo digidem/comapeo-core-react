@@ -41,6 +41,10 @@ export function getProjectRoleQueryKey({ projectId }: { projectId: string }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'role'] as const
 }
 
+export function getProjectStatsQueryKey({ projectId }: { projectId: string }) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'stats'] as const
+}
+
 export function getMembersQueryKey({ projectId }: { projectId: string }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'members'] as const
 }
@@ -177,6 +181,22 @@ export function projectOwnRoleQueryOptions({
 		queryKey: getProjectRoleQueryKey({ projectId }),
 		queryFn: async () => {
 			return projectApi.$getOwnRole()
+		},
+	})
+}
+
+export function projectStatsQueryOptions({
+	projectApi,
+	projectId,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+}) {
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: getProjectStatsQueryKey({ projectId }),
+		queryFn: async () => {
+			return projectApi.$getStats()
 		},
 	})
 }

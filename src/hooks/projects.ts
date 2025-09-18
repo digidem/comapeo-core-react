@@ -29,6 +29,7 @@ import {
 	projectOwnRoleQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	projectStatsQueryOptions,
 	removeServerPeerMutationOptions,
 	setAutostopDataSyncTimeoutMutationOptions,
 	startSyncMutationOptions,
@@ -514,6 +515,32 @@ export function useChangeMemberRole({ projectId }: { projectId: string }) {
 	return status === 'error'
 		? { error, mutate, mutateAsync, reset, status }
 		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Retrieve project statistics for roughly the last 6 months.
+ *
+ * This hook only reads stats from the local project database via IPC.
+ *
+ * @param opts.projectId Project public ID
+ *
+ * @example
+ * ```tsx
+ * function Example() {
+ *   const { data, isRefetching } = useProjectStats({ projectId: '...' })
+ *   // e.g. data.observations.values => [ ['2025-06', 12], ['2025-07', 9], ... ]
+ * }
+ * ```
+ */
+
+export function useProjectStats({ projectId }: { projectId: string }) {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { data, error, isRefetching } = useSuspenseQuery(
+		projectStatsQueryOptions({ projectApi, projectId }),
+	)
+
+	return { data, error, isRefetching }
 }
 
 /**
