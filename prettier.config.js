@@ -9,6 +9,6 @@ export default {
 	plugins: ['@ianvs/prettier-plugin-sort-imports'],
 	// Options for @ianvs/prettier-plugin-sort-imports
 	importOrder: ['<BUILTIN_MODULES>', '<THIRD_PARTY_MODULES>', '', '^[./]'],
-	importOrderTypeScriptVersion: '5.8.3',
+	importOrderTypeScriptVersion: '5.9.2',
 	importOrderCaseSensitive: false,
 }
