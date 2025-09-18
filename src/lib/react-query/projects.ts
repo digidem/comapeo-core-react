@@ -7,7 +7,6 @@ import type {
 	MapeoClientApi,
 	MapeoProjectApi,
 } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import type { ProjectSettings } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	queryOptions,
 	type QueryClient,
@@ -39,10 +38,6 @@ export function getProjectSettingsQueryKey({
 
 export function getProjectRoleQueryKey({ projectId }: { projectId: string }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'role'] as const
-}
-
-export function getProjectStatsQueryKey({ projectId }: { projectId: string }) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, 'stats'] as const
 }
 
 export function getMembersQueryKey({ projectId }: { projectId: string }) {
@@ -181,22 +176,6 @@ export function projectOwnRoleQueryOptions({
 		queryKey: getProjectRoleQueryKey({ projectId }),
 		queryFn: async () => {
 			return projectApi.$getOwnRole()
-		},
-	})
-}
-
-export function projectStatsQueryOptions({
-	projectApi,
-	projectId,
-}: {
-	projectApi: MapeoProjectApi
-	projectId: string
-}) {
-	return queryOptions({
-		...baseQueryOptions(),
-		queryKey: getProjectStatsQueryKey({ projectId }),
-		queryFn: async () => {
-			return projectApi.$getStats()
 		},
 	})
 }
@@ -405,13 +384,7 @@ export function updateProjectSettingsMutationOptions({
 	} satisfies UseMutationOptions<
 		EditableProjectSettings,
 		Error,
-		{
-			name?: ProjectSettings['name']
-			configMetadata?: ProjectSettings['configMetadata']
-			defaultPresets?: ProjectSettings['defaultPresets']
-			projectColor?: ProjectSettings['projectColor']
-			projectDescription?: ProjectSettings['projectDescription']
-		}
+		EditableProjectSettings
 	>
 }
 
