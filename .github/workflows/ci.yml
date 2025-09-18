@@ -30,8 +30,7 @@ jobs:
         node-version:
           - 18.x
           - 20.x
-          # Incompatible with the better-sqlite3 version used by core
-          # - 22.x
+          - 22.x
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
