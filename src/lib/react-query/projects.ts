@@ -384,7 +384,7 @@ export function updateProjectSettingsMutationOptions({
 	} satisfies UseMutationOptions<
 		EditableProjectSettings,
 		Error,
-		EditableProjectSettings
+		Partial<EditableProjectSettings>
 	>
 }
 
