@@ -179,7 +179,7 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	)
 
 	return {
-		data: data as Extract<typeof data, { schemaName: D }>,
+		data: data as Extract<typeof data, Array<{ schemaName: D }>>,
 		error,
 		isRefetching,
 	}
