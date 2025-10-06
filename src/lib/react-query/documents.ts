@@ -1,3 +1,4 @@
+import type { DerivedDocFields } from '@comapeo/core/dist/datatype/index.js' with { 'resolution-mode': 'import' }
 import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import {
 	queryOptions,
@@ -182,7 +183,10 @@ export function documentByVersionIdQueryOptions<
 	})
 }
 
-export function createDocumentMutationOptions<D extends WriteableDocumentType>({
+export function createDocumentMutationOptions<
+	D extends WriteableDocumentType,
+	Result = WriteableDocument<D> & DerivedDocFields,
+>({
 	docType,
 	projectApi,
 	projectId,
@@ -195,9 +199,7 @@ export function createDocumentMutationOptions<D extends WriteableDocumentType>({
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({
-			value,
-		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
+		mutationFn: async ({ value }): Promise<Result> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].create({
 				...value,
@@ -213,13 +215,16 @@ export function createDocumentMutationOptions<D extends WriteableDocumentType>({
 			})
 		},
 	} satisfies UseMutationOptions<
-		WriteableDocument<D> & { forks: Array<string> },
+		Result,
 		Error,
 		{ value: Omit<WriteableValue<D>, 'schemaName'> }
 	>
 }
 
-export function updateDocumentMutationOptions<D extends WriteableDocumentType>({
+export function updateDocumentMutationOptions<
+	D extends WriteableDocumentType,
+	Result = WriteableDocument<D> & DerivedDocFields,
+>({
 	docType,
 	projectApi,
 	projectId,
@@ -232,10 +237,7 @@ export function updateDocumentMutationOptions<D extends WriteableDocumentType>({
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({
-			versionId,
-			value,
-		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
+		mutationFn: async ({ versionId, value }): Promise<Result> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].update(versionId, value)
 		},
@@ -248,13 +250,16 @@ export function updateDocumentMutationOptions<D extends WriteableDocumentType>({
 			})
 		},
 	} satisfies UseMutationOptions<
-		WriteableDocument<D> & { forks: Array<string> },
+		Result,
 		Error,
 		{ versionId: string; value: Omit<WriteableValue<D>, 'schemaName'> }
 	>
 }
 
-export function deleteDocumentMutationOptions<D extends WriteableDocumentType>({
+export function deleteDocumentMutationOptions<
+	D extends WriteableDocumentType,
+	Result = WriteableDocument<D> & DerivedDocFields,
+>({
 	docType,
 	projectApi,
 	projectId,
@@ -267,9 +272,7 @@ export function deleteDocumentMutationOptions<D extends WriteableDocumentType>({
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({
-			docId,
-		}): Promise<WriteableDocument<D> & { forks: Array<string> }> => {
+		mutationFn: async ({ docId }): Promise<Result> => {
 			// @ts-expect-error TS not handling this well
 			return projectApi[docType].delete(docId)
 		},
@@ -281,9 +284,5 @@ export function deleteDocumentMutationOptions<D extends WriteableDocumentType>({
 				}),
 			})
 		},
-	} satisfies UseMutationOptions<
-		WriteableDocument<D> & { forks: Array<string> },
-		Error,
-		{ docId: string }
-	>
+	} satisfies UseMutationOptions<Result, Error, { docId: string }>
 }
