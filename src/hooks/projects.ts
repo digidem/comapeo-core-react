@@ -353,6 +353,8 @@ function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
  *   })
  * }
  * ```
+ *
+ * @deprecated Use `createdBy` field from document read hooks.
  */
 export function useDocumentCreatedBy({
 	projectId,
