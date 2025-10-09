@@ -12,6 +12,7 @@ export {
 	useManyDocs,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
+	useSortedPresets,
 	useUpdateDocument,
 } from './hooks/documents.js'
 export {
