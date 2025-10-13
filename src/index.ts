@@ -12,9 +12,9 @@ export {
 	useManyDocs,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
-	useSortedPresets,
 	useUpdateDocument,
 } from './hooks/documents.js'
+export { sortPresetsByDefaultOrder } from './lib/presets.js'
 export {
 	useAcceptInvite,
 	useManyInvites,

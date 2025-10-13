@@ -1,12 +1,9 @@
-import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useMemo } from 'react'
 
-import { sortPresetsByDefaultOrder } from '../lib/presets.js'
 import {
 	createDocumentMutationOptions,
 	deleteDocumentMutationOptions,
@@ -16,7 +13,7 @@ import {
 	updateDocumentMutationOptions,
 } from '../lib/react-query/documents.js'
 import type { WriteableDocumentType } from '../lib/types.js'
-import { useProjectSettings, useSingleProject } from './projects.js'
+import { useSingleProject } from './projects.js'
 
 /**
  * Retrieve a single document from the database based on the document's document ID.
@@ -276,74 +273,4 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 	return status === 'error'
 		? { error, mutate, mutateAsync, reset, status }
 		: { error: null, mutate, mutateAsync, reset, status }
-}
-
-/**
- * Retrieve all presets for a project, sorted according to the defaultPresets configuration or alphabetically if none exists.
- *
- * @param opts.projectId Project public ID
- * @param opts.geometryType The geometry type to use for sorting ('point' for observations, 'line' for tracks)
- * @param opts.includeDeleted Include documents that have been marked as deleted
- * @param opts.lang Language to translate the documents into
- *
- * @example
- * ```tsx
- * function ObservationCategoryChooser() {
- *   const { data: presets } = useSortedPresets({
- *     projectId: '...',
- *     geometryType: 'point',
- *   })
- *
- *   // presets are now sorted according to projectSettings.defaultPresets.point
- * }
- * ```
- *
- * ```tsx
- * function TrackCategoryChooser() {
- *   const { data: presets } = useSortedPresets({
- *     projectId: '...',
- *     geometryType: 'line',
- *   })
- *
- *   // presets are now sorted according to projectSettings.defaultPresets.line
- * }
- * ```
- */
-export function useSortedPresets({
-	projectId,
-	geometryType,
-	includeDeleted,
-	lang,
-}: {
-	projectId: string
-	geometryType: 'point' | 'area' | 'vertex' | 'line' | 'relation'
-	includeDeleted?: boolean
-	lang?: string
-}) {
-	const {
-		data: presets,
-		error,
-		isRefetching,
-	} = useManyDocs({
-		projectId,
-		docType: 'preset',
-		includeDeleted,
-		lang,
-	})
-
-	const { data: projectSettings } = useProjectSettings({ projectId })
-
-	const sortedPresets = useMemo(() => {
-		return sortPresetsByDefaultOrder(
-			presets as Array<Extract<MapeoDoc, { schemaName: 'preset' }>>,
-			projectSettings.defaultPresets,
-			geometryType,
-		)
-	}, [presets, projectSettings.defaultPresets, geometryType])
-
-	return {
-		data: sortedPresets,
-		error,
-		isRefetching,
-	}
 }
