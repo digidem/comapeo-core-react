@@ -10,11 +10,11 @@ export {
 	useCreateDocument,
 	useDeleteDocument,
 	useManyDocs,
+	usePresetsSelection,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
 	useUpdateDocument,
 } from './hooks/documents.js'
-export { sortPresetsByDefaultOrder } from './lib/presets.js'
 export {
 	useAcceptInvite,
 	useManyInvites,

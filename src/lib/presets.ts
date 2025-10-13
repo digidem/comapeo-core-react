@@ -1,68 +1,33 @@
-import type { MapeoDoc } from '@comapeo/schema' with { 'resolution-mode': 'import' }
-
-type PresetDoc = Extract<MapeoDoc, { schemaName: 'preset' }>
+import type { Preset } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 
 /**
- * Sort presets based on a custom order defined by an array of preset IDs.
- *
- * @param presets Array of preset documents to sort
- * @param orderedPresetIds Optional array of preset document IDs defining the desired order.
- *                         Corresponds to one of the arrays in `projectSettings.defaultPresets`
- *                         (e.g., `defaultPresets.point` or `defaultPresets.line`)
- * @returns Sorted array of presets
- *
- * - If `orderedPresetIds` is provided and has matching presets, returns only those presets in the specified order
- * - If `orderedPresetIds` is missing, empty, or has no matches, returns all presets sorted alphabetically by name (case-insensitive)
- *
- * **Note:** This function does NOT filter by geometry type. Consumers should filter presets by geometry before or after sorting.
- *
- * @example
- * ```tsx
- * import { sortPresetsByDefaultOrder, useManyDocs, useProjectSettings } from '@comapeo/core-react'
- *
- * function ObservationCategoryChooser() {
- *   const { data: presets } = useManyDocs({ projectId, docType: 'preset' })
- *   const { data: settings } = useProjectSettings({ projectId })
- *
- *   // Sort presets according to the point preset order
- *   const sortedPresets = sortPresetsByDefaultOrder(
- *     presets,
- *     settings.defaultPresets.point
- *   )
- *   // Returns presets in the order specified by settings.defaultPresets.point
- * }
- *
- * function TrackCategoryChooser() {
- *   const { data: presets } = useManyDocs({ projectId, docType: 'preset' })
- *   const { data: settings } = useProjectSettings({ projectId })
- *
- *   // Sort presets according to the line preset order
- *   const sortedPresets = sortPresetsByDefaultOrder(
- *     presets,
- *     settings.defaultPresets.line
- *   )
- * }
- * ```
+ * Internal helper to sort presets alphabetically by name (case-insensitive).
  */
-export function sortPresetsByDefaultOrder(
-	presets: Array<PresetDoc>,
-	orderedPresetIds?: Array<string>,
-): Array<PresetDoc> {
-	if (!orderedPresetIds || orderedPresetIds.length === 0) {
-		return [...presets].sort((a, b) =>
-			a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-		)
-	}
-	const presetMap = new Map(presets.map((p) => [p.docId, p]))
-	const orderedPresets = orderedPresetIds
-		.map((id) => presetMap.get(id))
-		.filter((p): p is PresetDoc => Boolean(p))
+function sortByName(presets: Array<Preset>): Array<Preset> {
+	return [...presets].sort((a, b) =>
+		a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+	)
+}
 
-	if (orderedPresets.length === 0) {
-		return [...presets].sort((a, b) =>
-			a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-		)
+export function getPresetsSelection(
+	presets: Array<Preset>,
+	orderedPresetIds: Array<string> = [],
+): Array<Preset> {
+	if (orderedPresetIds.length === 0) {
+		return sortByName(presets)
 	}
 
-	return orderedPresets
+	const presetsSelection: Array<Preset> = []
+	for (const presetId of orderedPresetIds) {
+		const preset = presets.find((p) => p.docId === presetId)
+		if (preset) {
+			presetsSelection.push(preset)
+		}
+	}
+
+	if (presetsSelection.length === 0) {
+		return sortByName(presets)
+	}
+
+	return presetsSelection
 }
