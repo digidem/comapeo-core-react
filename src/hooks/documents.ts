@@ -286,7 +286,7 @@ const dataTypeToGeometry = {
  * Retrieve presets for category selection, ordered by project settings.
  *
  * Returns presets in the order defined by `projectSettings.defaultPresets` for the
- * specified data type. Falls back to alphabetical order if no defaults are configured.
+ * specified data type. Falls back to alphabetical order (by preset name) if no defaults are configured.
  *
  * @param opts.projectId Project public ID
  * @param opts.dataType Type of data being created ('observation' or 'track')
@@ -329,7 +329,7 @@ export function usePresetsSelection({
 
 	const presetsSelection = useMemo(() => {
 		const geometry = dataTypeToGeometry[dataType]
-		const defaults = projectSettings.defaultPresets?.[geometry] || []
+		const defaults = projectSettings.defaultPresets?.[geometry]
 		return getPresetsSelection(presets, defaults)
 	}, [presets, projectSettings.defaultPresets, dataType])
 

@@ -92,11 +92,8 @@ describe('getPresetsSelection', () => {
 
 		const presets = await project.preset.getMany()
 
-		const pointResult = getPresetsSelection(
-			presets,
-			defaultPresets?.point || [],
-		)
-		const lineResult = getPresetsSelection(presets, defaultPresets?.line || [])
+		const pointResult = getPresetsSelection(presets, defaultPresets?.point)
+		const lineResult = getPresetsSelection(presets, defaultPresets?.line)
 
 		// Cannot use docId because it will change every time the test runs.
 		// Checking the names should be sufficient in this case
