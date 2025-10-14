@@ -10,6 +10,7 @@ export {
 	useCreateDocument,
 	useDeleteDocument,
 	useManyDocs,
+	usePresetsSelection,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
 	useUpdateDocument,

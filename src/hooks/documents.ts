@@ -1,9 +1,12 @@
+import type { Preset } from '@comapeo/schema' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
+import { useMemo } from 'react'
 
+import { getPresetsSelection } from '../lib/presets.js'
 import {
 	createDocumentMutationOptions,
 	deleteDocumentMutationOptions,
@@ -13,7 +16,7 @@ import {
 	updateDocumentMutationOptions,
 } from '../lib/react-query/documents.js'
 import type { WriteableDocumentType } from '../lib/types.js'
-import { useSingleProject } from './projects.js'
+import { useProjectSettings, useSingleProject } from './projects.js'
 
 /**
  * Retrieve a single document from the database based on the document's document ID.
@@ -273,4 +276,62 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 	return status === 'error'
 		? { error, mutate, mutateAsync, reset, status }
 		: { error: null, mutate, mutateAsync, reset, status }
+}
+const dataTypeToGeometry = {
+	observation: 'point',
+	track: 'line',
+} as const
+
+/**
+ * Retrieve presets for category selection, ordered by project settings.
+ *
+ * Returns presets in the order defined by `projectSettings.defaultPresets` for the
+ * specified data type. Falls back to alphabetical order (by preset name) if no defaults are configured.
+ *
+ * @param opts.projectId Project public ID
+ * @param opts.dataType Type of data being created ('observation' or 'track')
+ * @param opts.lang Language to translate presets into
+ *
+ * @example
+ * ```tsx
+ * function ObservationCategoryChooser() {
+ *   const presets = usePresetsSelection({
+ *     projectId: '...',
+ *     dataType: 'observation',
+ *   })
+ * }
+ * ```
+ *
+ * ```tsx
+ * function TrackCategoryChooser() {
+ *   const presets = usePresetsSelection({
+ *     projectId: '...',
+ *     dataType: 'track',
+ *   })
+ * }
+ * ```
+ */
+export function usePresetsSelection({
+	projectId,
+	dataType,
+	lang,
+}: {
+	projectId: string
+	dataType: 'observation' | 'track'
+	lang?: string
+}): Array<Preset> {
+	const { data: projectSettings } = useProjectSettings({ projectId })
+	const { data: presets } = useManyDocs({
+		projectId,
+		docType: 'preset',
+		lang,
+	})
+
+	const presetsSelection = useMemo(() => {
+		const geometry = dataTypeToGeometry[dataType]
+		const defaults = projectSettings.defaultPresets?.[geometry]
+		return getPresetsSelection(presets, defaults)
+	}, [presets, projectSettings.defaultPresets, dataType])
+
+	return presetsSelection
 }
