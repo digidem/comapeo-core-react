@@ -20,7 +20,6 @@ import {
 	documentCreatedByQueryOptions,
 	exportGeoJSONMutationOptions,
 	exportZipFileMutationOptions,
-	importProjectCategoriesMutationOptions,
 	importProjectConfigMutationOptions,
 	leaveProjectMutationOptions,
 	mediaServerOriginQueryOptions,
@@ -457,35 +456,8 @@ export function useLeaveProject() {
 }
 
 /**
- * Update the categories of a project using an external file.
- *
- * @param opts.projectId Public ID of the project to apply changes to.
- */
-export function useImportProjectCategories({
-	projectId,
-}: {
-	projectId: string
-}) {
-	const queryClient = useQueryClient()
-	const { data: projectApi } = useSingleProject({ projectId })
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		importProjectCategoriesMutationOptions({
-			queryClient,
-			projectApi,
-			projectId,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
-}
-
-/**
  * Update the configuration of a project using an external file.
  *
- * @deprecated Use `useImportProjectCategories` instead.
  * @param opts.projectId Public ID of the project to apply changes to.
  */
 export function useImportProjectConfig({ projectId }: { projectId: string }) {

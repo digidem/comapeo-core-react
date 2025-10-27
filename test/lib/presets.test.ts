@@ -75,7 +75,7 @@ describe('getPresetsSelection', () => {
 		expect(result.map((r) => r.docId)).toEqual(['l2', 'both-1', 'a'])
 	})
 
-	it('works with default categories (@mapeo/default-config@6.0.0)', async (t) => {
+	it('works with default categories (@mapeo/default-config@5.0.0)', async (t) => {
 		const { client, cleanup } = setupCoreIpc()
 
 		t.onTestFinished(() => {
@@ -99,7 +99,38 @@ describe('getPresetsSelection', () => {
 		// Checking the names should be sufficient in this case
 		expect(pointResult.map((p) => p.name)).toMatchInlineSnapshot(`
 			[
+			  "Waterfall",
+			  "Animal",
+			  "Airstrip",
+			  "New area",
+			  "Boundary",
+			  "Building",
+			  "Cave",
+			  "Camp",
+			  "Clay",
+			  "Community",
+			  "Fishing Site",
+			  "Hills",
+			  "House",
+			  "Gathering Site",
+			  "Lake",
+			  "Hunting Site",
+			  "New line",
+			  "Palm",
+			  "Path",
+			  "Plant",
 			  "New point",
+			  "River",
+			  "Salt lick",
+			  "Special site",
+			  "Stream",
+			  "Farmland",
+			  "Threat",
+			  "Tree",
+			]
+		`)
+		expect(lineResult.map((p) => p.name)).toMatchInlineSnapshot(`
+			[
 			  "Airstrip",
 			  "Animal",
 			  "Boundary",
@@ -108,12 +139,16 @@ describe('getPresetsSelection', () => {
 			  "Cave",
 			  "Clay",
 			  "Community",
+			  "Farmland",
 			  "Fishing Site",
 			  "Gathering Site",
 			  "Hills",
 			  "House",
 			  "Hunting Site",
 			  "Lake",
+			  "New area",
+			  "New line",
+			  "New point",
 			  "Palm",
 			  "Path",
 			  "Plant",
@@ -121,20 +156,9 @@ describe('getPresetsSelection', () => {
 			  "Salt lick",
 			  "Special site",
 			  "Stream",
-			  "Farmland",
 			  "Threat",
 			  "Tree",
 			  "Waterfall",
-			]
-		`)
-		expect(lineResult.map((p) => p.name)).toMatchInlineSnapshot(`
-			[
-			  "New line",
-			  "Boundary",
-			  "River",
-			  "Path",
-			  "Stream",
-			  "Threat",
 			]
 		`)
 	})
