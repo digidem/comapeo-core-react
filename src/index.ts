@@ -35,6 +35,7 @@ export {
 	useDisconnectSyncServers,
 	useDocumentCreatedBy,
 	useIconUrl,
+	useImportProjectCategories,
 	useImportProjectConfig,
 	useLeaveProject,
 	useManyMembers,
