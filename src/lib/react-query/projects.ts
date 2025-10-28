@@ -342,6 +342,28 @@ export function leaveProjectMutationOptions({
 	} satisfies UseMutationOptions<void, Error, { projectId: string }>
 }
 
+export function importProjectCategoriesMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: ({ filePath }) => {
+			return projectApi.$importCategories({ filePath })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectByIdQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<void, Error, { filePath: string }>
+}
+
 export function importProjectConfigMutationOptions({
 	projectApi,
 	projectId,
