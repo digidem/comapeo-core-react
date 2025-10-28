@@ -43,6 +43,7 @@ export {
 	useOwnRoleInProject,
 	useProjectSettings,
 	useRemoveServerPeer,
+	useRemoveMember,
 	useSetAutostopDataSyncTimeout,
 	useSingleMember,
 	useSingleProject,
