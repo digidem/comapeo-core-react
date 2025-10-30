@@ -8,7 +8,7 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 import {
 	addServerPeerMutationOptions,
@@ -20,6 +20,8 @@ import {
 	documentCreatedByQueryOptions,
 	exportGeoJSONMutationOptions,
 	exportZipFileMutationOptions,
+	getMembersQueryKey,
+	getProjectRoleQueryKey,
 	importProjectCategoriesMutationOptions,
 	importProjectConfigMutationOptions,
 	leaveProjectMutationOptions,
@@ -30,6 +32,7 @@ import {
 	projectOwnRoleQueryOptions,
 	projectSettingsQueryOptions,
 	projectsQueryOptions,
+	removeProjectMemberMutationOptions,
 	removeServerPeerMutationOptions,
 	setAutostopDataSyncTimeoutMutationOptions,
 	startSyncMutationOptions,
@@ -544,6 +547,76 @@ export function useChangeMemberRole({ projectId }: { projectId: string }) {
 	return status === 'error'
 		? { error, mutate, mutateAsync, reset, status }
 		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Remove a member from a project, providing an optional reason for removal.
+ *
+ * Do NOT use this for removing your own device from a project. Use `useLeaveProject` instead.
+ *
+ * @param opts.projectId Project public ID
+ *
+ * @example
+ * ```tsx
+ * function BasicExample() {
+ *   const { mutate } = useRemoveMember({ projectId: '...' })
+ *   mutate({
+ *     deviceId: '...',
+ *     // Optional
+ *     reason: '...',
+ *   })
+ * }
+ * ```
+ */
+export function useRemoveMember({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		removeProjectMemberMutationOptions({ projectId, projectApi, queryClient }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Set up listener for changes to your own role in a project.
+ * It is necessary to use this if you want the project role-related read hooks to update
+ * based on role change events that are received in the background.
+ *
+ * @example
+ * ```tsx
+ * function SomeComponent({ projectId }: { projectId: string }) {
+ *   useProjectOwnRoleChangeListener({ projectId })
+ * }
+ * ```
+ */
+export function useProjectOwnRoleChangeListener({
+	projectId,
+}: {
+	projectId: string
+}) {
+	const queryClient = useQueryClient()
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	useEffect(() => {
+		function invalidateCache() {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectRoleQueryKey({ projectId }),
+			})
+		}
+
+		projectApi.addListener('own-role-change', invalidateCache)
+
+		return () => {
+			projectApi.removeListener('own-role-change', invalidateCache)
+		}
+	}, [projectApi, queryClient, projectId])
 }
 
 /**

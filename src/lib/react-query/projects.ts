@@ -442,6 +442,39 @@ export function changeMemberRoleMutationOptions({
 	>
 }
 
+export function removeProjectMemberMutationOptions({
+	projectApi,
+	projectId,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	projectId: string
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ deviceId, reason }) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return reason
+				? projectApi.$member.remove(deviceId, { reason })
+				: projectApi.$member.remove(deviceId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	} satisfies UseMutationOptions<
+		void,
+		Error,
+		{
+			deviceId: string
+			reason?: string
+		}
+	>
+}
+
 export function createBlobMutationOptions({
 	projectApi,
 }: {
