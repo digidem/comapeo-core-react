@@ -550,7 +550,9 @@ export function useChangeMemberRole({ projectId }: { projectId: string }) {
 }
 
 /**
- * Remove a member from a project.
+ * Remove a member from a project, providing an optional reason for removal.
+ *
+ * Do NOT use this for removing your own device from a project. Use `useLeaveProject` instead.
  *
  * @param opts.projectId Project public ID
  *
