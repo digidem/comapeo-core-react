@@ -589,11 +589,11 @@ export function useRemoveMember({ projectId }: { projectId: string }) {
  * @example
  * ```tsx
  * function SomeComponent({ projectId }: { projectId: string }) {
- *   useSetUpProjectOwnRoleChangeListener({ projectId })
+ *   useProjectOwnRoleChangeListener({ projectId })
  * }
  * ```
  */
-export function useSetUpProjectOwnRoleChangeListener({
+export function useProjectOwnRoleChangeListener({
 	projectId,
 }: {
 	projectId: string

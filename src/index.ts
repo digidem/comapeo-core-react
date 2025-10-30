@@ -41,6 +41,7 @@ export {
 	useManyMembers,
 	useManyProjects,
 	useOwnRoleInProject,
+	useProjectOwnRoleChangeListener,
 	useProjectSettings,
 	useRemoveServerPeer,
 	useRemoveMember,
