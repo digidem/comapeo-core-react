@@ -464,9 +464,6 @@ export function removeProjectMemberMutationOptions({
 			queryClient.invalidateQueries({
 				queryKey: getMembersQueryKey({ projectId }),
 			})
-			queryClient.invalidateQueries({
-				queryKey: getProjectRoleQueryKey({ projectId }),
-			})
 		},
 	} satisfies UseMutationOptions<
 		void,
