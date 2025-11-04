@@ -620,7 +620,7 @@ export function useProjectOwnRoleChangeListener({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	useEffect(() => {
-		function onRoleChange() {
+		function invalidateCache() {
 			queryClient.invalidateQueries({
 				queryKey: getMembersQueryKey({ projectId }),
 			})
@@ -629,10 +629,10 @@ export function useProjectOwnRoleChangeListener({
 			})
 		}
 
-		projectApi.addListener('own-role-change', onRoleChange)
+		projectApi.addListener('own-role-change', invalidateCache)
 
 		return () => {
-			projectApi.removeListener('own-role-change', onRoleChange)
+			projectApi.removeListener('own-role-change', invalidateCache)
 		}
 	}, [projectApi, queryClient, projectId])
 
