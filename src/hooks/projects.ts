@@ -586,17 +586,34 @@ export function useRemoveMember({ projectId }: { projectId: string }) {
  * It is necessary to use this if you want the project role-related read hooks to update
  * based on role change events that are received in the background.
  *
+ * @param opts.callback Optional callback to invoke after cache invalidation when role changes
+ *
  * @example
  * ```tsx
  * function SomeComponent({ projectId }: { projectId: string }) {
  *   useProjectOwnRoleChangeListener({ projectId })
  * }
  * ```
+ *
+ * @example
+ * ```tsx
+ * function ComponentWithCallback({ projectId }: { projectId: string }) {
+ *   useProjectOwnRoleChangeListener({
+ *     projectId,
+ *     callback: () => {
+ *       // Handle role change, e.g., navigate to default project
+ *       console.log('Role changed!')
+ *     }
+ *   })
+ * }
+ * ```
  */
 export function useProjectOwnRoleChangeListener({
 	projectId,
+	callback,
 }: {
 	projectId: string
+	callback?: () => void
 }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -609,6 +626,7 @@ export function useProjectOwnRoleChangeListener({
 			queryClient.invalidateQueries({
 				queryKey: getProjectRoleQueryKey({ projectId }),
 			})
+			callback?.()
 		}
 
 		projectApi.addListener('own-role-change', invalidateCache)
@@ -616,7 +634,7 @@ export function useProjectOwnRoleChangeListener({
 		return () => {
 			projectApi.removeListener('own-role-change', invalidateCache)
 		}
-	}, [projectApi, queryClient, projectId])
+	}, [projectApi, queryClient, projectId, callback])
 }
 
 /**
