@@ -2,6 +2,7 @@ import type {
 	BlobApi,
 	IconApi,
 } from '@comapeo/core' with { 'resolution-mode': 'import' }
+import type { RoleChangeEvent } from '@comapeo/core/dist/mapeo-project.js' with { 'resolution-mode': 'import' }
 import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
 import {
 	useMutation,
@@ -586,17 +587,34 @@ export function useRemoveMember({ projectId }: { projectId: string }) {
  * It is necessary to use this if you want the project role-related read hooks to update
  * based on role change events that are received in the background.
  *
+ * @param opts.listener Optional listener to invoke when role changes
+ *
  * @example
  * ```tsx
  * function SomeComponent({ projectId }: { projectId: string }) {
  *   useProjectOwnRoleChangeListener({ projectId })
  * }
  * ```
+ *
+ * @example
+ * ```tsx
+ * function ComponentWithListener({ projectId }: { projectId: string }) {
+ *   useProjectOwnRoleChangeListener({
+ *     projectId,
+ *     listener: (event) => {
+ *       // Handle role change, e.g., navigate to default project
+ *       console.log('New role:', event.role)
+ *     }
+ *   })
+ * }
+ * ```
  */
 export function useProjectOwnRoleChangeListener({
 	projectId,
+	listener,
 }: {
 	projectId: string
+	listener?: (event: RoleChangeEvent) => void
 }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -617,6 +635,18 @@ export function useProjectOwnRoleChangeListener({
 			projectApi.removeListener('own-role-change', invalidateCache)
 		}
 	}, [projectApi, queryClient, projectId])
+
+	useEffect(() => {
+		if (listener) {
+			projectApi.addListener('own-role-change', listener)
+		}
+
+		return () => {
+			if (listener) {
+				projectApi.removeListener('own-role-change', listener)
+			}
+		}
+	}, [projectApi, listener])
 }
 
 /**
