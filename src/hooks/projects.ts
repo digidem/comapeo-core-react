@@ -14,6 +14,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import {
 	addServerPeerMutationOptions,
 	changeMemberRoleMutationOptions,
+	closeMutationOptions,
 	connectSyncServersMutationOptions,
 	createBlobMutationOptions,
 	createProjectMutationOptions,
@@ -820,6 +821,75 @@ export function useExportZipFile({ projectId }: { projectId: string }) {
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		exportZipFileMutationOptions({ projectApi }),
+	)
+
+	return status === 'error'
+		? { error, mutate, mutateAsync, reset, status }
+		: { error: null, mutate, mutateAsync, reset, status }
+}
+
+/**
+ * Closes the project.
+ *
+ * After doing this, any subsequent usage of the project instance will not work.
+ * Note that mounted read hooks that make use of the affected project instance will attempt to refetch,
+ * triggering an update to the `isRefetching` field and eventually populating the `error` field, while the `data`
+ * field will represent the last successful read. As per React Query default behavior, this will not cause wrapping suspense boundaries
+ * or error boundaries to be triggered by default. In general, it is up to the consumer of the hooks to handle these states where the hooks are used
+ * (see example).
+ *
+ * @example
+ * ```ts
+ * function Example() {
+ *     const closeProject = useCloseProject({ projectId });
+ *
+ *     function handleClick() {
+ *       closeProject.mutate(undefined, {
+ *           onSuccess: () => {
+ *                // Do something like navigate to a different page
+ *           }
+ *       })
+ *     }
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * function ErrorHandlingExample({ projectId }: { projetId: string }) {
+ *   const { data, isRefetching, error } = useManyDocs({ projectId, docType: 'observation' })
+ *
+ *   const closeProject = useCloseProject({ projectId })
+ *
+ *   return (
+ *     <div>
+ *       {isRefetching ? <SomeFetchingIndicator /> : error ? <SomeErrorIndicator /> : null}
+ *
+ *       <ul>
+ *         {\/* When `error` is `null`, this data represents the last successful read! (standard React Query behavior) *\/}
+ *         {data.map(d => <li key={d.docId}>Observation document ID: {d.docId}</li>)}
+ *       </ul>
+ *
+ *       <button
+ *           onClick={() => {
+ *               closeProject.mutate(undefined)
+ *           }}
+ *       >
+ *          Close project
+ *       </button>
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @param opts.projectId Public ID of the project to close.
+ */
+export function useCloseProject({ projectId }: { projectId: string }) {
+	const queryClient = useQueryClient()
+
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { error, mutate, mutateAsync, reset, status } = useMutation(
+		closeMutationOptions({ projectApi, queryClient }),
 	)
 
 	return status === 'error'

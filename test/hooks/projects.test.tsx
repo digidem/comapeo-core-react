@@ -1,20 +1,223 @@
 import { QueryClient } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import type { JSXElementConstructor, ReactNode } from 'react'
-import { assert, describe, test } from 'vitest'
+import { assert, describe, expect, test } from 'vitest'
 
 import {
+	useCloseProject,
 	useDataSyncProgress,
+	useOwnRoleInProject,
 	useStartSync,
 	useStopSync,
 } from '../../src/hooks/projects.js'
 import {
 	useCreateProject,
+	useManyDocs,
 	useSingleProject,
 	useSyncState,
+	type WriteableDocumentType,
 } from '../../src/index.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
 import { createClientApiWrapper } from '../helpers/react.js'
+
+describe('close', () => {
+	test('makes project instance unusable', async (t) => {
+		const { client, cleanup } = setupCoreIpc()
+
+		t.onTestFinished(() => {
+			return cleanup()
+		})
+
+		const queryClient = new QueryClient()
+
+		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+
+		const projectId = await client.createProject({
+			name: 'project_1',
+		})
+
+		const singleProjectHook = renderHook(
+			({ projectId }) => useSingleProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+
+		const closeProjectHook = renderHook(
+			({ projectId }) => useCloseProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(() => {
+			assert(singleProjectHook.result.current !== null)
+			assert(closeProjectHook.result.current !== null)
+		})
+
+		await act(async () => {
+			await closeProjectHook.result.current.mutateAsync(undefined)
+		})
+
+		await expect(
+			singleProjectHook.result.current.data.$getOwnRole(),
+			'Cannot use top-level method',
+		).rejects.toThrowError('Cannot await idle after closing')
+
+		await expect(
+			singleProjectHook.result.current.data.observation.getMany(),
+			'Cannot use data type',
+		).rejects.toThrowError('Cannot await idle after closing')
+
+		// Ensure subsequent hook does not produce different result
+		const otherSingleProjectHook = renderHook(
+			({ projectId }) => useSingleProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(() => {
+			assert(singleProjectHook.result.current !== null)
+		})
+
+		await expect(
+			otherSingleProjectHook.result.current.data.$getOwnRole(),
+			'Cannot use top-level method',
+		).rejects.toThrowError('Cannot await idle after closing')
+
+		await expect(
+			otherSingleProjectHook.result.current.data.observation.getMany(),
+			'Cannot use data type',
+		).rejects.toThrowError('Cannot await idle after closing')
+	})
+
+	test('causes other project-specific read hooks to populate error field', async (t) => {
+		const { client, cleanup } = setupCoreIpc()
+
+		t.onTestFinished(() => {
+			return cleanup()
+		})
+
+		const queryClient = new QueryClient()
+
+		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+
+		const projectId = await client.createProject({
+			name: 'project_1',
+		})
+
+		const ownRoleHook = renderHook(
+			({ projectId }) => useOwnRoleInProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+
+		const manyDocsHook = renderHook(
+			({ docType, projectId }) => useManyDocs({ projectId, docType }),
+			{
+				wrapper,
+				initialProps: {
+					docType: 'observation' as WriteableDocumentType,
+					projectId,
+				},
+			},
+		)
+
+		const closeProjectHook = renderHook(
+			({ projectId }) => useCloseProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(() => {
+			assert(ownRoleHook.result.current !== null)
+			assert(manyDocsHook.result.current !== null)
+			assert(closeProjectHook.result.current !== null)
+		})
+
+		const ownRoleDataBefore = ownRoleHook.result.current.data
+		const manyDocsHookDataBefore = manyDocsHook.result.current.data
+
+		await act(async () => {
+			await closeProjectHook.result.current.mutateAsync(undefined)
+		})
+
+		ownRoleHook.rerender({ projectId })
+		manyDocsHook.rerender({ projectId, docType: 'observation' as const })
+
+		await waitFor(() => {
+			assert(ownRoleHook.result.current.isRefetching === false)
+			assert(manyDocsHook.result.current.isRefetching === false)
+		})
+
+		expect(ownRoleHook.result.current.data).toStrictEqual(ownRoleDataBefore)
+		expect(ownRoleHook.result.current.error).toStrictEqual(
+			new Error('Cannot await idle after closing'),
+		)
+		expect(manyDocsHook.result.current.data).toStrictEqual(
+			manyDocsHookDataBefore,
+		)
+		expect(manyDocsHook.result.current.error).toStrictEqual(
+			new Error('Cannot await idle after closing'),
+		)
+	})
+
+	test('does not affect usage of other non-closed projects', async (t) => {
+		const { client, cleanup } = setupCoreIpc()
+
+		t.onTestFinished(() => {
+			return cleanup()
+		})
+
+		const queryClient = new QueryClient()
+
+		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+
+		const projectId1 = await client.createProject({
+			name: 'project_1',
+		})
+
+		const projectId2 = await client.createProject({
+			name: 'project_2',
+		})
+
+		// Start with project 1
+		const singleProjectHook = renderHook(
+			({ projectId }) => useSingleProject({ projectId }),
+			{ wrapper, initialProps: { projectId: projectId1 } },
+		)
+
+		const closeProjectHook = renderHook(
+			({ projectId }) => useCloseProject({ projectId }),
+			{ wrapper, initialProps: { projectId: projectId1 } },
+		)
+
+		await waitFor(() => {
+			assert(singleProjectHook.result.current !== null)
+			assert(closeProjectHook.result.current !== null)
+		})
+
+		await act(async () => {
+			await closeProjectHook.result.current.mutateAsync(undefined)
+		})
+
+		// Switch to project 2
+		singleProjectHook.rerender({ projectId: projectId2 })
+
+		await waitFor(() => {
+			assert(singleProjectHook.result.current !== null)
+		})
+
+		await expect(
+			singleProjectHook.result.current.data.$getProjectSettings(),
+			'Switched to project 2',
+		).resolves.toMatchObject({ name: 'project_2' })
+
+		// Check that project 2 instance can be called
+		await expect(
+			singleProjectHook.result.current.data.$getOwnRole(),
+			'Can use top-level method',
+		).resolves.toBeDefined()
+
+		await expect(
+			singleProjectHook.result.current.data.observation.getMany(),
+			'Can use data type',
+		).resolves.toBeDefined()
+	})
+})
 
 describe('sync', () => {
 	async function initializeProject({

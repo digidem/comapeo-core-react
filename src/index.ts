@@ -27,6 +27,7 @@ export { useMapStyleUrl } from './hooks/maps.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
+	useCloseProject,
 	useConnectSyncServers,
 	useCreateBlob,
 	useCreateProject,

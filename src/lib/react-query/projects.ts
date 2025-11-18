@@ -624,3 +624,21 @@ export function exportZipFileMutationOptions({
 		}
 	>
 }
+
+export function closeMutationOptions({
+	projectApi,
+	queryClient,
+}: {
+	projectApi: MapeoProjectApi
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.close()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: getProjectsQueryKey() })
+		},
+	} satisfies UseMutationOptions<void, Error, void>
+}
