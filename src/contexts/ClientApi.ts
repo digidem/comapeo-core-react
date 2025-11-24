@@ -2,13 +2,22 @@ import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'im
 import {
 	createContext,
 	createElement,
+	useContext,
+	useMemo,
+	useRef,
 	type Context,
 	type JSX,
 	type ReactNode,
+	type RefObject,
 } from 'react'
 
-export const ClientApiContext: Context<MapeoClientApi | null> =
-	createContext<MapeoClientApi | null>(null)
+type ClientApiContextType = null | {
+	clientApi: MapeoClientApi
+	inviteListenerCountRef: RefObject<number>
+}
+
+export const ClientApiContext: Context<ClientApiContextType> =
+	createContext<ClientApiContextType>(null)
 
 /**
  * Create a context provider that holds a CoMapeo API client instance.
@@ -24,9 +33,25 @@ export function ClientApiProvider({
 	children: ReactNode
 	clientApi: MapeoClientApi
 }): JSX.Element {
-	return createElement(
-		ClientApiContext.Provider,
-		{ value: clientApi },
-		children,
+	const inviteListenerCountRef = useRef(0)
+	const value = useMemo(
+		() => ({
+			clientApi,
+			inviteListenerCountRef,
+		}),
+		[clientApi],
 	)
+	return createElement(ClientApiContext.Provider, { value }, children)
+}
+
+export function useClientApiContext(): Exclude<ClientApiContextType, null> {
+	const contextValue = useContext(ClientApiContext)
+
+	if (!contextValue) {
+		throw new Error(
+			'No client API set. Make sure you set up the ClientApiContext provider properly',
+		)
+	}
+
+	return contextValue
 }

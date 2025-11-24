@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query'
 import { useEffect } from 'react'
 
+import { useClientApiContext } from '../contexts/ClientApi.js'
 import {
 	acceptInviteMutationOptions,
 	getInviteByIdQueryOptions,
@@ -34,21 +35,25 @@ import { useSingleProject } from './projects.js'
  */
 export function useSetUpInvitesListeners() {
 	const queryClient = useQueryClient()
-	const clientApi = useClientApi()
+	const { clientApi, inviteListenerCountRef } = useClientApiContext()
 
 	useEffect(() => {
 		function invalidateCache() {
 			queryClient.invalidateQueries({ queryKey: getInvitesQueryKey() })
 		}
-
-		clientApi.invite.addListener('invite-received', invalidateCache)
-		clientApi.invite.addListener('invite-updated', invalidateCache)
+		if (inviteListenerCountRef.current === 0) {
+			clientApi.invite.addListener('invite-received', invalidateCache)
+			clientApi.invite.addListener('invite-updated', invalidateCache)
+		}
+		inviteListenerCountRef.current += 1
 
 		return () => {
+			inviteListenerCountRef.current -= 1
+			if (inviteListenerCountRef.current > 0) return
 			clientApi.invite.removeListener('invite-received', invalidateCache)
 			clientApi.invite.removeListener('invite-updated', invalidateCache)
 		}
-	}, [clientApi, queryClient])
+	}, [clientApi, queryClient, inviteListenerCountRef])
 }
 
 /**
@@ -62,6 +67,7 @@ export function useSetUpInvitesListeners() {
  * ```
  */
 export function useManyInvites() {
+	useSetUpInvitesListeners()
 	const clientApi = useClientApi()
 	const { data, error, isRefetching } = useSuspenseQuery(
 		getInvitesQueryOptions({ clientApi }),
@@ -83,6 +89,7 @@ export function useManyInvites() {
  * ```
  */
 export function useSingleInvite({ inviteId }: { inviteId: string }) {
+	useSetUpInvitesListeners()
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery(
