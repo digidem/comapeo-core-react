@@ -3,12 +3,10 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import { useEffect } from 'react'
 
 import {
 	acceptInviteMutationOptions,
 	getInviteByIdQueryOptions,
-	getInvitesQueryKey,
 	getInvitesQueryOptions,
 	rejectInviteMutationOptions,
 	requestCancelInviteMutationOptions,
@@ -16,40 +14,6 @@ import {
 } from '../lib/react-query/invites.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
-
-/**
- * Set up listeners for received and updated invites.
- * It is necessary to use this if you want the invites-related read hooks to update
- * based on invites that are received or changed in the background.
- *
- * @example
- * ```tsx
- * function App() {
- *   // Use this somewhere near the root of the application
- *   useSetUpInvitesListeners()
- *
- *   return <RestOfApp />
- * }
- * ```
- */
-export function useSetUpInvitesListeners() {
-	const queryClient = useQueryClient()
-	const clientApi = useClientApi()
-
-	useEffect(() => {
-		function invalidateCache() {
-			queryClient.invalidateQueries({ queryKey: getInvitesQueryKey() })
-		}
-
-		clientApi.invite.addListener('invite-received', invalidateCache)
-		clientApi.invite.addListener('invite-updated', invalidateCache)
-
-		return () => {
-			clientApi.invite.removeListener('invite-received', invalidateCache)
-			clientApi.invite.removeListener('invite-updated', invalidateCache)
-		}
-	}, [clientApi, queryClient])
-}
 
 /**
  * Get all invites that the device has received.
