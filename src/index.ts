@@ -21,7 +21,6 @@ export {
 	useRejectInvite,
 	useRequestCancelInvite,
 	useSendInvite,
-	useSetUpInvitesListeners,
 	useSingleInvite,
 } from './hooks/invites.js'
 export { useMapStyleUrl } from './hooks/maps.js'

@@ -4,8 +4,9 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
+import { useContext } from 'react'
 
-import { useClientApiContext } from '../contexts/ClientApi.js'
+import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	deviceInfoQueryOptions,
 	isArchiveDeviceQueryOptions,
@@ -39,8 +40,15 @@ import {
  *
  */
 export function useClientApi(): MapeoClientApi {
-	const contextValue = useClientApiContext()
-	return contextValue.clientApi
+	const clientApi = useContext(ClientApiContext)
+
+	if (!clientApi) {
+		throw new Error(
+			'No client API set. Make sure you set up the ClientApiContext provider properly',
+		)
+	}
+
+	return clientApi
 }
 
 /**

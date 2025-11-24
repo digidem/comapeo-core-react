@@ -1,23 +1,18 @@
 import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import { useQueryClient } from '@tanstack/react-query'
 import {
 	createContext,
 	createElement,
-	useContext,
-	useMemo,
-	useRef,
+	useEffect,
 	type Context,
 	type JSX,
 	type ReactNode,
-	type RefObject,
 } from 'react'
 
-type ClientApiContextType = null | {
-	clientApi: MapeoClientApi
-	inviteListenerCountRef: RefObject<number>
-}
+import { getInvitesQueryKey } from '../lib/react-query/invites.js'
 
-export const ClientApiContext: Context<ClientApiContextType> =
-	createContext<ClientApiContextType>(null)
+export const ClientApiContext: Context<MapeoClientApi | null> =
+	createContext<MapeoClientApi | null>(null)
 
 /**
  * Create a context provider that holds a CoMapeo API client instance.
@@ -33,25 +28,25 @@ export function ClientApiProvider({
 	children: ReactNode
 	clientApi: MapeoClientApi
 }): JSX.Element {
-	const inviteListenerCountRef = useRef(0)
-	const value = useMemo(
-		() => ({
-			clientApi,
-			inviteListenerCountRef,
-		}),
-		[clientApi],
+	const queryClient = useQueryClient()
+
+	useEffect(() => {
+		function invalidateCache() {
+			queryClient.invalidateQueries({ queryKey: getInvitesQueryKey() })
+		}
+
+		clientApi.invite.addListener('invite-received', invalidateCache)
+		clientApi.invite.addListener('invite-updated', invalidateCache)
+
+		return () => {
+			clientApi.invite.removeListener('invite-received', invalidateCache)
+			clientApi.invite.removeListener('invite-updated', invalidateCache)
+		}
+	}, [clientApi, queryClient])
+
+	return createElement(
+		ClientApiContext.Provider,
+		{ value: clientApi },
+		children,
 	)
-	return createElement(ClientApiContext.Provider, { value }, children)
-}
-
-export function useClientApiContext(): Exclude<ClientApiContextType, null> {
-	const contextValue = useContext(ClientApiContext)
-
-	if (!contextValue) {
-		throw new Error(
-			'No client API set. Make sure you set up the ClientApiContext provider properly',
-		)
-	}
-
-	return contextValue
 }
