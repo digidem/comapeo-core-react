@@ -1,4 +1,4 @@
-export { ClientApiProvider } from './contexts/ClientApi.js'
+export { ClientApiContext, ClientApiProvider } from './contexts/ClientApi.js'
 export {
 	useClientApi,
 	useIsArchiveDevice,
