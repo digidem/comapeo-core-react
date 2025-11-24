@@ -23,6 +23,8 @@ import { useSingleProject } from './projects.js'
  * It is necessary to use this if you want the invites-related read hooks to update
  * based on invites that are received or changed in the background.
  *
+ * @deprecated This is now handled automatically when needed.
+ *
  * @example
  * ```tsx
  * function App() {
@@ -34,6 +36,10 @@ import { useSingleProject } from './projects.js'
  * ```
  */
 export function useSetUpInvitesListeners() {
+	// no-op - now handled automatically in other hooks
+}
+
+function useEnsureInvitesListeners() {
 	const queryClient = useQueryClient()
 	const { clientApi, inviteListenerCountRef } = useClientApiContext()
 
@@ -67,7 +73,7 @@ export function useSetUpInvitesListeners() {
  * ```
  */
 export function useManyInvites() {
-	useSetUpInvitesListeners()
+	useEnsureInvitesListeners()
 	const clientApi = useClientApi()
 	const { data, error, isRefetching } = useSuspenseQuery(
 		getInvitesQueryOptions({ clientApi }),
@@ -89,7 +95,7 @@ export function useManyInvites() {
  * ```
  */
 export function useSingleInvite({ inviteId }: { inviteId: string }) {
-	useSetUpInvitesListeners()
+	useEnsureInvitesListeners()
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery(
