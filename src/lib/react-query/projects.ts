@@ -53,22 +53,6 @@ export function getMemberByIdQueryKey({
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'members', deviceId] as const
 }
 
-export function getDocumentCreatedByQueryKey({
-	projectId,
-	originalVersionId,
-}: {
-	projectId: string
-	originalVersionId: string
-}) {
-	return [
-		ROOT_QUERY_KEY,
-		'projects',
-		projectId,
-		'document_created_by',
-		originalVersionId,
-	] as const
-}
-
 /**
  * We call this within a project hook, because that's the only place the API is
  * exposed right now, but it is the same for all projects, so no need for
