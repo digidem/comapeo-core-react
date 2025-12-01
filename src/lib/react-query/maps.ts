@@ -167,8 +167,9 @@ export function acceptMapShareMutationOptions({
 		mutationFn: async ({ shareId }) => {
 			await new Promise((res) => setTimeout(res, 1000))
 			console.log('Accepted map share', shareId)
+			return shareId
 		},
-	} satisfies UseMutationOptions<void, Error, { shareId: string }>
+	} satisfies UseMutationOptions<string, Error, { shareId: string }>
 }
 
 export function rejectMapShareMutationOptions({
