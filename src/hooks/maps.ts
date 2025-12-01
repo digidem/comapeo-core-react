@@ -154,11 +154,11 @@ export function useSendMapShare({ projectId }: { projectId: string }) {
 }
 
 /**
- * Request a cancellation of an invite sent to another device.
+ * Request a cancellation of a map share that was previously sent.
  *
- * @param opts.projectId Public ID of project to request the invite cancellation for.
+ * @param opts.projectId Public ID of project to request the map share cancellation for.
  */
-export function useRequestCancelInvite({ projectId }: { projectId: string }) {
+export function useRequestCancelMapShare({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
