@@ -9,7 +9,11 @@ import {
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
-import { getMembersQueryKey, getProjectsQueryKey } from './projects.js'
+import {
+	getMembersQueryKey,
+	getProjectRoleQueryKey,
+	getProjectsQueryKey,
+} from './projects.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
@@ -66,12 +70,15 @@ export function acceptInviteMutationOptions({
 		mutationFn: async ({ inviteId }) => {
 			return clientApi.invite.accept({ inviteId })
 		},
-		onSuccess: () => {
+		onSuccess: (projectId) => {
 			queryClient.invalidateQueries({
 				queryKey: getInvitesQueryKey(),
 			})
 			queryClient.invalidateQueries({
 				queryKey: getProjectsQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectRoleQueryKey({ projectId }),
 			})
 		},
 	} satisfies UseMutationOptions<string, Error, { inviteId: string }>
