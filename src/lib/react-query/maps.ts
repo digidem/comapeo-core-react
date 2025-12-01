@@ -200,7 +200,7 @@ export function sendMapShareMutationOptions({
 	return {
 		...baseMutationOptions(),
 		mutationFn: async ({ deviceId, mapId }) => {
-			await new Promise((res) => setTimeout(res, 1000))
+			await new Promise((res) => setTimeout(res, 5000))
 			console.log(
 				`Sent map share for map ${mapId} to device ${deviceId} on project ${projectId}`,
 			)
