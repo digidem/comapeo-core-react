@@ -10,14 +10,14 @@ import { useMemo } from 'react'
 
 import { getPresetsSelection } from '../lib/presets.js'
 import {
-	createDocumentMutationOptions,
-	deleteDocumentMutationOptions,
-	documentByDocumentIdQueryOptions,
-	documentByVersionIdQueryOptions,
-	documentsQueryOptions,
-	updateDocumentMutationOptions,
-} from '../lib/react-query/documents.js'
-import type { WriteableDocumentType } from '../lib/types.js'
+	createDocMutationOptions,
+	deleteDocMutationOptions,
+	docByDocIdQueryOptions,
+	docByVersionIdQueryOptions,
+	docsQueryOptions,
+	updateDocMutationOptions,
+} from '../lib/react-query/docs.js'
+import type { WriteableDocType } from '../lib/types.js'
 import { useProjectSettings, useSingleProject } from './projects.js'
 
 /**
@@ -43,7 +43,7 @@ import { useProjectSettings, useSingleProject } from './projects.js'
  * }
  * ```
  */
-export function useSingleDocByDocId<D extends WriteableDocumentType>({
+export function useSingleDocByDocId<D extends WriteableDocType>({
 	projectId,
 	docType,
 	docId,
@@ -57,7 +57,7 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		documentByDocumentIdQueryOptions({
+		docByDocIdQueryOptions({
 			projectApi,
 			projectId,
 			docType,
@@ -96,7 +96,7 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
  * }
  * ```
  */
-export function useSingleDocByVersionId<D extends WriteableDocumentType>({
+export function useSingleDocByVersionId<D extends WriteableDocType>({
 	projectId,
 	docType,
 	versionId,
@@ -110,7 +110,7 @@ export function useSingleDocByVersionId<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		documentByVersionIdQueryOptions({
+		docByVersionIdQueryOptions({
 			projectApi,
 			projectId,
 			docType,
@@ -160,7 +160,7 @@ export function useSingleDocByVersionId<D extends WriteableDocumentType>({
  * }
  * ```
  */
-export function useManyDocs<D extends WriteableDocumentType>({
+export function useManyDocs<D extends WriteableDocType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -174,7 +174,7 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		documentsQueryOptions({
+		docsQueryOptions({
 			projectApi,
 			projectId,
 			docType,
@@ -196,7 +196,7 @@ export function useManyDocs<D extends WriteableDocumentType>({
  * @param opts.docType Document type to create.
  * @param opts.projectId Public ID of project to create document for.
  */
-export function useCreateDocument<D extends WriteableDocumentType>({
+export function useCreateDoc<D extends WriteableDocType>({
 	docType,
 	projectId,
 }: {
@@ -207,7 +207,7 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		createDocumentMutationOptions({
+		createDocMutationOptions({
 			docType,
 			projectApi,
 			projectId,
@@ -226,7 +226,7 @@ export function useCreateDocument<D extends WriteableDocumentType>({
  * @param opts.docType Document type to update.
  * @param opts.projectId Public ID of project document belongs to.
  */
-export function useUpdateDocument<D extends WriteableDocumentType>({
+export function useUpdateDoc<D extends WriteableDocType>({
 	docType,
 	projectId,
 }: {
@@ -237,7 +237,7 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		updateDocumentMutationOptions({
+		updateDocMutationOptions({
 			docType,
 			projectApi,
 			projectId,
@@ -256,7 +256,7 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
  * @param opts.docType Document type to delete.
  * @param opts.projectId Public ID of project document belongs to.
  */
-export function useDeleteDocument<D extends WriteableDocumentType>({
+export function useDeleteDoc<D extends WriteableDocType>({
 	docType,
 	projectId,
 }: {
@@ -267,7 +267,7 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		deleteDocumentMutationOptions({
+		deleteDocMutationOptions({
 			docType,
 			projectApi,
 			projectId,
