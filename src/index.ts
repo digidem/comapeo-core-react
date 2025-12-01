@@ -32,7 +32,6 @@ export {
 	useCreateProject,
 	useDataSyncProgress,
 	useDisconnectSyncServers,
-	useDocumentCreatedBy,
 	useIconUrl,
 	useImportProjectCategories,
 	useImportProjectConfig,

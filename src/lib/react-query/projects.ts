@@ -179,29 +179,6 @@ export function projectOwnRoleQueryOptions({
 	})
 }
 
-export function documentCreatedByQueryOptions({
-	projectApi,
-	projectId,
-	originalVersionId,
-}: {
-	projectApi: MapeoProjectApi
-	projectId: string
-	originalVersionId: string
-}) {
-	return queryOptions({
-		...baseQueryOptions(),
-		queryKey: getDocumentCreatedByQueryKey({
-			projectId,
-			originalVersionId,
-		}),
-		queryFn: async () => {
-			return projectApi.$originalVersionIdToDeviceId(originalVersionId)
-		},
-		staleTime: 'static',
-		gcTime: Infinity,
-	})
-}
-
 // Used as a placeholder so that we can read the server port from the $blobs.getUrl() method
 const FAKE_BLOB_ID: BlobApi.BlobId = {
 	type: 'photo',
