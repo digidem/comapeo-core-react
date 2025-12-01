@@ -25,7 +25,6 @@
 - [useManyMembers](#usemanymembers)
 - [useIconUrl](#useiconurl)
 - [useAttachmentUrl](#useattachmenturl)
-- [useDocumentCreatedBy](#usedocumentcreatedby)
 - [useOwnRoleInProject](#useownroleinproject)
 - [useAddServerPeer](#useaddserverpeer)
 - [useRemoveServerPeer](#useremoveserverpeer)
@@ -507,32 +506,6 @@ function VideoExample() {
       name: '...',
       driveId: '...',
     }
-  })
-}
-```
-
-
-### useDocumentCreatedBy
-
-Retrieve the device ID that created a document.
-
-| Function | Type |
-| ---------- | ---------- |
-| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
-
-Parameters:
-
-* `opts.projectId`: Project public ID
-* `opts.originalVersionId`: Version ID of document
-
-
-Examples:
-
-```tsx
-function BasicExample() {
-  const { data } = useDocumentCreatedBy({
-    projectId: '...',
-    originalVersionId: '...',
   })
 }
 ```
