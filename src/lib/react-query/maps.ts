@@ -52,20 +52,22 @@ type MapShareBase = {
 	estimatedSizeBytes: number
 }
 
-type MapShare =
-	| (MapShareBase & {
-			state: Exclude<MapShareState, 'downloading' | 'error'>
-	  })
-	| {
-			state: 'downloading'
-			/** Total bytes downloaded so far (compare with estimatedSizeBytes for progress) */
-			bytesDownloaded: number
-	  }
-	| {
-			state: 'error'
-			/** Error that occurred while receiving the map share */
-			error: Error
-	  }
+type MapShare = MapShareBase &
+	(
+		| {
+				state: Exclude<MapShareState, 'downloading' | 'error'>
+		  }
+		| {
+				state: 'downloading'
+				/** Total bytes downloaded so far (compare with estimatedSizeBytes for progress) */
+				bytesDownloaded: number
+		  }
+		| {
+				state: 'error'
+				/** Error that occurred while receiving the map share */
+				error: Error
+		  }
+	)
 
 const MOCK_MAP_SHARE = {
 	senderDeviceId: 'device-123',
