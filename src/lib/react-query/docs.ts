@@ -6,18 +6,14 @@ import {
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
-import {
-	WriteableDocument,
-	WriteableDocumentType,
-	WriteableValue,
-} from '../types.js'
+import { WriteableDoc, WriteableDocType, WriteableValue } from '../types.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
 	ROOT_QUERY_KEY,
 } from './shared.js'
 
-export function getDocumentsQueryKey<D extends WriteableDocumentType>({
+export function getDocsQueryKey<D extends WriteableDocType>({
 	projectId,
 	docType,
 }: {
@@ -27,7 +23,7 @@ export function getDocumentsQueryKey<D extends WriteableDocumentType>({
 	return [ROOT_QUERY_KEY, 'projects', projectId, docType] as const
 }
 
-export function getManyDocumentsQueryKey<D extends WriteableDocumentType>({
+export function getManyDocsQueryKey<D extends WriteableDocType>({
 	projectId,
 	docType,
 	includeDeleted,
@@ -47,7 +43,7 @@ export function getManyDocumentsQueryKey<D extends WriteableDocumentType>({
 	] as const
 }
 
-export function getDocumentByDocIdQueryKey<D extends WriteableDocumentType>({
+export function getDocByDocIdQueryKey<D extends WriteableDocType>({
 	projectId,
 	docType,
 	docId,
@@ -68,9 +64,7 @@ export function getDocumentByDocIdQueryKey<D extends WriteableDocumentType>({
 	] as const
 }
 
-export function getDocumentByVersionIdQueryKey<
-	D extends WriteableDocumentType,
->({
+export function getDocByVersionIdQueryKey<D extends WriteableDocType>({
 	projectId,
 	docType,
 	versionId,
@@ -91,7 +85,7 @@ export function getDocumentByVersionIdQueryKey<
 	] as const
 }
 
-export function documentsQueryOptions<D extends WriteableDocumentType>({
+export function docsQueryOptions<D extends WriteableDocType>({
 	projectApi,
 	projectId,
 	docType,
@@ -106,7 +100,7 @@ export function documentsQueryOptions<D extends WriteableDocumentType>({
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getManyDocumentsQueryKey({
+		queryKey: getManyDocsQueryKey({
 			projectId,
 			docType,
 			includeDeleted,
@@ -121,9 +115,7 @@ export function documentsQueryOptions<D extends WriteableDocumentType>({
 	})
 }
 
-export function documentByDocumentIdQueryOptions<
-	D extends WriteableDocumentType,
->({
+export function docByDocIdQueryOptions<D extends WriteableDocType>({
 	projectApi,
 	projectId,
 	docType,
@@ -138,7 +130,7 @@ export function documentByDocumentIdQueryOptions<
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getDocumentByDocIdQueryKey({
+		queryKey: getDocByDocIdQueryKey({
 			projectId,
 			docType,
 			docId,
@@ -154,9 +146,7 @@ export function documentByDocumentIdQueryOptions<
 	})
 }
 
-export function documentByVersionIdQueryOptions<
-	D extends WriteableDocumentType,
->({
+export function docByVersionIdQueryOptions<D extends WriteableDocType>({
 	projectApi,
 	projectId,
 	docType,
@@ -171,7 +161,7 @@ export function documentByVersionIdQueryOptions<
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getDocumentByVersionIdQueryKey({
+		queryKey: getDocByVersionIdQueryKey({
 			projectId,
 			docType,
 			versionId,
@@ -183,9 +173,9 @@ export function documentByVersionIdQueryOptions<
 	})
 }
 
-export function createDocumentMutationOptions<
-	D extends WriteableDocumentType,
-	Result = WriteableDocument<D> & DerivedDocFields,
+export function createDocMutationOptions<
+	D extends WriteableDocType,
+	Result = WriteableDoc<D> & DerivedDocFields,
 >({
 	docType,
 	projectApi,
@@ -208,7 +198,7 @@ export function createDocumentMutationOptions<
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
+				queryKey: getDocsQueryKey({
 					projectId,
 					docType,
 				}),
@@ -221,9 +211,9 @@ export function createDocumentMutationOptions<
 	>
 }
 
-export function updateDocumentMutationOptions<
-	D extends WriteableDocumentType,
-	Result = WriteableDocument<D> & DerivedDocFields,
+export function updateDocMutationOptions<
+	D extends WriteableDocType,
+	Result = WriteableDoc<D> & DerivedDocFields,
 >({
 	docType,
 	projectApi,
@@ -243,7 +233,7 @@ export function updateDocumentMutationOptions<
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
+				queryKey: getDocsQueryKey({
 					projectId,
 					docType,
 				}),
@@ -256,9 +246,9 @@ export function updateDocumentMutationOptions<
 	>
 }
 
-export function deleteDocumentMutationOptions<
-	D extends WriteableDocumentType,
-	Result = WriteableDocument<D> & DerivedDocFields,
+export function deleteDocMutationOptions<
+	D extends WriteableDocType,
+	Result = WriteableDoc<D> & DerivedDocFields,
 >({
 	docType,
 	projectApi,
@@ -278,7 +268,7 @@ export function deleteDocumentMutationOptions<
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
+				queryKey: getDocsQueryKey({
 					projectId,
 					docType,
 				}),
