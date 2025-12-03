@@ -52,6 +52,17 @@ type MapShareBase = {
 	estimatedSizeBytes: number
 }
 
+type MapShareResponse =
+	| {
+			decision: 'ACCEPT' | 'UNRECOGNIZED'
+			shareId: string
+	  }
+	| {
+			decision: 'REJECT'
+			shareId: string
+			reason: 'DISK_SPACE' | 'USER_REJECTED' | 'ALREADY' | 'UNRECOGNIZED'
+	  }
+
 type MapShare = MapShareBase &
 	(
 		| {
@@ -204,15 +215,20 @@ export function sendMapShareMutationOptions({
 			console.log(
 				`Sent map share for map ${mapId} to device ${deviceId} on project ${projectId}`,
 			)
-			const outcomes: Array<'ACCEPT' | 'REJECT' | 'ALREADY'> = [
-				'ACCEPT',
-				'REJECT',
-				'ALREADY',
+			const outcomes: Array<MapShareResponse> = [
+				{ decision: 'ACCEPT', shareId: 'share-1' },
+				{ decision: 'REJECT', shareId: 'share-2', reason: 'DISK_SPACE' },
+				{ decision: 'REJECT', shareId: 'share-3', reason: 'USER_REJECTED' },
 			]
-			return outcomes[Math.floor(Math.random() * outcomes.length)] || 'ACCEPT'
+			return (
+				outcomes[Math.floor(Math.random() * outcomes.length)] || {
+					decision: 'ACCEPT',
+					shareId: 'share-1',
+				}
+			)
 		},
 	} satisfies UseMutationOptions<
-		'ACCEPT' | 'REJECT' | 'ALREADY',
+		MapShareResponse,
 		Error,
 		{
 			deviceId: string
