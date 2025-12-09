@@ -23,7 +23,15 @@ export {
 	useSendInvite,
 	useSingleInvite,
 } from './hooks/invites.js'
-export { useMapStyleUrl } from './hooks/maps.js'
+export {
+	useMapStyleUrl,
+	useAcceptMapShare,
+	useManyMapShares,
+	useRejectMapShare,
+	useRequestCancelMapShare,
+	useSendMapShare,
+	useSingleMapShare,
+} from './hooks/maps.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
