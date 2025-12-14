@@ -10,7 +10,7 @@ import {
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
-import {
+import type {
 	WriteableDocument,
 	WriteableDocumentType,
 	WriteableValue,
