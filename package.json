@@ -89,7 +89,7 @@
 		"happy-dom": "20.0.11",
 		"husky": "9.1.7",
 		"lint-staged": "16.2.7",
-		"npm-run-all2": "7.0.2",
+		"npm-run-all2": "8.0.4",
 		"prettier": "3.7.4",
 		"random-access-memory": "6.2.1",
 		"react": "19.2.3",
