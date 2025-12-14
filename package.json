@@ -86,7 +86,7 @@
 		"eslint-plugin-testing-library": "7.13.6",
 		"fastify": "4.29.1",
 		"globals": "16.5.0",
-		"happy-dom": "18.0.1",
+		"happy-dom": "20.0.11",
 		"husky": "9.1.7",
 		"lint-staged": "15.5.2",
 		"npm-run-all2": "7.0.2",
