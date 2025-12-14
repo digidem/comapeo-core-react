@@ -88,7 +88,7 @@
 		"globals": "16.5.0",
 		"happy-dom": "20.0.11",
 		"husky": "9.1.7",
-		"lint-staged": "15.5.2",
+		"lint-staged": "16.2.7",
 		"npm-run-all2": "7.0.2",
 		"prettier": "3.7.4",
 		"random-access-memory": "6.2.1",
