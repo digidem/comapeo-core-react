@@ -1,7 +1,6 @@
-import type {
-	MapeoDoc,
-	MapeoValue,
-} from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import type { MapeoDoc, MapeoValue } from '@comapeo/schema' with {
+	'resolution-mode': 'import',
+}
 
 export type WriteableDocumentType = Extract<
 	MapeoDoc['schemaName'],

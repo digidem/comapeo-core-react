@@ -1,5 +1,9 @@
-import type { DerivedDocFields } from '@comapeo/core/dist/datatype/index.js' with { 'resolution-mode': 'import' }
-import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { DerivedDocFields } from '@comapeo/core/dist/datatype/index.js' with {
+	'resolution-mode': 'import',
+}
+import type { MapeoProjectApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 import {
 	queryOptions,
 	type QueryClient,
