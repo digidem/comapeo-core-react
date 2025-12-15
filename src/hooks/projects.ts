@@ -21,7 +21,6 @@ import {
 	createBlobMutationOptions,
 	createProjectMutationOptions,
 	disconnectSyncServersMutationOptions,
-	documentCreatedByQueryOptions,
 	exportGeoJSONMutationOptions,
 	exportZipFileMutationOptions,
 	getMembersQueryKey,
@@ -340,41 +339,6 @@ function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
 		mediaServerOriginQueryOptions({
 			projectApi,
 		}),
-	)
-
-	return { data, error, isRefetching }
-}
-
-// TODO: Eventually remove in favor of this information being provided by the backend when retrieving documents
-/**
- * Retrieve the device ID that created a document.
- *
- * @param opts.projectId Project public ID
- * @param opts.originalVersionId Version ID of document
- *
- * @example
- * ```tsx
- * function BasicExample() {
- *   const { data } = useDocumentCreatedBy({
- *     projectId: '...',
- *     originalVersionId: '...',
- *   })
- * }
- * ```
- *
- * @deprecated Use `createdBy` field from document read hooks.
- */
-export function useDocumentCreatedBy({
-	projectId,
-	originalVersionId,
-}: {
-	projectId: string
-	originalVersionId: string
-}) {
-	const { data: projectApi } = useSingleProject({ projectId })
-
-	const { data, error, isRefetching } = useSuspenseQuery(
-		documentCreatedByQueryOptions({ projectApi, projectId, originalVersionId }),
 	)
 
 	return { data, error, isRefetching }
