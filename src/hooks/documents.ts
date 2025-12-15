@@ -1,4 +1,6 @@
-import type { Preset } from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import type { Preset } from '@comapeo/schema' with {
+	'resolution-mode': 'import',
+}
 import {
 	useMutation,
 	useQueryClient,

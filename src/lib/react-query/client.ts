@@ -1,5 +1,9 @@
-import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
-import type { DeviceInfo } from '@comapeo/schema' with { 'resolution-mode': 'import' }
+import type { MapeoClientApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
+import type { DeviceInfo } from '@comapeo/schema' with {
+	'resolution-mode': 'import',
+}
 import {
 	queryOptions,
 	type MutationOptions,

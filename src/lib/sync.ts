@@ -1,4 +1,6 @@
-import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { MapeoProjectApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 
 export type SyncState = Awaited<
 	ReturnType<MapeoProjectApi['$sync']['getState']>

@@ -4,8 +4,9 @@ import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
 import pluginVitest from '@vitest/eslint-plugin'
-import * as pluginReactHooks from 'eslint-plugin-react-hooks'
+import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginTestingLibrary from 'eslint-plugin-testing-library'
+import { defineConfig } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -21,7 +22,7 @@ const gitExcludePath = path.resolve(
 	'exclude',
 )
 
-export default tseslint.config(
+export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	includeIgnoreFile(gitExcludePath),
 	js.configs.recommended,
@@ -30,7 +31,7 @@ export default tseslint.config(
 		extends: [
 			tseslint.configs.recommended,
 			pluginQuery.configs['flat/recommended'],
-			pluginReactHooks.configs['recommended-latest'],
+			pluginReactHooks.configs.flat.recommended,
 		],
 		rules: {
 			'@typescript-eslint/array-type': ['warn', { default: 'generic' }],
