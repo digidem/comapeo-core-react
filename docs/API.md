@@ -18,8 +18,12 @@
 - [useRemoveServerPeer](#useremoveserverpeer)
 - [useCreateProject](#usecreateproject)
 - [useLeaveProject](#useleaveproject)
+- [useImportProjectCategories](#useimportprojectcategories)
 - [useImportProjectConfig](#useimportprojectconfig)
 - [useUpdateProjectSettings](#useupdateprojectsettings)
+- [useChangeMemberRole](#usechangememberrole)
+- [useRemoveMember](#useremovemember)
+- [useProjectOwnRoleChangeListener](#useprojectownrolechangelistener)
 - [useCreateBlob](#usecreateblob)
 - [useSyncState](#usesyncstate)
 - [useDataSyncProgress](#usedatasyncprogress)
@@ -33,10 +37,10 @@
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
-- [useCreateDocument](#usecreatedocument)
-- [useUpdateDocument](#useupdatedocument)
-- [useDeleteDocument](#usedeletedocument)
-- [useSetUpInvitesListeners](#usesetupinviteslisteners)
+- [useCreateDoc](#usecreatedoc)
+- [useUpdateDoc](#useupdatedoc)
+- [useDeleteDoc](#usedeletedoc)
+- [usePresetsSelection](#usepresetsselection)
 - [useManyInvites](#usemanyinvites)
 - [useSingleInvite](#usesingleinvite)
 - [useAcceptInvite](#useacceptinvite)
@@ -51,7 +55,7 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: { children: ReactNode; clientApi: MapeoClientApi; }) => Element` |
+| `ClientApiProvider` | `({ children, clientApi, }: { children: ReactNode; clientApi: any; }) => Element` |
 
 Parameters:
 
@@ -66,7 +70,11 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => MapeoClientApi` |
+| `useClientApi` | `() => any` |
+
+Returns:
+
+Client API instance
 
 Examples:
 
@@ -94,7 +102,7 @@ Retrieve info about the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnDeviceInfo` | `() => { data: { deviceId: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; } and Partial<DeviceInfoParam>; error: Error or null; isRefetching: boolean; }` |
+| `useOwnDeviceInfo` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -111,7 +119,7 @@ Retrieve whether the current device is an archive device or not.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIsArchiveDevice` | `() => { data: boolean; error: Error or null; isRefetching: boolean; }` |
+| `useIsArchiveDevice` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -128,7 +136,7 @@ Update the device info for the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { name: string; deviceType: "UNRECOGNIZED" or "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer"; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSetOwnDeviceInfo` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSetIsArchiveDevice
 
@@ -136,7 +144,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { isArchiveDevice: boolean; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useProjectSettings
 
@@ -144,7 +152,7 @@ Retrieve the project settings for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useProjectSettings` | `({ projectId }: { projectId: string; }) => { data: EditableProjectSettings; error: Error or null; isRefetching: boolean; }` |
+| `useProjectSettings` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -170,7 +178,7 @@ This is mostly used internally by the other hooks and should only be used if cer
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleProject` | `({ projectId }: { projectId: string; }) => { data: ClientApi<MapeoProject>; error: Error or null; isRefetching: boolean; }` |
+| `useSingleProject` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -192,7 +200,7 @@ Retrieve project information for each project that exists.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyProjects` | `() => { data: (Pick<{ schemaName: "projectSettings"; name?: string or undefined; defaultPresets?: { point: string[]; area: string[]; vertex: string[]; line: string[]; relation: string[]; } or undefined; configMetadata?: { ...; } or undefined; }, "name"> and { ...; })[]; error: Error or null; isRefetching: boolean; }` |
+| `useManyProjects` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -211,7 +219,7 @@ Retrieve a single member of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => { data: MemberInfo; error: Error or null; isRefetching: boolean; }` |
+| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -236,7 +244,7 @@ Retrieve all members of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: MemberInfo[]; error: Error or null; isRefetching: boolean; }` |
+| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -367,7 +375,7 @@ This is a more convenient alternative to using the `useOwnDeviceInfo` and `useMa
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnRoleInProject` | `({ projectId }: { projectId: string; }) => { data: Role<"a12a6702b93bd7ff" or "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9" or "8ced989b1904606b" or "a24eaca65ab5d5d0" or "08e4251e36f6e7ed">; error: Error or null; isRefetching: boolean; }` |
+| `useOwnRoleInProject` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -389,13 +397,13 @@ function BasicExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useRemoveServerPeer
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRemoveServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useRemoveServerPeer` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useCreateProject
 
@@ -403,7 +411,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useLeaveProject
 
@@ -411,7 +419,20 @@ Leave an existing project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useLeaveProject` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { projectId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useLeaveProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { projectId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { projectId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### useImportProjectCategories
+
+Update the categories of a project using an external file.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useImportProjectCategories` | `({ projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<unknown, Error, { filePath: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<unknown, Error, { filePath: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+Parameters:
+
+* `opts.projectId`: Public ID of the project to apply changes to.
+
 
 ### useImportProjectConfig
 
@@ -419,7 +440,7 @@ Update the configuration of a project using an external file.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<Error[], Error, { configPath: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<Error[], Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<unknown, Error, { configPath: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<unknown, Error, { configPath: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -432,11 +453,99 @@ Update the settings of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<EditableProjectSettings, Error, { name?: string or undefined; configMetadata?: { ...; } or undefined; defaultPresets?: { ...; } or undefined; projectColor?: string or undefined; projectDescription?: string or undefined; }, unknown>; muta...` |
+| `useUpdateProjectSettings` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, Partial<EditableProjectSettings>, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
 * `opts.projectId`: Public ID of the project to apply changes to.
+
+
+### useChangeMemberRole
+
+Change a project member's role.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useChangeMemberRole` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { deviceId: string; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+
+Parameters:
+
+* `opts.projectId`: Project public ID
+
+
+Examples:
+
+```tsx
+function BasicExample() {
+  const { mutate } = useChangeMemberRole({ projectId: '...' })
+  // Use one of: COORDINATOR_ROLE_ID, MEMBER_ROLE_ID, BLOCKED_ROLE_ID
+  mutate({ deviceId: '...', roleId: COORDINATOR_ROLE_ID })
+}
+```
+
+
+### useRemoveMember
+
+Remove a member from a project, providing an optional reason for removal.
+
+Do NOT use this for removing your own device from a project. Use `useLeaveProject` instead.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useRemoveMember` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { deviceId: string; reason?: string or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+
+Parameters:
+
+* `opts.projectId`: Project public ID
+
+
+Examples:
+
+```tsx
+function BasicExample() {
+  const { mutate } = useRemoveMember({ projectId: '...' })
+  mutate({
+    deviceId: '...',
+    // Optional
+    reason: '...',
+  })
+}
+```
+
+
+### useProjectOwnRoleChangeListener
+
+Set up listener for changes to your own role in a project.
+It is necessary to use this if you want the project role-related read hooks to update
+based on role change events that are received in the background.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useProjectOwnRoleChangeListener` | `({ projectId, listener, }: { projectId: string; listener?: ((event: RoleChangeEvent) => void) or undefined; }) => void` |
+
+Parameters:
+
+* `opts.listener`: Optional listener to invoke when role changes
+
+
+Examples:
+
+```tsx
+function SomeComponent({ projectId }: { projectId: string }) {
+  useProjectOwnRoleChangeListener({ projectId })
+}
+```
+```tsx
+function ComponentWithListener({ projectId }: { projectId: string }) {
+  useProjectOwnRoleChangeListener({
+    projectId,
+    listener: (event) => {
+      // Handle role change, e.g., navigate to default project
+      console.log('New role:', event.role)
+    }
+  })
+}
+```
 
 
 ### useCreateBlob
@@ -445,7 +554,7 @@ Create a blob for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; mutateAsync: UseMutateAsy...` |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -462,7 +571,7 @@ additional listeners across the IPC channel.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSyncState` | `({ projectId, }: { projectId: string; }) => State or null` |
+| `useSyncState` | `({ projectId, }: { projectId: string; }) => any` |
 
 Parameters:
 
@@ -492,35 +601,39 @@ Provides the progress of data sync for sync-enabled connected peers
 | ---------- | ---------- |
 | `useDataSyncProgress` | `({ projectId, }: { projectId: string; }) => number or null` |
 
+Returns:
+
+`null` if no sync state events have been received. Otherwise returns a value between 0 and 1 (inclusive)
+
 ### useStartSync
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStartSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useStartSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useStopSync
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useStopSync` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useConnectSyncServers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useConnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useConnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useDisconnectSyncServers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDisconnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useDisconnectSyncServers` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, void, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, void, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSetAutostopDataSyncTimeout
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { after: number or null; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { after: number or null; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useExportGeoJSON
 
@@ -528,7 +641,7 @@ Creates a GeoJson file with all the observations and/or tracks in the project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useExportGeoJSON` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error...` |
+| `useExportGeoJSON` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; ...` |
 
 Parameters:
 
@@ -541,7 +654,7 @@ Creates a zip file containing a GeoJson file with all the observations and/or tr
 
 | Function | Type |
 | ---------- | ---------- |
-| `useExportZipFile` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; attachments?: boolean or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>...` |
+| `useExportZipFile` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; attachments?: boolean or undefined; }; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; r...` |
 
 Parameters:
 
@@ -556,7 +669,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: boolean;...` |
+| `useSingleDocByDocId` | `<D extends WriteableDocType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -589,7 +702,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => ReadHookResult<Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ... 7 more ...; deleted: ...` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -622,7 +735,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => ReadHookResult<(Extract<{ schemaName: "deviceInfo"; name: string; deviceType: "UNRECOGNIZED" or ... 4 more ... or "selfHostedServer"; ...` |
+| `useManyDocs` | `<D extends WriteableDocType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -660,13 +773,13 @@ function useAllPresets(opts) {
 ```
 
 
-### useCreateDocument
+### useCreateDoc
 
 Create a document for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCreateDoc` | `<D extends WriteableDocType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDoc<D> and DerivedDocFields, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -674,13 +787,13 @@ Parameters:
 * `opts.projectId`: Public ID of project to create document for.
 
 
-### useUpdateDocument
+### useUpdateDoc
 
 Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useUpdateDoc` | `<D extends WriteableDocType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDoc<D> and DerivedDocFields, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -688,13 +801,13 @@ Parameters:
 * `opts.projectId`: Public ID of project document belongs to.
 
 
-### useDeleteDocument
+### useDeleteDoc
 
 Delete a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDocument<D> and { forks: string[]; }, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useDeleteDoc` | `<D extends WriteableDocType>({ docType, projectId, }: { docType: D; projectId: string; }) => { error: Error; mutate: UseMutateFunction<WriteableDoc<D> and DerivedDocFields, Error, { ...; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -702,24 +815,41 @@ Parameters:
 * `opts.projectId`: Public ID of project document belongs to.
 
 
-### useSetUpInvitesListeners
+### usePresetsSelection
 
-Set up listeners for received and updated invites.
-It is necessary to use this if you want the invites-related read hooks to update
-based on invites that are received or changed in the background.
+Retrieve presets for category selection, ordered by project settings.
+
+Returns presets in the order defined by `projectSettings.defaultPresets` for the
+specified data type. Falls back to alphabetical order (by preset name) if no defaults are configured.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetUpInvitesListeners` | `() => void` |
+| `usePresetsSelection` | `({ projectId, dataType, lang, }: { projectId: string; dataType: "track" or "observation"; lang?: string or undefined; }) => { schemaName: "preset"; name: string; geometry: ("point" or "vertex" or "line" or "area" or "relation")[]; ... 13 more ...; deleted: boolean; }[]` |
+
+Parameters:
+
+* `opts.projectId`: Project public ID
+* `opts.dataType`: Type of data being created ('observation' or 'track')
+* `opts.lang`: Language to translate presets into
+
 
 Examples:
 
 ```tsx
-function App() {
-  // Use this somewhere near the root of the application
-  useSetUpInvitesListeners()
+function ObservationCategoryChooser() {
+  const presets = usePresetsSelection({
+    projectId: '...',
+    dataType: 'observation',
+  })
+}
+```
 
-  return <RestOfApp />
+```tsx
+function TrackCategoryChooser() {
+  const presets = usePresetsSelection({
+    projectId: '...',
+    dataType: 'track',
+  })
 }
 ```
 
@@ -730,7 +860,7 @@ Get all invites that the device has received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyInvites` | `() => { data: Invite[]; error: Error or null; isRefetching: boolean; }` |
+| `useManyInvites` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -747,7 +877,7 @@ Get a single invite based on its ID.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleInvite` | `({ inviteId }: { inviteId: string; }) => { data: Invite; error: Error or null; isRefetching: boolean; }` |
+| `useSingleInvite` | `({ inviteId }: { inviteId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -769,7 +899,7 @@ Accept an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAcceptInvite` | `() => { error: Error; mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<string, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useAcceptInvite` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useRejectInvite
 
@@ -777,7 +907,7 @@ Reject an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRejectInvite` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useRejectInvite` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { inviteId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { inviteId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useSendInvite
 
@@ -785,7 +915,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; mutateAsync: UseMuta...` |
+| `useSendInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset:...` |
 
 Parameters:
 
@@ -798,7 +928,7 @@ Request a cancellation of an invite sent to another device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { deviceId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<any, Error, { deviceId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 Parameters:
 
@@ -814,7 +944,7 @@ due to hidden internal details by consuming components (e.g. map component from 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
+| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -850,31 +980,31 @@ function ExampleWithRefreshToken() {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<MapeoClientApi or null>` |
+| `ClientApiContext` | `Context<any>` |
 
 
 
 ## Types
 
-- [WriteableDocumentType](#writeabledocumenttype)
+- [WriteableDocType](#writeabledoctype)
 - [WriteableValue](#writeablevalue)
-- [WriteableDocument](#writeabledocument)
+- [WriteableDoc](#writeabledoc)
 
-### WriteableDocumentType
+### WriteableDocType
 
 | Type | Type |
 | ---------- | ---------- |
-| `WriteableDocumentType` | `Extract< MapeoDoc['schemaName'], 'field' or 'observation' or 'preset' or 'track' or 'remoteDetectionAlert' >` |
+| `WriteableDocType` | `Extract< ComapeoDoc['schemaName'], 'field' or 'observation' or 'preset' or 'track' or 'remoteDetectionAlert' >` |
 
 ### WriteableValue
 
 | Type | Type |
 | ---------- | ---------- |
-| `WriteableValue` | `Extract< MapeoValue, { schemaName: D } >` |
+| `WriteableValue` | `Extract< ComapeoValue, { schemaName: D } >` |
 
-### WriteableDocument
+### WriteableDoc
 
 | Type | Type |
 | ---------- | ---------- |
-| `WriteableDocument` | `Extract< MapeoDoc, { schemaName: D } >` |
+| `WriteableDoc` | `Extract< ComapeoValue, { schemaName: D } >` |
 

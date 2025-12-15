@@ -7,14 +7,14 @@ export {
 	useSetOwnDeviceInfo,
 } from './hooks/client.js'
 export {
-	useCreateDocument,
-	useDeleteDocument,
+	useCreateDoc,
+	useDeleteDoc,
 	useManyDocs,
 	usePresetsSelection,
 	useSingleDocByDocId,
 	useSingleDocByVersionId,
-	useUpdateDocument,
-} from './hooks/documents.js'
+	useUpdateDoc,
+} from './hooks/docs.js'
 export {
 	useAcceptInvite,
 	useManyInvites,
@@ -56,7 +56,7 @@ export {
 } from './hooks/projects.js'
 export { type SyncState } from './lib/sync.js'
 export {
-	type WriteableDocument,
-	type WriteableDocumentType,
+	type WriteableDoc,
+	type WriteableDocType,
 	type WriteableValue,
 } from './lib/types.js'
