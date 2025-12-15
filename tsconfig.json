@@ -21,8 +21,7 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
-		"target": "es2022",
-		"verbatimModuleSyntax": true
+		"target": "es2022"
 	},
 	"include": ["src/**/*", "test/**/*", "*.config.js"],
 	"exclude": ["node_modules"]
