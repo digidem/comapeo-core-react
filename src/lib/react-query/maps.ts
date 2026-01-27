@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
 	MapeoClientApi,
 	MapeoProjectApi,
@@ -9,90 +8,23 @@ import {
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
+import type { ReceivedMapShareStore } from '../map-share-store.js'
+import type {
+	AcceptMapShareResult,
+	ReceivedMapShareState,
+	RejectMapShareParams,
+	SendMapShareResult,
+} from '../map-share-types.js'
+import type { MapServerState } from '../MapServerState.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
 	ROOT_QUERY_KEY,
 } from './shared.js'
 
-type MapShareState =
-	/** Map share has been received and is awaiting a response */
-	| 'pending'
-	/** Map share has been rejected */
-	| 'rejected'
-	/** Map share is currently being downloaded */
-	| 'downloading'
-	/** Map share has been cancelled by the sharer */
-	| 'cancelled'
-	/** Map has been downloaded */
-	| 'completed'
-	/** An error occurred while receiving the map share */
-	| 'error'
-
-type MapShareBase = {
-	/** The ID of the device that sent the map share */
-	senderDeviceId: string
-	/** The name of the device that sent the map share */
-	senderDeviceName: string
-	/** The ID of the map share */
-	shareId: string
-	/** The name of the map being shared */
-	mapName: string
-	/** The ID of the map being shared */
-	mapId: string
-	/** The timestamp when the map share invite was received */
-	receivedAt: number
-	/** The bounding box of the map data being shared */
-	bounds: [number, number, number, number]
-	/** The minimum zoom level of the map data being shared */
-	minzoom: number
-	/** The maximum zoom level of the map data being shared */
-	maxzoom: number
-	/** Estimated size of the map data being shared in bytes */
-	estimatedSizeBytes: number
-}
-
-type MapShareResponse =
-	| {
-			decision: 'ACCEPT' | 'UNRECOGNIZED'
-			shareId: string
-	  }
-	| {
-			decision: 'REJECT'
-			shareId: string
-			reason: 'DISK_SPACE' | 'USER_REJECTED' | 'ALREADY' | 'UNRECOGNIZED'
-	  }
-
-type MapShare = MapShareBase &
-	(
-		| {
-				state: Exclude<MapShareState, 'downloading' | 'error'>
-		  }
-		| {
-				state: 'downloading'
-				/** Total bytes downloaded so far (compare with estimatedSizeBytes for progress) */
-				bytesDownloaded: number
-		  }
-		| {
-				state: 'error'
-				/** Error that occurred while receiving the map share */
-				error: Error
-		  }
-	)
-
-const MOCK_MAP_SHARE = {
-	senderDeviceId: 'device-123',
-	senderDeviceName: 'Device 123',
-	shareId: 'share-456',
-	mapName: 'Sample Map',
-	mapId: 'map-789',
-	receivedAt: Date.now(),
-	bounds: [0, 0, 10, 10],
-	minzoom: 0,
-	maxzoom: 14,
-	estimatedSizeBytes: 1024 * 1024,
-	state: 'pending' as const,
-} satisfies MapShare
+// ============================================
+// QUERY KEYS
+// ============================================
 
 export function getMapsQueryKey() {
 	return [ROOT_QUERY_KEY, 'maps'] as const
@@ -113,6 +45,10 @@ export function getStyleJsonUrlQueryKey({
 }) {
 	return [ROOT_QUERY_KEY, 'maps', 'stylejson_url', { refreshToken }] as const
 }
+
+// ============================================
+// QUERY OPTIONS
+// ============================================
 
 export function mapStyleJsonUrlQueryOptions({
 	clientApi,
@@ -136,124 +72,325 @@ export function mapStyleJsonUrlQueryOptions({
 	})
 }
 
+/**
+ * Query options for getting all received map shares.
+ * Uses the ReceivedMapShareStore as the source of truth.
+ */
 export function getMapSharesQueryOptions({
-	clientApi,
+	store,
 }: {
-	clientApi: MapeoClientApi
+	store: ReceivedMapShareStore
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
 		queryKey: getMapSharesQueryKey(),
-		queryFn: async (): Promise<Array<MapShare>> => {
-			return [MOCK_MAP_SHARE]
+		queryFn: async (): Promise<Array<ReceivedMapShareState>> => {
+			return store.getSnapshot()
 		},
+		// Stale time is minimal since store updates trigger refetches
+		staleTime: 0,
 	})
 }
 
+/**
+ * Query options for getting a specific map share by ID.
+ */
 export function getMapShareByIdQueryOptions({
-	clientApi,
+	store,
 	shareId,
 }: {
-	clientApi: MapeoClientApi
+	store: ReceivedMapShareStore
 	shareId: string
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
 		queryKey: getMapSharesByIdQueryKey({ shareId }),
-		queryFn: async (): Promise<MapShare> => {
-			return MOCK_MAP_SHARE
+		queryFn: async (): Promise<ReceivedMapShareState> => {
+			const share = store.getShareById(shareId)
+			if (!share) {
+				throw new Error(`Map share ${shareId} not found`)
+			}
+			return share
 		},
+		staleTime: 0,
 	})
 }
 
+// ============================================
+// MUTATION OPTIONS (Receiver side)
+// ============================================
+
+/**
+ * Mutation options for accepting a map share.
+ * POSTs to /downloads to start the download, then starts SSE tracking.
+ */
 export function acceptMapShareMutationOptions({
-	clientApi,
+	mapServerState,
+	store,
 	queryClient,
 }: {
-	clientApi: MapeoClientApi
+	mapServerState: MapServerState
+	store: ReceivedMapShareStore
 	queryClient: QueryClient
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ shareId }) => {
-			await new Promise((res) => setTimeout(res, 1000))
-			console.log('Accepted map share', shareId)
-			return shareId
+		mutationFn: async ({
+			shareId,
+		}: {
+			shareId: string
+		}): Promise<AcceptMapShareResult> => {
+			const share = store.getShareById(shareId)
+			if (!share) {
+				throw new Error(`Share ${shareId} not found`)
+			}
+			if (share.state !== 'pending') {
+				throw new Error(`Cannot accept share in state: ${share.state}`)
+			}
+
+			// POST to /downloads to start download
+			const response = await mapServerState.fetch('/downloads', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					senderDeviceId: share.senderDeviceId,
+					shareId: share.shareId,
+					mapShareUrls: share.mapShareUrls,
+					estimatedSizeBytes: share.estimatedSizeBytes,
+				}),
+			})
+
+			if (!response.ok) {
+				const error = (await response.json()) as { message?: string }
+				throw new Error(error.message || 'Failed to start download')
+			}
+
+			const result = (await response.json()) as { downloadId: string }
+
+			// Start tracking download progress via SSE
+			store.startDownloadTracking(shareId, result.downloadId)
+
+			return { shareId, downloadId: result.downloadId }
 		},
-	} satisfies UseMutationOptions<string, Error, { shareId: string }>
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: getMapSharesQueryKey() })
+		},
+	} satisfies UseMutationOptions<
+		AcceptMapShareResult,
+		Error,
+		{ shareId: string }
+	>
 }
 
+/**
+ * Mutation options for rejecting a map share.
+ * POSTs to /mapShares/{id}/decline to notify the sender.
+ */
 export function rejectMapShareMutationOptions({
-	clientApi,
+	mapServerState,
+	store,
 	queryClient,
 }: {
-	clientApi: MapeoClientApi
+	mapServerState: MapServerState
+	store: ReceivedMapShareStore
 	queryClient: QueryClient
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ shareId }) => {
-			await new Promise((res) => setTimeout(res, 1000))
-			console.log('Rejected map share', shareId)
+		mutationFn: async ({
+			shareId,
+			reason = 'user_rejected',
+		}: RejectMapShareParams): Promise<void> => {
+			const share = store.getShareById(shareId)
+			if (!share) {
+				throw new Error(`Share ${shareId} not found`)
+			}
+
+			// POST to /mapShares/{shareId}/decline
+			const response = await mapServerState.fetch(
+				`/mapShares/${shareId}/decline`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						senderDeviceId: share.senderDeviceId,
+						mapShareUrls: share.mapShareUrls,
+						reason,
+					}),
+				},
+			)
+
+			if (!response.ok) {
+				const error = (await response.json()) as { message?: string }
+				throw new Error(error.message || 'Failed to decline share')
+			}
+
+			// Update store state
+			store.markRejected(shareId, reason)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: getMapSharesQueryKey() })
+		},
+	} satisfies UseMutationOptions<void, Error, RejectMapShareParams>
+}
+
+/**
+ * Mutation options for aborting an in-progress download.
+ */
+export function abortMapShareDownloadMutationOptions({
+	mapServerState,
+	store,
+	queryClient,
+}: {
+	mapServerState: MapServerState
+	store: ReceivedMapShareStore
+	queryClient: QueryClient
+}) {
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ shareId }: { shareId: string }): Promise<void> => {
+			const share = store.getShareById(shareId)
+			if (!share || share.state !== 'downloading') {
+				throw new Error('Cannot abort: not downloading')
+			}
+
+			const response = await mapServerState.fetch(
+				`/downloads/${share.downloadId}/abort`,
+				{ method: 'POST' },
+			)
+
+			if (!response.ok) {
+				const error = (await response.json()) as { message?: string }
+				throw new Error(error.message || 'Failed to abort download')
+			}
+
+			// Update store state
+			store.markAborted(shareId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: getMapSharesQueryKey() })
 		},
 	} satisfies UseMutationOptions<void, Error, { shareId: string }>
 }
 
+// ============================================
+// MUTATION OPTIONS (Sender side)
+// ============================================
+
+/**
+ * Mutation options for sending a map share.
+ * Creates the share on the map server, then sends via projectApi RPC.
+ */
 export function sendMapShareMutationOptions({
+	mapServerState,
 	projectApi,
-	projectId,
-	queryClient,
 }: {
+	mapServerState: MapServerState
 	projectApi: MapeoProjectApi
-	projectId: string
-	queryClient: QueryClient
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ deviceId, mapId }) => {
-			await new Promise((res) => setTimeout(res, 5000))
-			console.log(
-				`Sent map share for map ${mapId} to device ${deviceId} on project ${projectId}`,
-			)
-			const outcomes: Array<MapShareResponse> = [
-				{ decision: 'ACCEPT', shareId: 'share-1' },
-				{ decision: 'REJECT', shareId: 'share-2', reason: 'DISK_SPACE' },
-				{ decision: 'REJECT', shareId: 'share-3', reason: 'USER_REJECTED' },
-			]
-			return (
-				outcomes[Math.floor(Math.random() * outcomes.length)] || {
-					decision: 'ACCEPT',
-					shareId: 'share-1',
-				}
-			)
-		},
-	} satisfies UseMutationOptions<
-		MapShareResponse,
-		Error,
-		{
+		mutationFn: async ({
+			deviceId,
+			mapId,
+		}: {
 			deviceId: string
 			mapId: string
-		}
+		}): Promise<SendMapShareResult> => {
+			// Step 1: Create share on map server
+			const response = await mapServerState.fetch('/mapShares', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					mapId,
+					receiverDeviceId: deviceId,
+				}),
+			})
+
+			if (!response.ok) {
+				const error = (await response.json()) as { message?: string }
+				throw new Error(error.message || 'Failed to create map share')
+			}
+
+			const share = (await response.json()) as {
+				shareId: string
+				mapShareUrls: Array<string>
+				mapId: string
+				mapName: string
+				estimatedSizeBytes: number
+				bounds: readonly [number, number, number, number]
+				minzoom: number
+				maxzoom: number
+				mapCreated: number
+			}
+
+			// Step 2: Send share offer to recipient via projectApi RPC
+			// Note: This method needs to be implemented in @comapeo/core
+			await (
+				projectApi as MapeoProjectApi & {
+					$mapShare: {
+						send: (params: {
+							deviceId: string
+							shareId: string
+							mapShareUrls: Array<string>
+							mapId: string
+							mapName: string
+							estimatedSizeBytes: number
+							bounds: readonly [number, number, number, number]
+							minzoom: number
+							maxzoom: number
+							mapCreated: number
+						}) => Promise<void>
+					}
+				}
+			).$mapShare.send({
+				deviceId,
+				shareId: share.shareId,
+				mapShareUrls: share.mapShareUrls,
+				mapId: share.mapId,
+				mapName: share.mapName,
+				estimatedSizeBytes: share.estimatedSizeBytes,
+				bounds: share.bounds,
+				minzoom: share.minzoom,
+				maxzoom: share.maxzoom,
+				mapCreated: share.mapCreated,
+			})
+
+			// Resolve immediately after sending - don't wait for response
+			return { shareId: share.shareId }
+		},
+	} satisfies UseMutationOptions<
+		SendMapShareResult,
+		Error,
+		{ deviceId: string; mapId: string }
 	>
 }
 
+/**
+ * Mutation options for canceling a sent map share.
+ */
 export function requestCancelMapShareMutationOptions({
-	projectApi,
+	mapServerState,
 	queryClient,
 }: {
-	projectApi: MapeoProjectApi
+	mapServerState: MapServerState
 	queryClient: QueryClient
 }) {
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ shareId }) => {
-			await new Promise((res) => setTimeout(res, 1000))
-			console.log('Requested cancellation of map share', shareId)
+		mutationFn: async ({ shareId }: { shareId: string }): Promise<void> => {
+			const response = await mapServerState.fetch(
+				`/mapShares/${shareId}/cancel`,
+				{ method: 'POST' },
+			)
+
+			if (!response.ok) {
+				const error = (await response.json()) as { message?: string }
+				throw new Error(error.message || 'Failed to cancel share')
+			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMapSharesQueryKey(),
-			})
+			queryClient.invalidateQueries({ queryKey: getMapSharesQueryKey() })
 		},
 	} satisfies UseMutationOptions<void, Error, { shareId: string }>
 }
