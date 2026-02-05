@@ -7,29 +7,34 @@ import {
 	type ReactNode,
 } from 'react'
 
-import { MapServerState } from '../lib/MapServerState.js'
+type MapServerFetch = (path: string, options?: RequestInit) => Promise<Response>
 
-export const MapServerContext: Context<MapServerState | null> =
-	createContext<MapServerState | null>(null)
+export const MapServerContext: Context<MapServerFetch | null> =
+	createContext<MapServerFetch | null>(null)
 
 /**
- * Create a context provider that holds a `MapServerState` instance. Required for all map sharing hooks.
+ * Create a context provider that holds a `MapServerFetch` function, which waits
+ * for the map server to be ready before making requests.
  *
  * @param opts.children React children node
- * @param opts.mapServerState `MapServerState` instance created via `createMapServerState()`
+ * @param opts.mapServerFetch `MapServerFetch` function
  *
  * @example
  * ```tsx
- * import { createMapServerState, MapServerProvider } from '@comapeo/core-react'
+ * import { createServer } from '@comapeo/map-server'
  *
- * const mapServerState = createMapServerState()
+ * const server = createServer()
+ * const listenPromise = server.listen()
  *
- * // When map server starts:
- * mapServerState.setPort(8080)
+ * const mapServerFetch: MapServerFetch = async (path, options) => {
+ *   const { localPort } = await listenPromise
+ *   const url = `http://localhost:${localPort}${path}`
+ *   return fetch(url, options)
+ * }
  *
  * function App() {
  *   return (
- *     <MapServerProvider mapServerState={mapServerState}>
+ *     <MapServerProvider mapServerFetch={mapServerFetch}>
  *       <MyApp />
  *     </MapServerProvider>
  *   )
@@ -38,26 +43,26 @@ export const MapServerContext: Context<MapServerState | null> =
  */
 export function MapServerProvider({
 	children,
-	mapServerState,
+	mapServerFetch,
 }: {
 	children: ReactNode
-	mapServerState: MapServerState
+	mapServerFetch: MapServerFetch
 }): JSX.Element {
 	return createElement(
 		MapServerContext.Provider,
-		{ value: mapServerState },
+		{ value: mapServerFetch },
 		children,
 	)
 }
 
 /**
- * Internal hook to get the MapServerState from context.
+ * Internal hook to get the MapServerFetch from context.
  * Throws if used outside of MapServerProvider.
  */
-export function useMapServerState(): MapServerState {
-	const state = useContext(MapServerContext)
-	if (!state) {
-		throw new Error('useMapServerState must be used within a MapServerProvider')
+export function useMapServerFetch(): MapServerFetch {
+	const fetch = useContext(MapServerContext)
+	if (!fetch) {
+		throw new Error('useMapServerFetch must be used within a MapServerProvider')
 	}
-	return state
+	return fetch
 }
