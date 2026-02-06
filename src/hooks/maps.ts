@@ -5,11 +5,7 @@ import {
 } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 
-import { useMapServerState } from '../contexts/MapServer.js'
-import {
-	ReceivedMapShareStore,
-	SentMapShareStore,
-} from '../lib/map-share-store.js'
+import { useMapServerFetch } from '../contexts/MapServer.js'
 import type {
 	MapShareState,
 	ReceivedMapShareState,
@@ -25,6 +21,10 @@ import {
 	requestCancelMapShareMutationOptions,
 	sendMapShareMutationOptions,
 } from '../lib/react-query/maps.js'
+import {
+	ReceivedMapShareStore,
+	SentMapShareStore,
+} from '../lib/received-map-shares-store.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 
@@ -39,7 +39,7 @@ const SENT_SHARE_STORES = new Map<string, SentMapShareStore>()
  */
 function useReceivedMapShareStore(): ReceivedMapShareStore {
 	const clientApi = useClientApi()
-	const mapServerState = useMapServerState()
+	const mapServerFetch = useMapServerFetch()
 
 	return useMemo(() => {
 		let store = RECEIVED_SHARE_STORES.get(clientApi)
@@ -173,7 +173,7 @@ export function useSingleMapShare({ shareId }: { shareId: string }) {
  */
 export function useAcceptMapShare() {
 	const queryClient = useQueryClient()
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 	const store = useReceivedMapShareStore()
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
@@ -205,7 +205,7 @@ export function useAcceptMapShare() {
  */
 export function useRejectMapShare() {
 	const queryClient = useQueryClient()
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 	const store = useReceivedMapShareStore()
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
@@ -233,7 +233,7 @@ export function useRejectMapShare() {
  */
 export function useAbortMapShareDownload() {
 	const queryClient = useQueryClient()
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 	const store = useReceivedMapShareStore()
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
@@ -308,7 +308,7 @@ export function useMapShareDownloadProgress({
  * ```
  */
 export function useSendMapShare({ projectId }: { projectId: string }) {
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
@@ -342,7 +342,7 @@ export function useRequestCancelMapShare({
 	projectId: string
 }) {
 	const queryClient = useQueryClient()
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 
 	const { error, mutate, mutateAsync, reset, status } = useMutation(
 		requestCancelMapShareMutationOptions({ mapServerState, queryClient }),
@@ -377,7 +377,7 @@ export function useSentMapShareProgress({
 	shareId: string
 	initialState: MapShareState
 }): MapShareState {
-	const mapServerState = useMapServerState()
+	const mapServerState = useMapServerFetch()
 
 	// Create or retrieve store for this share
 	const storeRef = useRef<SentMapShareStore | null>(null)

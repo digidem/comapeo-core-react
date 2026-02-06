@@ -52,7 +52,10 @@ describe('Map Share Hooks - Unit Tests', () => {
 				createElement(
 					QueryClientProvider,
 					{ client: queryClient },
-					createElement(MapServerProvider, { mapServerState, children }),
+					createElement(MapServerProvider, {
+						mapServerFetch: mapServerState,
+						children,
+					}),
 				)
 
 			const { result } = renderHook(() => mapServerState.port, { wrapper })

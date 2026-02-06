@@ -8,7 +8,6 @@ import {
 	type UseMutationOptions,
 } from '@tanstack/react-query'
 
-import type { ReceivedMapShareStore } from '../map-share-store.js'
 import type {
 	AcceptMapShareResult,
 	ReceivedMapShareState,
@@ -16,6 +15,7 @@ import type {
 	SendMapShareResult,
 } from '../map-share-types.js'
 import type { MapServerState } from '../MapServerState.js'
+import type { ReceivedMapShareStore } from '../received-map-shares-store.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
