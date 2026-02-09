@@ -25,6 +25,9 @@ export type MapServerApi = KyInstance & {
 	createEventSource(options: EventSourceOptions): EventSourceClient
 }
 
+// Placeholder URL used to allow ky to create Request objects with relative URLs in Node.js
+const PLACEHOLDER_PREFIX = 'http://placeholder/'
+
 /**
  * Utility function to create a MapServerApi instance.
  * Only exported for unit testing purposes.
@@ -38,12 +41,18 @@ export function createMapServerApi({
 	fetch = globalThis.fetch,
 }: MapServerApiOptions): MapServerApi {
 	const api = ky.create({
+		prefixUrl: PLACEHOLDER_PREFIX,
 		fetch,
 		hooks: {
 			beforeRequest: [
 				async (request) => {
 					const baseUrl = await getBaseUrl()
-					return new Request(new URL(request.url, baseUrl), request)
+					const requestUrl = new URL(request.url)
+					const realUrl = new URL(
+						requestUrl.pathname + requestUrl.search,
+						baseUrl,
+					)
+					return new Request(realUrl, request)
 				},
 			],
 		},

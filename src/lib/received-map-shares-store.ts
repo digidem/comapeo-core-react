@@ -7,14 +7,14 @@ import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'
 import type { MapServerApi } from '../contexts/MapServer.js'
 
 type DistributedIntersection<T, U> = U extends unknown ? Simplify<T & U> : never
-type MapShareState = DistributedIntersection<
+export type ReceivedMapShareState = DistributedIntersection<
 	Simplify<MapShare>,
 	ServerMapShareState
 >
 type MapShareStateUpdate = Simplify<
 	DistributedOmit<
-		MapShareState,
-		Exclude<keyof SharedUnionFields<MapShareState>, 'status'>
+		ReceivedMapShareState,
+		Exclude<keyof SharedUnionFields<ReceivedMapShareState>, 'status'>
 	>
 >
 export type ReceivedMapSharesStore = ReturnType<
@@ -34,7 +34,7 @@ export function createReceivedMapSharesStore({
 	clientApi: MapeoClientApi
 	mapServerApi: MapServerApi
 }) {
-	let mapShares: Array<MapShareState> = []
+	let mapShares: Array<ReceivedMapShareState> = []
 	const listeners = new Set<() => void>()
 	const downloads = new Map<string, Promise<string | void>>()
 
@@ -79,7 +79,7 @@ export function createReceivedMapSharesStore({
 	function monitorDownload(mapShareId: string, downloadId: string) {
 		// TODO: add a timeout in case the download stalls and never completes
 		const es = mapServerApi.createEventSource({
-			url: `/download/${downloadId}/events`,
+			url: `downloads/${downloadId}/events`,
 			onMessage({ data }) {
 				try {
 					const stateUpdate = JSON.parse(data)
@@ -104,12 +104,12 @@ export function createReceivedMapSharesStore({
 		getSnapshot() {
 			return mapShares
 		},
-		download(mapShareId: string) {
+		async download(mapShareId: string) {
 			const mapShare = getMapShare(mapShareId)
 			update(mapShareId, { status: 'downloading', bytesDownloaded: 0 })
-			const downloadId = (async () => {
-				const { downloadId } = await mapServerApi
-					.post(`/mapShares/${mapShareId}/download`, {
+			try {
+				const downloadIdPromise = mapServerApi
+					.post(`downloads`, {
 						json: {
 							senderDeviceId: mapShare.senderDeviceId,
 							shareId: mapShare.shareId,
@@ -118,55 +118,61 @@ export function createReceivedMapSharesStore({
 						},
 					})
 					.json<{ downloadId: string }>()
-				monitorDownload(mapShareId, downloadId)
-				return downloadId
-			})().catch((cause: unknown) => {
+					.then(({ downloadId }) => downloadId)
+				// Not strictly necessary, because the `await downloadIdPromise` in the
+				// same tick below ensures that this is handled, but this protects
+				// against a refactor which could add another async function between
+				// setting the promise on the map and awaiting the downloadIdPromise,
+				// which would result in an unhandled rejection without this.
+				downloadIdPromise.catch(noop)
+				downloads.set(mapShareId, downloadIdPromise)
+				monitorDownload(mapShareId, await downloadIdPromise)
+			} catch (cause) {
 				downloads.delete(mapShareId)
 				handleError(mapShareId, cause)
-			})
-			downloads.set(mapShareId, downloadId)
+				throw cause
+			}
 		},
-		decline(mapShareId: string, reason: string) {
+		async decline(mapShareId: string, reason: string) {
 			const mapShare = getMapShare(mapShareId)
 			update(mapShareId, { status: 'declined', reason })
-			mapServerApi
-				.post(`/mapShares/${mapShareId}/decline`, {
+			try {
+				await mapServerApi.post(`mapShares/${mapShareId}/decline`, {
 					json: {
 						senderDeviceId: mapShare.senderDeviceId,
 						mapShareUrls: mapShare.mapShareUrls,
 						reason,
 					},
 				})
-				.catch((cause: unknown) => handleError(mapShareId, cause))
+			} catch (cause) {
+				handleError(mapShareId, cause)
+				throw cause
+			}
 		},
-		abort(mapShareId: string) {
-			const mapShare = getMapShare(mapShareId)
+		async abort(mapShareId: string) {
+			getMapShare(mapShareId) // Throws if share doesn't exist
 			update(mapShareId, { status: 'aborted' })
-			;(async () => {
+			try {
 				const downloadId = await downloads.get(mapShareId)
 				if (!downloadId) {
 					throw new Error(
 						`No download in progress for map share with id ${mapShareId}`,
 					)
 				}
-				await mapServerApi.post(`/mapShares/${mapShareId}/abort`, {
-					json: {
-						senderDeviceId: mapShare.senderDeviceId,
-						mapShareUrls: mapShare.mapShareUrls,
-					},
-				})
-			})()
-				.catch((cause: unknown) => handleError(mapShareId, cause))
-				.finally(() => {
-					downloads.delete(mapShareId)
-				})
+				await mapServerApi.post(`downloads/${downloadId}/abort`)
+			} catch (cause) {
+				handleError(mapShareId, cause)
+				throw cause
+			} finally {
+				downloads.delete(mapShareId)
+			}
 		},
 	}
 }
 
 const allowedStatusTransitions: Record<
-	MapShareState['status'],
-	Array<MapShareState['status']>
+	ReceivedMapShareState['status'],
+	Array<ReceivedMapShareState['status']>
 > = {
 	pending: ['downloading', 'declined', 'error'],
 	downloading: ['downloading', 'aborted', 'completed', 'canceled', 'error'],
@@ -178,10 +184,12 @@ const allowedStatusTransitions: Record<
 }
 
 function assertValidStatusTransition(
-	current: MapShareState['status'],
-	next: MapShareState['status'],
+	current: ReceivedMapShareState['status'],
+	next: ReceivedMapShareState['status'],
 ) {
 	if (!allowedStatusTransitions[current].includes(next)) {
 		throw new Error(`Invalid status transition from ${current} to ${next}`)
 	}
 }
+
+function noop() {}
