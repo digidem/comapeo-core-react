@@ -14,7 +14,7 @@ import {
 	createSentMapSharesStore,
 	type SentMapSharesStore,
 	type SentMapShareState,
-} from '../lib/sent-map-shares-store.js'
+} from '../lib/map-shares-stores.js'
 import type { MapServerApi } from './MapServer.js'
 
 export const SentMapSharesContext: Context<SentMapSharesStore | null> =
@@ -59,10 +59,10 @@ export function useSentMapSharesActions() {
 	}
 	return useMemo(() => {
 		return {
-			create: store.create,
+			create: store.createAndSend,
 			cancel: store.cancel,
 		}
-	}, [store.cancel, store.create])
+	}, [store.cancel, store.createAndSend])
 }
 
 export function useSentMapSharesState<T>(

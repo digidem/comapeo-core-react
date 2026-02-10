@@ -11,6 +11,10 @@ import type {
 	ReceivedMapShareState,
 } from '../lib/map-share-types.js'
 import {
+	ReceivedMapShareStore,
+	SentMapShareStore,
+} from '../lib/map-shares-stores.js'
+import {
 	abortMapShareDownloadMutationOptions,
 	acceptMapShareMutationOptions,
 	getMapShareByIdQueryOptions,
@@ -21,10 +25,6 @@ import {
 	requestCancelMapShareMutationOptions,
 	sendMapShareMutationOptions,
 } from '../lib/react-query/maps.js'
-import {
-	ReceivedMapShareStore,
-	SentMapShareStore,
-} from '../lib/received-map-shares-store.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 

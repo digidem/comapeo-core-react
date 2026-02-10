@@ -14,7 +14,7 @@ import {
 	createReceivedMapSharesStore,
 	type ReceivedMapSharesStore,
 	type ReceivedMapShareState,
-} from '../lib/received-map-shares-store.js'
+} from '../lib/map-shares-stores.js'
 import type { MapServerApi } from './MapServer.js'
 
 export const ReceivedMapSharesContext: Context<ReceivedMapSharesStore | null> =

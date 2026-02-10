@@ -8,12 +8,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
 	createReceivedMapSharesStore,
-	type ReceivedMapSharesStore,
-} from '../../src/lib/received-map-shares-store.js'
-import {
 	createSentMapSharesStore,
+	type ReceivedMapSharesStore,
 	type SentMapSharesStore,
-} from '../../src/lib/sent-map-shares-store.js'
+} from '../../src/lib/map-shares-stores.js'
 import {
 	createMapShareFromServerShare,
 	createMockClientApi,
@@ -401,7 +399,7 @@ describe('ReceivedMapSharesStore', () => {
 
 		it('should update status when sender cancels during download', async () => {
 			// Sender creates a share
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',

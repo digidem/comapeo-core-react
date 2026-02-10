@@ -14,8 +14,8 @@ import type {
 	RejectMapShareParams,
 	SendMapShareResult,
 } from '../map-share-types.js'
+import type { ReceivedMapShareStore } from '../map-shares-stores.js'
 import type { MapServerState } from '../MapServerState.js'
-import type { ReceivedMapShareStore } from '../received-map-shares-store.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,

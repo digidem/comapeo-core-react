@@ -6,12 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
 	createReceivedMapSharesStore,
-	type ReceivedMapSharesStore,
-} from '../../src/lib/received-map-shares-store.js'
-import {
 	createSentMapSharesStore,
+	type ReceivedMapSharesStore,
 	type SentMapSharesStore,
-} from '../../src/lib/sent-map-shares-store.js'
+} from '../../src/lib/map-shares-stores.js'
 import {
 	createMapShareFromServerShare,
 	createMockClientApi,
@@ -51,7 +49,7 @@ describe('SentMapSharesStore', () => {
 			const listener = vi.fn()
 			sentStore.subscribe(listener)
 
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -69,7 +67,7 @@ describe('SentMapSharesStore', () => {
 		})
 
 		it('should call clientApi.getProject and $sendMapShare', async () => {
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -85,13 +83,13 @@ describe('SentMapSharesStore', () => {
 		})
 
 		it('should handle multiple map shares', async () => {
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
 
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -103,13 +101,11 @@ describe('SentMapSharesStore', () => {
 		})
 
 		it('should create share on the server', async () => {
-			await sentStore.create({
+			const { shareId } = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const shareId = sentStore.getSnapshot()[0]!.shareId
 
 			// Verify the share exists on the server
 			const serverShare = (await sender
@@ -122,39 +118,63 @@ describe('SentMapSharesStore', () => {
 				status: 'pending',
 			})
 		})
+
+		it('should cancel the map share on the server if $sendMapShare throws', async () => {
+			// Make $sendMapShare throw an error
+			const sendError = new Error('Failed to send map share')
+			mockClientApi.$sendMapShare.mockRejectedValueOnce(sendError)
+
+			// createAndSend should throw
+			await expect(
+				sentStore.createAndSend({
+					projectId: 'test-project-id',
+					receiverDeviceId: receiver.deviceId,
+					mapId: 'custom',
+				}),
+			).rejects.toThrow('Failed to send map share')
+
+			// The store should be empty since createAndSend failed
+			expect(sentStore.getSnapshot()).toHaveLength(0)
+
+			// Query the server to find the map share - it should exist and be canceled
+			const serverShares = (await sender
+				.get('mapShares')
+				.json()) as Array<ServerMapShareState>
+
+			expect(serverShares).toHaveLength(1)
+			expect(serverShares[0]).toMatchObject({
+				mapId: 'custom',
+				status: 'canceled',
+			})
+		})
 	})
 
 	describe('cancel', () => {
 		it('should update status to canceled immediately', async () => {
-			await sentStore.create({
+			const { shareId } = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
 
-			const shareId = sentStore.getSnapshot()[0]!.shareId
-
-			// Start cancel but don't await - check immediate state
 			const cancelPromise = sentStore.cancel(shareId)
 
-			// Status should be 'canceled' immediately (before server response)
-			// But if server returns error, status may become 'error'
-			// So we just verify the promise resolves or rejects appropriately
-			try {
-				await cancelPromise
-				const snapshot = sentStore.getSnapshot()
-				expect(snapshot[0]).toHaveProperty('status', 'canceled')
-			} catch {
-				// If cancel fails, status should be 'error'
-				const snapshot = sentStore.getSnapshot()
-				expect(snapshot[0]).toHaveProperty('status', 'error')
-			}
+			expect(sentStore.getSnapshot()[0]).toHaveProperty('status', 'canceled')
+
+			// Verify the server was called to cancel the share
+			await expect(cancelPromise).resolves.toBeUndefined()
+
+			expect(sentStore.getSnapshot()[0]).toHaveProperty('status', 'canceled')
 		})
 
 		it('should throw when canceling a non-existent share', async () => {
 			await expect(() =>
 				sentStore.cancel('non-existent-share-id'),
-			).rejects.toThrow('Map share with id non-existent-share-id not found')
+			).rejects.toThrow(
+				expect.objectContaining({
+					code: 'MAP_SHARE_NOT_FOUND',
+				}),
+			)
 		})
 	})
 
@@ -173,13 +193,11 @@ describe('SentMapSharesStore', () => {
 
 		it('should update status when receiver declines the share', async () => {
 			// Sender creates a share
-			await sentStore.create({
+			const serverShare = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const serverShare = sentStore.getSnapshot()[0]!
 
 			// Simulate receiver getting the share (as if via comapeo-core event)
 			const mapShare = createMapShareFromServerShare(
@@ -211,13 +229,11 @@ describe('SentMapSharesStore', () => {
 
 		it('should update status to completed when download finishes', async () => {
 			// Sender creates a share
-			await sentStore.create({
+			const serverShare = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const serverShare = sentStore.getSnapshot()[0]!
 
 			// Simulate receiver getting the share
 			const mapShare = createMapShareFromServerShare(
@@ -247,13 +263,11 @@ describe('SentMapSharesStore', () => {
 
 		it('should update status when receiver aborts download', async () => {
 			// Sender creates a share
-			await sentStore.create({
+			const serverShare = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const serverShare = sentStore.getSnapshot()[0]!
 
 			// Simulate receiver getting the share
 			const mapShare = createMapShareFromServerShare(
@@ -295,13 +309,11 @@ describe('SentMapSharesStore', () => {
 		})
 
 		it('should not allow cancel after decline', async () => {
-			await sentStore.create({
+			const serverShare = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const serverShare = sentStore.getSnapshot()[0]!
 
 			// Simulate receiver getting and declining the share
 			const mapShare = createMapShareFromServerShare(
@@ -327,13 +339,11 @@ describe('SentMapSharesStore', () => {
 		})
 
 		it('should not allow cancel after completion', async () => {
-			await sentStore.create({
+			const serverShare = await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
-
-			const serverShare = sentStore.getSnapshot()[0]!
 
 			// Simulate receiver getting and downloading the share
 			const mapShare = createMapShareFromServerShare(
@@ -369,7 +379,7 @@ describe('SentMapSharesStore', () => {
 			sentStore.subscribe(listener2)
 			sentStore.subscribe(listener3)
 
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -384,7 +394,7 @@ describe('SentMapSharesStore', () => {
 			const listener = vi.fn()
 			const unsubscribe = sentStore.subscribe(listener)
 
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -395,7 +405,7 @@ describe('SentMapSharesStore', () => {
 			unsubscribe()
 
 			// Create another share
-			await sentStore.create({
+			await sentStore.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
