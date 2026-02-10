@@ -11,16 +11,16 @@ import {
 } from 'react'
 
 import {
-	createReceivedMapSharesStore,
-	type ReceivedMapSharesStore,
-	type ReceivedMapShareState,
-} from '../lib/received-map-shares-store.js'
+	createSentMapSharesStore,
+	type SentMapSharesStore,
+	type SentMapShareState,
+} from '../lib/sent-map-shares-store.js'
 import type { MapServerApi } from './MapServer.js'
 
-export const ReceivedMapSharesContext: Context<ReceivedMapSharesStore | null> =
-	createContext<ReceivedMapSharesStore | null>(null)
+export const SentMapSharesContext: Context<SentMapSharesStore | null> =
+	createContext<SentMapSharesStore | null>(null)
 
-export function ReceivedMapSharesProvider({
+export function SentMapSharesProvider({
 	children,
 	clientApi,
 	mapServerApi,
@@ -30,14 +30,15 @@ export function ReceivedMapSharesProvider({
 }>): JSX.Element {
 	const mapSharesStore = useMemo(
 		() =>
-			createReceivedMapSharesStore({
+			createSentMapSharesStore({
 				clientApi,
 				mapServerApi,
 			}),
 		[clientApi, mapServerApi],
 	)
+
 	return createElement(
-		ReceivedMapSharesContext.Provider,
+		SentMapSharesContext.Provider,
 		{ value: mapSharesStore },
 		children,
 	)
@@ -49,30 +50,29 @@ const identity = <T>(arg: T): T => arg
  * Internal hook to get the MapSharesStore from context.
  * Throws if used outside of MapSharesProvider.
  */
-export function useReceivedMapSharesActions() {
-	const store = useContext(ReceivedMapSharesContext)
+export function useSentMapSharesActions() {
+	const store = useContext(SentMapSharesContext)
 	if (!store) {
 		throw new Error(
-			'useReceivedMapSharesActions must be used within a ReceivedMapSharesProvider',
+			'useSentMapSharesActions must be used within a SentMapSharesProvider',
 		)
 	}
 	return useMemo(() => {
 		return {
-			download: store.download,
-			decline: store.decline,
-			abort: store.abort,
+			create: store.create,
+			cancel: store.cancel,
 		}
-	}, [store.abort, store.decline, store.download])
+	}, [store.cancel, store.create])
 }
 
-export function useReceivedMapSharesState<T>(
+export function useSentMapSharesState<T>(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	selector: (state: Array<ReceivedMapShareState>) => T = identity as any,
+	selector: (state: Array<SentMapShareState>) => T = identity as any,
 ) {
-	const store = useContext(ReceivedMapSharesContext)
+	const store = useContext(SentMapSharesContext)
 	if (!store) {
 		throw new Error(
-			'useReceivedMapSharesState must be used within a ReceivedMapSharesProvider',
+			'useSentMapSharesState must be used within a SentMapSharesProvider',
 		)
 	}
 	return useSyncExternalStore(store.subscribe, () =>

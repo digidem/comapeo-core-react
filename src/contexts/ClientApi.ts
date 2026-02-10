@@ -6,7 +6,7 @@ import {
 	useEffect,
 	type Context,
 	type JSX,
-	type ReactNode,
+	type PropsWithChildren,
 } from 'react'
 
 import { getInvitesQueryKey } from '../lib/react-query/invites.js'
@@ -25,10 +25,7 @@ export const ClientApiContext: Context<MapeoClientApi | null> =
 export function ClientApiProvider({
 	children,
 	clientApi,
-}: {
-	children: ReactNode
-	clientApi: MapeoClientApi
-}): JSX.Element {
+}: PropsWithChildren<{ clientApi: MapeoClientApi }>): JSX.Element {
 	const queryClient = useQueryClient()
 
 	useEffect(() => {
