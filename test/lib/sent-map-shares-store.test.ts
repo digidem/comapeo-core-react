@@ -351,6 +351,7 @@ describe('SentMapSharesStore', () => {
 						// Array reference should be the same (Object.is equality)
 						// This is important for useSyncExternalStore - components
 						// listening to the raw array won't re-render on progress updates
+						// eslint-disable-next-line vitest/no-conditional-expect -- resolve() is also conditional, so test will fail if condition not met
 						expect(current).toBe(snapshotDuringDownload)
 
 						resolve()
@@ -417,6 +418,7 @@ describe('SentMapSharesStore', () => {
 						// Individual map share should be a different object
 						// This means selectors that return individual map shares will
 						// correctly trigger re-renders on progress updates
+						// eslint-disable-next-line vitest/no-conditional-expect -- resolve() is also conditional, so test will fail if condition not met
 						expect(currentShare).not.toBe(initialMapShare)
 
 						resolve()
