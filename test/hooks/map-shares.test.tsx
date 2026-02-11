@@ -453,7 +453,7 @@ describe('Received Map Shares Hooks', () => {
 				expect(result.current.status).toBe('error')
 			})
 
-			expect(result.current.error?.message).toContain('not found')
+			expect(result.current.error).toHaveProperty('code', 'MAP_SHARE_NOT_FOUND')
 		})
 	})
 
@@ -464,6 +464,25 @@ describe('Received Map Shares Hooks', () => {
 			})
 
 			expect(result.current.status).toBe('idle')
+		})
+
+		it('should throw for non-existent shareId', async () => {
+			const { result } = renderHook(() => useDeclineReceivedMapShare(), {
+				wrapper: receiverWrapper,
+			})
+
+			act(() => {
+				result.current.mutate({
+					shareId: 'non-existent',
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.status).toBe('error')
+			})
+
+			expect(result.current.error).toHaveProperty('code', 'MAP_SHARE_NOT_FOUND')
 		})
 
 		it('should decline a pending share', async () => {
@@ -511,6 +530,22 @@ describe('Received Map Shares Hooks', () => {
 			})
 
 			expect(result.current.status).toBe('idle')
+		})
+
+		it('should throw for non-existent shareId', async () => {
+			const { result } = renderHook(() => useAbortReceivedMapShareDownload(), {
+				wrapper: receiverWrapper,
+			})
+
+			act(() => {
+				result.current.mutate({ shareId: 'non-existent' })
+			})
+
+			await waitFor(() => {
+				expect(result.current.status).toBe('error')
+			})
+
+			expect(result.current.error).toHaveProperty('code', 'MAP_SHARE_NOT_FOUND')
 		})
 
 		it('should abort an in-progress download', async () => {
@@ -572,6 +607,171 @@ describe('Received Map Shares Hooks', () => {
 			})
 
 			// Try to abort without downloading first (pending -> aborted is invalid)
+			act(() => {
+				result.current.abort.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.abort.status).toBe('error')
+			})
+
+			expect(result.current.abort.error?.message).toContain(
+				'Invalid status transition',
+			)
+		})
+	})
+
+	describe('invalid status transitions', () => {
+		it('should not allow download after decline', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					decline: useDeclineReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Decline the share first
+			act(() => {
+				result.current.decline.mutate({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.decline.status).toBe('success')
+			})
+
+			expect(result.current.shares[0]).toHaveProperty('status', 'declined')
+
+			// Now try to download - should fail
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('error')
+			})
+
+			expect(result.current.download.error?.message).toContain(
+				'Invalid status transition',
+			)
+		})
+
+		it('should not allow decline after download starts', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					decline: useDeclineReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Start download and immediately try to decline to minimize race condition
+			await act(async () => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+				// Small delay to let the store update to 'downloading'
+				await new Promise((resolve) => setTimeout(resolve, 10))
+				result.current.decline.mutate({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.decline.status).toBe('error')
+			})
+
+			expect(result.current.decline.error?.message).toContain(
+				'Invalid status transition',
+			)
+		})
+
+		it('should not allow any action after completion', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					decline: useDeclineReceivedMapShare(),
+					abort: useAbortReceivedMapShareDownload(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Download and wait for completion
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('completed')
+			})
+
+			// Reset the download mutation to test again
+			act(() => {
+				result.current.download.reset()
+			})
+
+			// Try to download again - should fail
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('error')
+			})
+
+			expect(result.current.download.error?.message).toContain(
+				'Invalid status transition',
+			)
+
+			// Try to decline - should fail
+			act(() => {
+				result.current.decline.mutate({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.decline.status).toBe('error')
+			})
+
+			expect(result.current.decline.error?.message).toContain(
+				'Invalid status transition',
+			)
+
+			// Try to abort - should fail
 			act(() => {
 				result.current.abort.mutate({ shareId: mapShare.shareId })
 			})
