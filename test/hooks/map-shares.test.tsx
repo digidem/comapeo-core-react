@@ -125,6 +125,13 @@ function createMapSharesWrapper({
 	}
 }
 
+// Create a stateful wrapper that only renders children once a share exists.
+// This allows useSingleReceivedMapShare to be tested without throwing.
+function WaitForShareWrapper({ children }: PropsWithChildren) {
+	const shares = useManyReceivedMapShares()
+	return <>{shares.length > 0 ? children : null}</>
+}
+
 // ============================================
 // RECEIVED MAP SHARES HOOKS
 // ============================================
@@ -233,20 +240,6 @@ describe('Received Map Shares Hooks', () => {
 		it('should return the specific map share', async () => {
 			const mapShare = await createShare()
 
-			// Create a stateful wrapper that only renders children once a share exists.
-			// This allows useSingleReceivedMapShare to be tested without throwing.
-			function WaitForShareWrapper({ children }: PropsWithChildren) {
-				const shares = useManyReceivedMapShares()
-				const [ready, setReady] = useState(false)
-
-				// Once we have shares, mark as ready (one-way transition)
-				if (shares.length > 0 && !ready) {
-					setReady(true)
-				}
-
-				return <>{ready ? children : null}</>
-			}
-
 			// Combine the base wrapper with our stateful wrapper
 			function CombinedWrapper({ children }: PropsWithChildren) {
 				const BaseWrapper = receiverWrapper
@@ -281,26 +274,48 @@ describe('Received Map Shares Hooks', () => {
 	})
 
 	describe('useDownloadReceivedMapShare', () => {
-		it('should have idle status initially', () => {
-			const { result } = renderHook(() => useDownloadReceivedMapShare(), {
-				wrapper: receiverWrapper,
-			})
+		it('should show download progress during download', async () => {
+			// Capture all render states to verify progress updates
+			const capturedStates: Array<{
+				status: string
+				bytesDownloaded?: number
+			}> = []
 
-			expect(result.current.status).toBe('idle')
-		})
+			function Tracker() {
+				const share = useSingleReceivedMapShare({ shareId: mapShare.shareId })
+				capturedStates.push({
+					status: share.status,
+					// @ts-expect-error no need to type this precisely for the test
+					bytesDownloaded: share.bytesDownloaded,
+				})
+				return null
+			}
 
-		it('should download a received share and update status to completed', async () => {
-			// First render the hook to set up the store
+			function CombinedWrapper({ children }: PropsWithChildren) {
+				const BaseWrapper = receiverWrapper
+
+				return (
+					<BaseWrapper>
+						<WaitForShareWrapper>
+							<Tracker />
+							{children}
+						</WaitForShareWrapper>
+					</BaseWrapper>
+				)
+			}
+
+			// Create the share before we render, so we have the shareId for the wrappers
+			const mapShare = await createShare()
+
 			const { result } = renderHook(
 				() => ({
 					download: useDownloadReceivedMapShare(),
 					shares: useManyReceivedMapShares(),
 				}),
-				{ wrapper: receiverWrapper },
+				{ wrapper: CombinedWrapper },
 			)
 
-			// Create and emit the share AFTER the store is listening
-			const mapShare = await createShare()
+			// Emit the share AFTER the store is listening
 			act(() => {
 				mockClientApi.emit('map-share', mapShare)
 			})
@@ -323,6 +338,106 @@ describe('Received Map Shares Hooks', () => {
 			await waitFor(() => {
 				expect(result.current.shares[0]?.status).toBe('completed')
 			})
+
+			// Verify we saw downloading states with progress before completion
+			const downloadingStates = capturedStates.filter(
+				(s) => s.status === 'downloading' && s.bytesDownloaded! > 0,
+			)
+			expect(downloadingStates.length).toBeGreaterThan(7)
+		})
+
+		it('should not re-render useManyReceivedMapShares during download progress updates', async () => {
+			// Track renders of useManyReceivedMapShares to verify it only re-renders
+			// on status changes, not on download progress updates
+			const capturedStates: Array<{
+				status: string
+				bytesDownloaded?: number
+			}> = []
+
+			function ManySharesTracker() {
+				const shares = useManyReceivedMapShares()
+				const share = shares.find((s) => s.shareId === mapShare.shareId)
+				if (share) {
+					capturedStates.push({
+						status: share.status,
+						// @ts-expect-error no need to type this precisely for the test
+						bytesDownloaded: share.bytesDownloaded,
+					})
+				}
+				return null
+			}
+
+			function CombinedWrapper({ children }: PropsWithChildren) {
+				const BaseWrapper = receiverWrapper
+
+				return (
+					<BaseWrapper>
+						<ManySharesTracker />
+						{children}
+					</BaseWrapper>
+				)
+			}
+
+			// Create the share before we render, so we have the shareId for the wrappers
+			const mapShare = await createShare()
+
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: CombinedWrapper },
+			)
+
+			// Emit the share AFTER the store is listening
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			// Wait for share to appear in store
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Now trigger the download
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('success')
+			})
+
+			// Wait for download to complete
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('completed')
+			})
+
+			// Get unique statuses captured (ignoring bytesDownloaded changes)
+			const uniqueStatuses = [...new Set(capturedStates.map((s) => s.status))]
+
+			// Should have seen: pending, downloading, completed
+			expect(uniqueStatuses).toContain('pending')
+			expect(uniqueStatuses).toContain('downloading')
+			expect(uniqueStatuses).toContain('completed')
+
+			// The key assertion: useManyReceivedMapShares should NOT re-render
+			// during download progress updates. It should only re-render on status
+			// changes. So we should see at most a few renders per status, not many
+			// renders with different bytesDownloaded values.
+			const downloadingStates = capturedStates.filter(
+				(s) => s.status === 'downloading',
+			)
+			const uniqueBytesDownloaded = [
+				...new Set(downloadingStates.map((s) => s.bytesDownloaded)),
+			]
+
+			// With the optimization working, we should only see one unique
+			// bytesDownloaded value during downloading (the initial value when status
+			// changes to downloading), not many different values as progress updates
+			// come in.
+			expect(uniqueBytesDownloaded.length).toBe(1)
+			expect(uniqueBytesDownloaded[0]).toBe(0) // should be the initial value when status changes to downloading
 		})
 
 		it('should throw for non-existent shareId', async () => {
