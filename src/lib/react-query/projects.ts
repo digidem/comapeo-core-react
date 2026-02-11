@@ -3,10 +3,9 @@ import type {
 	EditableProjectSettings,
 	MemberApi,
 } from '@comapeo/core' with { 'resolution-mode': 'import' }
-import type {
-	MapeoClientApi,
-	MapeoProjectApi,
-} from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 import {
 	queryOptions,
 	type QueryClient,

@@ -1,4 +1,6 @@
-import type { MapeoClientApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { MapeoClientApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 import { useQueryClient } from '@tanstack/react-query'
 import {
 	createContext,

@@ -1,9 +1,12 @@
-import type {
-	BlobApi,
-	IconApi,
-} from '@comapeo/core' with { 'resolution-mode': 'import' }
-import type { RoleChangeEvent } from '@comapeo/core/dist/mapeo-project.js' with { 'resolution-mode': 'import' }
-import type { MapeoProjectApi } from '@comapeo/ipc' with { 'resolution-mode': 'import' }
+import type { BlobApi, IconApi } from '@comapeo/core' with {
+	'resolution-mode': 'import',
+}
+import type { RoleChangeEvent } from '@comapeo/core/dist/mapeo-project.js' with {
+	'resolution-mode': 'import',
+}
+import type { MapeoProjectApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 import {
 	useMutation,
 	useQueryClient,

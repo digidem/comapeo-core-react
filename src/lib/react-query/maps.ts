@@ -1,3 +1,6 @@
+import type { MapeoClientApi } from '@comapeo/ipc' with {
+	'resolution-mode': 'import',
+}
 import { CUSTOM_MAP_ID } from '@comapeo/map-server'
 import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
 
