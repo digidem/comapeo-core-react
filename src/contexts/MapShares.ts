@@ -21,9 +21,15 @@ import {
 } from '../lib/map-shares-stores.js'
 import type { MapServerApi } from './MapServer.js'
 
+/**
+ * @internal
+ */
 export const ReceivedMapSharesContext: Context<ReceivedMapSharesStore | null> =
 	createContext<ReceivedMapSharesStore | null>(null)
 
+/**
+ * @internal
+ */
 export const SentMapSharesContext: Context<SentMapSharesStore | null> =
 	createContext<SentMapSharesStore | null>(null)
 
@@ -32,6 +38,9 @@ type MapSharesProviderProps = PropsWithChildren<{
 	mapServerApi: MapServerApi
 }>
 
+/**
+ * @internal
+ */
 export function ReceivedMapSharesProvider({
 	children,
 	clientApi,
@@ -48,6 +57,9 @@ export function ReceivedMapSharesProvider({
 	)
 }
 
+/**
+ * @internal
+ */
 export function SentMapSharesProvider({
 	children,
 	clientApi,
@@ -108,10 +120,16 @@ function useMapSharesState<
 	)
 }
 
+/**
+ * @internal
+ */
 export function useReceivedMapSharesActions() {
 	return useMapSharesActions(ReceivedMapSharesContext)
 }
 
+/**
+ * @internal
+ */
 export function useReceivedMapSharesState(): Array<ReceivedMapShareState>
 export function useReceivedMapSharesState<T>(
 	selector: (state: Array<ReceivedMapShareState>) => T,
@@ -122,10 +140,16 @@ export function useReceivedMapSharesState<T>(
 	return useMapSharesState(ReceivedMapSharesContext, selector)
 }
 
+/**
+ * @internal
+ */
 export function useSentMapSharesActions() {
 	return useMapSharesActions(SentMapSharesContext)
 }
 
+/**
+ * @internal
+ */
 export function useSentMapSharesState<T>(
 	selector?: (state: Array<SentMapShareState>) => T,
 ) {

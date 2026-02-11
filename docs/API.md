@@ -1,14 +1,22 @@
 ## Functions
 
-- [createMapServerState](#createmapserverstate)
 - [ClientApiProvider](#clientapiprovider)
-- [MapServerProvider](#mapserverprovider)
-- [useMapServerState](#usemapserverstate)
 - [useClientApi](#useclientapi)
 - [useOwnDeviceInfo](#useowndeviceinfo)
 - [useIsArchiveDevice](#useisarchivedevice)
 - [useSetOwnDeviceInfo](#usesetowndeviceinfo)
 - [useSetIsArchiveDevice](#usesetisarchivedevice)
+- [ReceivedMapSharesProvider](#receivedmapsharesprovider)
+- [SentMapSharesProvider](#sentmapsharesprovider)
+- [useReceivedMapSharesActions](#usereceivedmapsharesactions)
+- [useReceivedMapSharesState](#usereceivedmapsharesstate)
+- [useReceivedMapSharesState](#usereceivedmapsharesstate)
+- [useReceivedMapSharesState](#usereceivedmapsharesstate)
+- [useSentMapSharesActions](#usesentmapsharesactions)
+- [useSentMapSharesState](#usesentmapsharesstate)
+- [createMapServerApi](#createmapserverapi)
+- [MapServerProvider](#mapserverprovider)
+- [useMapServerApi](#usemapserverapi)
 - [useProjectSettings](#useprojectsettings)
 - [useSingleProject](#usesingleproject)
 - [useManyProjects](#usemanyprojects)
@@ -52,46 +60,14 @@
 - [useSendInvite](#usesendinvite)
 - [useRequestCancelInvite](#userequestcancelinvite)
 - [useMapStyleUrl](#usemapstyleurl)
-- [useManyMapShares](#usemanymapshares)
-- [useSingleMapShare](#usesinglemapshare)
-- [useAcceptMapShare](#useacceptmapshare)
-- [useRejectMapShare](#userejectmapshare)
-- [useAbortMapShareDownload](#useabortmapsharedownload)
-- [useMapShareDownloadProgress](#usemapsharedownloadprogress)
+- [useManyReceivedMapShares](#usemanyreceivedmapshares)
+- [useSingleReceivedMapShare](#usesinglereceivedmapshare)
+- [useDownloadReceivedMapShare](#usedownloadreceivedmapshare)
+- [useDeclineReceivedMapShare](#usedeclinereceivedmapshare)
+- [useAbortReceivedMapShareDownload](#useabortreceivedmapsharedownload)
 - [useSendMapShare](#usesendmapshare)
-- [useRequestCancelMapShare](#userequestcancelmapshare)
-- [useSentMapShareProgress](#usesentmapshareprogress)
-
-### createMapServerState
-
-Factory function to create a `MapServerState` instance. The app should create one instance,
-call `setPort()` when the map server starts, and pass it to `MapServerProvider`.
-
-The returned `MapServerState` instance has the following methods:
-
-- `setPort(port)`: Set the port once the map server has started. Resolves any queued fetch requests.
-- `waitForPort()`: Wait for the port to be set, returning it when available.
-- `getBaseUrl()`: Get the base URL (`http://127.0.0.1:{port}`), or `undefined` if port is not yet set.
-- `fetch(path, init?)`: Fetch from the map server. Waits for the port to be set before making the request.
-
-| Function | Type |
-| ---------- | ---------- |
-| `createMapServerState` | `() => MapServerState` |
-
-Examples:
-
-```ts
-const mapServerState = createMapServerState()
-
-// Port is not yet set - fetch will queue
-const pendingResponse = mapServerState.fetch('/mapShares')
-
-// Setting the port resolves queued requests
-mapServerState.setPort(8080)
-
-const response = await pendingResponse // now completes
-```
-
+- [useCancelSentMapShare](#usecancelsentmapshare)
+- [useSingleSentMapShare](#usesinglesentmapshare)
 
 ### ClientApiProvider
 
@@ -99,56 +75,13 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: { children: ReactNode; clientApi: any; }) => Element` |
+| `ClientApiProvider` | `({ children, clientApi, }: PropsWithChildren<{ clientApi: any; }>) => Element` |
 
 Parameters:
 
 * `opts.children`: React children node
 * `opts.clientApi`: Client API instance
 
-
-### MapServerProvider
-
-Create a context provider that holds a `MapServerState` instance. Required for all map sharing hooks.
-
-| Function | Type |
-| ---------- | ---------- |
-| `MapServerProvider` | `({ children, mapServerState, }: { children: ReactNode; mapServerState: MapServerState; }) => Element` |
-
-Parameters:
-
-* `opts.children`: React children node
-* `opts.mapServerState`: `MapServerState` instance created via `createMapServerState()`
-
-
-Examples:
-
-```tsx
-import { createMapServerState, MapServerProvider } from '@comapeo/core-react'
-
-const mapServerState = createMapServerState()
-
-// When map server starts:
-mapServerState.setPort(8080)
-
-function App() {
-  return (
-    <MapServerProvider mapServerState={mapServerState}>
-      <MyApp />
-    </MapServerProvider>
-  )
-}
-```
-
-
-### useMapServerState
-
-Internal hook to get the MapServerState from context.
-Throws if used outside of MapServerProvider.
-
-| Function | Type |
-| ---------- | ---------- |
-| `useMapServerState` | `() => MapServerState` |
 
 ### useClientApi
 
@@ -232,6 +165,119 @@ Set or unset the current device as an archive device.
 | Function | Type |
 | ---------- | ---------- |
 | `useSetIsArchiveDevice` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { isArchiveDevice: boolean; }, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, { isArchiveDevice: boolean; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+
+### ReceivedMapSharesProvider
+
+| Function | Type |
+| ---------- | ---------- |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, }: MapSharesProviderProps) => Element` |
+
+### SentMapSharesProvider
+
+| Function | Type |
+| ---------- | ---------- |
+| `SentMapSharesProvider` | `({ children, clientApi, mapServerApi, }: MapSharesProviderProps) => Element` |
+
+### useReceivedMapSharesActions
+
+| Function | Type |
+| ---------- | ---------- |
+| `useReceivedMapSharesActions` | `() => { download({ shareId }: DownloadMapShareOptions): Promise<void>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<void>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }` |
+
+### useReceivedMapSharesState
+
+| Function | Type |
+| ---------- | ---------- |
+| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+
+### useReceivedMapSharesState
+
+| Function | Type |
+| ---------- | ---------- |
+| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+
+### useReceivedMapSharesState
+
+| Function | Type |
+| ---------- | ---------- |
+| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+
+### useSentMapSharesActions
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSentMapSharesActions` | `() => { createAndSend({ projectId, receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }` |
+
+### useSentMapSharesState
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSentMapSharesState` | `<T>(selector?: ((state: ServerMapShareState[]) => T) or undefined) => T` |
+
+### createMapServerApi
+
+Utility function to create a MapServerApi instance.
+Only exported for unit testing purposes.
+
+| Function | Type |
+| ---------- | ---------- |
+| `createMapServerApi` | `({ getBaseUrl, fetch, }: MapServerApiOptions) => MapServerApi` |
+
+Parameters:
+
+* `opts.getBaseUrl`: A function that returns a promise that resolves to the base URL of the map server.
+* `opts.fetch`: An optional custom fetch function to use for making requests to the map server. If not provided, the global `fetch` will be used.
+
+
+### MapServerProvider
+
+Create a context provider that holds a `MapServerFetch` function, which waits
+for the map server to be ready before making requests.
+
+| Function | Type |
+| ---------- | ---------- |
+| `MapServerProvider` | `({ children, getBaseUrl, fetch, }: MapServerProviderProps) => Element` |
+
+Parameters:
+
+* `opts.children`: React children node
+* `opts.getBaseUrl`: A function that returns a promise that resolves to the base URL of the map server.
+* `opts.fetch`: An optional custom fetch function to use for making requests to the map server. If not provided, the global `fetch` will be used.
+
+
+Examples:
+
+```tsx
+import { createServer } from '@comapeo/map-server'
+
+const server = createServer()
+const listenPromise = server.listen()
+
+const getBaseUrl = async () => {
+  const { localPort } = await listenPromise
+  return new URL(`http://localhost:${localPort}/`)
+}
+
+const mapServerApi = createMapServerApi({ getBaseUrl })
+
+function App() {
+  return (
+    <MapServerProvider mapServerApi={mapServerApi}>
+      <MyApp />
+    </MapServerProvider>
+  )
+}
+```
+
+
+### useMapServerApi
+
+Internal hook to get the MapServerApi (instance of ky) from context.
+Throws if used outside of MapServerProvider.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useMapServerApi` | `() => MapServerApi` |
 
 ### useProjectSettings
 
@@ -1057,7 +1103,7 @@ due to hidden internal details by consuming components (e.g. map component from 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
+| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -1084,21 +1130,25 @@ function ExampleWithRefreshToken() {
 ```
 
 
-### useManyMapShares
+### useManyReceivedMapShares
 
-Get all map shares that the device has received. Automatically updates when new shares arrive or share states change.
+Get all map shares that the device has received. Automatically updates when
+new shares arrive or share states change.
 
-Requires `MapServerProvider` to be set up.
+IMPORTANT: This hook will not trigger a re-render when download progress
+updates, only when the status changes. This is to avoid excessive re-renders
+during downloads. Use `useSingleReceivedMapShare` to get real-time updates on
+a specific share, including download progress.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyMapShares` | `() => { data: ReceivedMapShareState[]; error: Error or null; isRefetching: boolean; }` |
+| `useManyReceivedMapShares` | `() => any[]` |
 
 Examples:
 
 ```tsx
 function MapSharesList() {
-  const { data: shares } = useManyMapShares()
+  const shares = useManyReceivedMapShares()
 
   return shares.map(share => (
     <div key={share.shareId}>
@@ -1109,15 +1159,13 @@ function MapSharesList() {
 ```
 
 
-### useSingleMapShare
+### useSingleReceivedMapShare
 
-Get a single map share based on its ID.
-
-Requires `MapServerProvider` to be set up.
+Get a single received map share based on its shareId.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleMapShare` | `({ shareId }: { shareId: string; }) => { data: ReceivedMapShareState; error: Error or null; isRefetching: boolean; }` |
+| `useSingleReceivedMapShare` | `({ shareId }: { shareId: string; }) => any` |
 
 Parameters:
 
@@ -1128,22 +1176,25 @@ Examples:
 
 ```tsx
 function MapShareDetail({ shareId }: { shareId: string }) {
-  const { data: share } = useSingleMapShare({ shareId })
+  const share = useSingleReceivedMapShare({ shareId })
 
   return <div>{share.mapName} - {share.state}</div>
 }
 ```
 
 
-### useAcceptMapShare
+### useDownloadReceivedMapShare
 
-Accept and download a map share that has been received. The mutate promise resolves once the map _starts_ downloading, before it finishes downloading. Use `useManyMapShares` or `useSingleMapShare` to track download progress.
+Accept and download a map share that has been received. The mutate promise
+resolves once the map _starts_ downloading, before it finishes downloading.
+Use `useManyMapShares` or `useSingleMapShare` to track download progress.
 
-Requires `MapServerProvider` to be set up.
+Throws if the share is not in `status="pending"` or if the download fails to
+start (e.g. if the shareId if invalid).
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAcceptMapShare` | `() => { error: Error; mutate: UseMutateFunction<AcceptMapShareResult, Error, { shareId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<AcceptMapShareResult, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useDownloadReceivedMapShare` | `() => Pick<Override<MutationObserverIdleResult<Promise<void>, Error, Omit<DownloadMapShareOptions, "projectId">, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Examples:
 
@@ -1156,40 +1207,44 @@ function AcceptButton({ shareId }: { shareId: string }) {
 ```
 
 
-### useRejectMapShare
+### useDeclineReceivedMapShare
 
-Reject a map share that has been received. Notifies the sender that the share was declined.
+Decline a map share that has been received. Notifies the sender that the
+share was declined.
 
-Requires `MapServerProvider` to be set up.
+Throws if the share is not with `status="pending"`
+Throws if shareId is invalid
+Throws if decline request fails (e.g. network error)
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRejectMapShare` | `() => { error: Error; mutate: UseMutateFunction<void, Error, RejectMapShareParams, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, RejectMapShareParams, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useDeclineReceivedMapShare` | `() => Pick<Override<MutationObserverIdleResult<Promise<void>, Error, Omit<DeclineMapShareOptions, "projectId">, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Examples:
 
 ```tsx
-function RejectButton({ shareId }: { shareId: string }) {
-  const { mutate: reject } = useRejectMapShare()
+function DeclineButton({ shareId }: { shareId: string }) {
+  const { mutate: decline } = useDeclineMapShare()
 
   return (
-    <button onClick={() => reject({ shareId, reason: 'user_rejected' })}>
-      Reject
+    <button onClick={() => decline({ shareId, reason: 'user_rejected' })}>
+      Decline
     </button>
   )
 }
 ```
 
 
-### useAbortMapShareDownload
+### useAbortReceivedMapShareDownload
 
 Abort an in-progress map share download.
 
-Requires `MapServerProvider` to be set up.
+Throws if the share is not in `status="downloading"`
+Throws if shareId is invalid
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAbortMapShareDownload` | `() => { error: Error; mutate: UseMutateFunction<void, Error, { shareId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { shareId: string; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useAbortReceivedMapShareDownload` | `() => Pick<Override<MutationObserverIdleResult<Promise<void>, Error, Omit<AbortMapShareOptions, "projectId">, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Examples:
 
@@ -1202,57 +1257,34 @@ function AbortButton({ shareId }: { shareId: string }) {
 ```
 
 
-### useMapShareDownloadProgress
-
-Get download progress for a received map share. Returns `null` if the share is not currently downloading.
-
-Requires `MapServerProvider` to be set up.
-
-| Function | Type |
-| ---------- | ---------- |
-| `useMapShareDownloadProgress` | `({ shareId, }: { shareId: string; }) => { progress: number; bytesDownloaded: number; totalBytes: number; } or null` |
-
-Parameters:
-
-* `opts.shareId`: ID of the map share
-
-
-Examples:
-
-```tsx
-function DownloadProgress({ shareId }: { shareId: string }) {
-  const progress = useMapShareDownloadProgress({ shareId })
-
-  if (!progress) return <div>Not downloading</div>
-
-  return <div>{Math.round(progress.progress * 100)}% downloaded</div>
-}
-```
-
-
 ### useSendMapShare
 
-Share a map with a device. The mutation resolves immediately after sending the share offer, without waiting for the recipient to accept or reject. Use `useSentMapShareProgress` to track the status of the share.
-
-Requires `MapServerProvider` to be set up.
+Share a map with a device. The mutation resolves immediately after sending
+the share offer, without waiting for the recipient to accept or reject. The
+mutation resolves with the created map share object, including its ID, which
+can be used to track the share status with `useSingleSentMapShare`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendMapShare` | `({ projectId }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<SendMapShareResult, Error, { deviceId: string; mapId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useSendMapShare` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<Promise<ServerMapShareState>, Error, CreateAndSendMapShareOptions, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
-* `opts.projectId`: Public ID of project to send the share on behalf of.
+* `opts.projectId`: Public ID of project for sending the map share: you can only send map shares to users on the same project
 
 
 Examples:
 
 ```tsx
 function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: string }) {
-  const { mutate: send } = useSendMapShare({ projectId })
+  const { mutate: send } = useSendMapShare({ projectId }, {
+    onSuccess: (mapShare) => {
+ 	   console.log('Share sent with id', mapShare.shareId)
+    }
+  })
 
   return (
-    <button onClick={() => send({ deviceId, mapId: 'custom' })}>
+    <button onClick={() => send({ receiverDeviceId: deviceId, mapId: 'custom' })}>
       Send Map
     </button>
   )
@@ -1260,15 +1292,17 @@ function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: s
 ```
 
 
-### useRequestCancelMapShare
+### useCancelSentMapShare
 
-Request a cancellation of a map share that was previously sent.
-
-Requires `MapServerProvider` to be set up.
+Cancel a map share that was previously sent. If the recipient has not yet
+started downloading the share, they will not be notified until they attempt
+to accept the share and begin downloading it. If they are already downloading
+the share, the download will be canceled before completion. If the download
+is already complete, this action will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRequestCancelMapShare` | `({ projectId: _projectId, }: { projectId: string; }) => { error: Error; mutate: UseMutateFunction<void, Error, { shareId: string; }, unknown>; mutateAsync: UseMutateAsyncFunction<void, Error, { ...; }, unknown>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCancelSentMapShare` | `() => Pick<Override<MutationObserverIdleResult<Promise<void>, Error, Omit<CancelMapShareOptions, "projectId">, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -1286,29 +1320,36 @@ function CancelShareButton({ projectId, shareId }: { projectId: string; shareId:
 ```
 
 
-### useSentMapShareProgress
+### useSingleSentMapShare
 
-Track the progress of a sent map share via SSE. Returns the current state of the share, updated in real-time.
+Track the status and progress of a sent map share. Returns the current state
+of the share, updated in real-time. When the recipient starts downloading, or
+if they decline the share, then the returned share will update.
 
-Requires `MapServerProvider` to be set up.
+Throws if no share with the specified ID is found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSentMapShareProgress` | `({ shareId, initialState, }: { shareId: string; initialState: MapShareState; }) => MapShareState` |
+| `useSingleSentMapShare` | `({ shareId, }: { shareId: string; }) => ServerMapShareState` |
 
 Parameters:
 
 * `opts.shareId`: ID of the sent map share
-* `opts.initialState`: Initial state of the share (from `useSendMapShare` result or server response)
 
 
 Examples:
 
 ```tsx
-function SentShareStatus({ shareId, initialState }: { shareId: string; initialState: MapShareState }) {
-  const state = useSentMapShareProgress({ shareId, initialState })
+function SentShareStatus({ shareId }: { shareId: string }) {
+  const mapShare = useSingleSentMapShare({ shareId })
 
-  return <div>Share status: {state.status}</div>
+  return (<div>
+		<div>Share status: {mapShare.status}</div>
+   {mapShare.status === 'pending' && <div>Waiting for recipient to accept...</div>}
+  	{mapShare.status === 'downloading' && (<div>Download in progress: {mapShare.downloadProgress}%</div>)}
+  	{mapShare.status === 'declined' && <div>Share was declined by recipient</div>}
+	  {mapShare.status === 'canceled' && <div>Share was canceled</div>}
+  </div>)
 }
 ```
 
@@ -1317,6 +1358,8 @@ function SentShareStatus({ shareId, initialState }: { shareId: string; initialSt
 ## Constants
 
 - [ClientApiContext](#clientapicontext)
+- [ReceivedMapSharesContext](#receivedmapsharescontext)
+- [SentMapSharesContext](#sentmapsharescontext)
 - [MapServerContext](#mapservercontext)
 
 ### ClientApiContext
@@ -1325,140 +1368,47 @@ function SentShareStatus({ shareId, initialState }: { shareId: string; initialSt
 | ---------- | ---------- |
 | `ClientApiContext` | `Context<any>` |
 
+### ReceivedMapSharesContext
+
+| Constant | Type |
+| ---------- | ---------- |
+| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => any[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<void>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; } or null>` |
+
+### SentMapSharesContext
+
+| Constant | Type |
+| ---------- | ---------- |
+| `SentMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ServerMapShareState[]; actions: { createAndSend({ projectId, receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }; } or null>` |
+
 ### MapServerContext
 
 | Constant | Type |
 | ---------- | ---------- |
-| `MapServerContext` | `Context<MapServerState or null>` |
+| `MapServerContext` | `Context<MapServerApi or null>` |
 
 
-## MapServerState
-
-MapServerState manages the dynamic map server port and provides a fetch wrapper
-that queues requests until the port is available.
-
-### Methods
-
-- [setPort](#setport)
-- [getBaseUrl](#getbaseurl)
-
-#### setPort
-
-Set the port once the map server has started.
-This resolves any queued fetch requests.
-
-| Method | Type |
-| ---------- | ---------- |
-| `setPort` | `(port: number) => void` |
-
-#### getBaseUrl
-
-Get the base URL for the map server.
-Returns undefined if port is not yet set.
-
-| Method | Type |
-| ---------- | ---------- |
-| `getBaseUrl` | `() => string or undefined` |
 
 ## Types
 
-- [MapShareStatus](#mapsharestatus)
-- [ReceivedMapShareStatus](#receivedmapsharestatus)
-- [ReceivedMapShareOffer](#receivedmapshareoffer)
-- [ReceivedMapShareState](#receivedmapsharestate)
-- [AcceptMapShareResult](#acceptmapshareresult)
-- [SendMapShareResult](#sendmapshareresult)
-- [RejectMapShareParams](#rejectmapshareparams)
-- [WriteableDocumentType](#writeabledocumenttype)
-- [WriteableValue](#writeablevalue)
-- [WriteableDocument](#writeabledocument)
+- [MapServerApiOptions](#mapserverapioptions)
+- [MapServerApi](#mapserverapi)
+- [MapServerProviderProps](#mapserverproviderprops)
 
-### MapShareStatus
-
-Status values for a map share (sender-side perspective)
+### MapServerApiOptions
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapShareStatus` | `| 'pending' or 'declined' or 'downloading' or 'canceled' or 'aborted' or 'completed' or 'error'` |
+| `MapServerApiOptions` | `{ getBaseUrl(): Promise<URL> fetch?( input: string or URL or Request, options?: RequestInit, ): Promise<Response> }` |
 
-### ReceivedMapShareStatus
-
-Status values for a received map share (receiver-side perspective)
+### MapServerApi
 
 | Type | Type |
 | ---------- | ---------- |
-| `ReceivedMapShareStatus` | `| 'pending' or 'rejected' or 'downloading' or 'cancelled' or 'aborted' or 'completed' or 'error'` |
+| `MapServerApi` | `KyInstance and { createEventSource(options: EventSourceOptions): EventSourceClient getMapStyleJsonUrl(mapId: string): Promise<string> }` |
 
-### ReceivedMapShareOffer
-
-Base properties for a received map share offer.
-This is the data that comes via RPC event when a sender shares a map.
+### MapServerProviderProps
 
 | Type | Type |
 | ---------- | ---------- |
-| `ReceivedMapShareOffer` | `{ /** The ID of the device that sent the map share */ senderDeviceId: string /** The name of the device that sent the map share */ senderDeviceName: string /** The ID of the map share */ shareId: string /** URLs where the map can be downloaded from */ mapShareUrls: Array<string> /** The ID of the map being shared */ mapId: string /** The name of the map being shared */ mapName: string /** Estimated size of the map data in bytes */ estimatedSizeBytes: number /** The bounding box of the map data [minLon, minLat, maxLon, maxLat] */ bounds: readonly [number, number, number, number] /** The minimum zoom level of the map data */ minzoom: number /** The maximum zoom level of the map data */ maxzoom: number /** Timestamp when the map was created */ mapCreated: number /** Timestamp when the map share offer was received */ receivedAt: number }` |
+| `MapServerProviderProps` | `PropsWithChildren<MapServerApiOptions>` |
 
-### ReceivedMapShareState
-
-State of a received map share on the receiver side. A discriminated union based on the `state` field.
-
-Properties common to all states (from `ReceivedMapShareOffer`):
-
-- `senderDeviceId`: The ID of the device that sent the map share
-- `senderDeviceName`: The name of the device that sent the map share
-- `shareId`: The ID of the map share
-- `mapShareUrls`: URLs where the map can be downloaded from
-- `mapId`: The ID of the map being shared
-- `mapName`: The name of the map being shared
-- `estimatedSizeBytes`: Estimated size of the map data in bytes
-- `bounds`: The bounding box of the map data `[minLon, minLat, maxLon, maxLat]`
-- `minzoom`: The minimum zoom level of the map data
-- `maxzoom`: The maximum zoom level of the map data
-- `mapCreated`: Timestamp when the map was created
-- `receivedAt`: Timestamp when the map share offer was received
-
-| Type | Type |
-| ---------- | ---------- |
-| `ReceivedMapShareState` | `ReceivedMapShareOffer and ( or { state: 'pending' } or { state: 'rejected'; reason?: string } or { state: 'downloading'; downloadId: string; bytesDownloaded: number } or { state: 'cancelled' } or { state: 'aborted' } or { state: 'completed' } or { state: 'error'; error: Error } )` |
-
-### AcceptMapShareResult
-
-Result of accepting a map share
-
-| Type | Type |
-| ---------- | ---------- |
-| `AcceptMapShareResult` | `{ shareId: string downloadId: string }` |
-
-### SendMapShareResult
-
-Result of sending a map share
-
-| Type | Type |
-| ---------- | ---------- |
-| `SendMapShareResult` | `{ shareId: string }` |
-
-### RejectMapShareParams
-
-Parameters for rejecting a map share
-
-| Type | Type |
-| ---------- | ---------- |
-| `RejectMapShareParams` | `{ shareId: string reason?: 'disk_full' or 'user_rejected' or string }` |
-
-### WriteableDocumentType
-
-| Type | Type |
-| ---------- | ---------- |
-| `WriteableDocumentType` | `Extract< MapeoDoc['schemaName'], 'field' or 'observation' or 'preset' or 'track' or 'remoteDetectionAlert' >` |
-
-### WriteableValue
-
-| Type | Type |
-| ---------- | ---------- |
-| `WriteableValue` | `Extract< MapeoValue, { schemaName: D } >` |
-
-### WriteableDocument
-
-| Type | Type |
-| ---------- | ---------- |
-| `WriteableDocument` | `Extract< MapeoDoc, { schemaName: D } >` |

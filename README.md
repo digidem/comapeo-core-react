@@ -35,21 +35,25 @@ function App() {
 
 ### Map Sharing Setup
 
-To use the map sharing hooks, you also need to wrap your application with `MapServerProvider`. Create a `MapServerState` instance and call `setPort()` once the `@comapeo/map-server` has started:
+To use the map sharing hooks, you also need to wrap your application with `MapServerProvider`. Provide a `getBaseUrl` function that returns a Promise resolving to the base URL of your map server:
 
 ```tsx
-import { createMapServerState, MapServerProvider } from '@comapeo/core-react'
+import { MapServerProvider } from '@comapeo/core-react'
+import { createServer } from '@comapeo/map-server'
 
-const mapServerState = createMapServerState()
+const server = createServer()
+const listenPromise = server.listen()
 
-// When your map server starts and you know the port:
-mapServerState.setPort(8080)
+const getBaseUrl = async () => {
+	const { localPort } = await listenPromise
+	return new URL(`http://localhost:${localPort}/`)
+}
 
 function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ClientApiProvider clientApi={clientApi}>
-				<MapServerProvider mapServerState={mapServerState}>
+				<MapServerProvider getBaseUrl={getBaseUrl}>
 					<MyApp />
 				</MapServerProvider>
 			</ClientApiProvider>
@@ -58,7 +62,7 @@ function App() {
 }
 ```
 
-Hooks that communicate with the map server (e.g. `useSendMapShare`, `useAcceptMapShare`) will queue their requests until `setPort()` is called, so the provider can be mounted before the server is ready.
+Hooks that communicate with the map server will wait for `getBaseUrl()` to resolve before making requests, so the provider can be mounted before the server is ready. You can also provide an optional `fetch` prop to use a custom fetch implementation.
 
 ## API Documentation
 
