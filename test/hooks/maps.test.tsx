@@ -1,10 +1,13 @@
 import { QueryClient } from '@tanstack/react-query'
 import { act, renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { afterAll, assert, beforeAll, test, vi } from 'vitest'
 
-import { useMapStyleUrl } from '../../src/index.js'
+import { MapServerProvider, useMapStyleUrl } from '../../src/index.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
 import { createClientApiWrapper } from '../helpers/react.js'
+
+const mockGetBaseUrl = async () => new URL('http://localhost:3000')
 
 beforeAll(() => {
 	vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -25,7 +28,18 @@ test('basic read works', async (t) => {
 
 	const queryClient = new QueryClient()
 
-	const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+	const ClientApiWrapper = createClientApiWrapper({
+		clientApi: client,
+		queryClient,
+	})
+
+	const wrapper = ({ children }: { children: ReactNode }) => (
+		<ClientApiWrapper>
+			<MapServerProvider getBaseUrl={mockGetBaseUrl}>
+				{children}
+			</MapServerProvider>
+		</ClientApiWrapper>
+	)
 
 	const mapStyleUrlHook = renderHook<
 		ReturnType<typeof useMapStyleUrl>,
