@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 
-import { MapServerProvider } from '../../src/contexts/MapServer.js'
+import { MapServerProvider } from '../../src/lib/map-server-api.js'
 import {
 	createMapServerState,
 	MapServerState,

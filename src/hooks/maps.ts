@@ -1,55 +1,23 @@
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQuery,
-} from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { errors } from '@comapeo/map-server'
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
+import { useCallback } from 'react'
 
-import { useMapServerFetch } from '../contexts/MapServer.js'
-import type {
-	MapShareState,
-	ReceivedMapShareState,
-} from '../lib/map-share-types.js'
+import { useMapServerApi } from '../contexts/MapServer.js'
 import {
-	ReceivedMapShareStore,
-	SentMapShareStore,
+	useReceivedMapSharesActions,
+	useReceivedMapSharesState,
+	useSentMapSharesActions,
+	useSentMapSharesState,
+} from '../contexts/MapShares.js'
+import {
+	type ReceivedMapShareState,
+	type SentMapShareState,
 } from '../lib/map-shares-stores.js'
 import {
-	abortMapShareDownloadMutationOptions,
-	acceptMapShareMutationOptions,
-	getMapShareByIdQueryOptions,
-	getMapSharesQueryKey,
-	getMapSharesQueryOptions,
+	mapSharesMutationOptions,
 	mapStyleJsonUrlQueryOptions,
-	rejectMapShareMutationOptions,
-	requestCancelMapShareMutationOptions,
-	sendMapShareMutationOptions,
 } from '../lib/react-query/maps.js'
-import { useClientApi } from './client.js'
-import { useSingleProject } from './projects.js'
-
-// WeakMap to cache ReceivedMapShareStore per clientApi instance
-const RECEIVED_SHARE_STORES = new WeakMap<object, ReceivedMapShareStore>()
-
-// Map to cache SentMapShareStore per shareId
-const SENT_SHARE_STORES = new Map<string, SentMapShareStore>()
-
-/**
- * Internal hook to get or create the ReceivedMapShareStore.
- */
-function useReceivedMapShareStore(): ReceivedMapShareStore {
-	const clientApi = useClientApi()
-	const mapServerFetch = useMapServerFetch()
-
-	return useMemo(() => {
-		let store = RECEIVED_SHARE_STORES.get(clientApi)
-		if (!store) {
-			store = new ReceivedMapShareStore(clientApi, mapServerState)
-			RECEIVED_SHARE_STORES.set(clientApi, store)
-		}
-		return store
-	}, [clientApi, mapServerState])
-}
+import { filterMutationResult } from '../lib/react-query/mutation-result.js'
 
 /**
  * Get a URL that points to a StyleJSON resource served by the embedded HTTP server.
@@ -82,10 +50,10 @@ export function useMapStyleUrl({
 }: {
 	refreshToken?: string
 } = {}) {
-	const clientApi = useClientApi()
+	const mapServerApi = useMapServerApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		mapStyleJsonUrlQueryOptions({ clientApi, refreshToken }),
+		mapStyleJsonUrlQueryOptions({ mapServerApi, refreshToken }),
 	)
 
 	return { data, error, isRefetching }
@@ -96,14 +64,18 @@ export function useMapStyleUrl({
 // ============================================
 
 /**
- * Get all map shares that the device has received. Automatically updates when new shares arrive or share states change.
+ * Get all map shares that the device has received. Automatically updates when
+ * new shares arrive or share states change.
  *
- * Requires `MapServerProvider` to be set up.
+ * IMPORTANT: This hook will not trigger a re-render when download progress
+ * updates, only when the status changes. This is to avoid excessive re-renders
+ * during downloads. Use `useSingleReceivedMapShare` to get real-time updates on
+ * a specific share, including download progress.
  *
  * @example
  * ```tsx
  * function MapSharesList() {
- *   const { data: shares } = useManyMapShares()
+ *   const shares = useManyReceivedMapShares()
  *
  *   return shares.map(share => (
  *     <div key={share.shareId}>
@@ -113,54 +85,45 @@ export function useMapStyleUrl({
  * }
  * ```
  */
-export function useManyMapShares() {
-	const store = useReceivedMapShareStore()
-	const queryClient = useQueryClient()
-
-	// Subscribe to store changes to trigger query refetch
-	useEffect(() => {
-		return store.subscribe(() => {
-			queryClient.invalidateQueries({ queryKey: getMapSharesQueryKey() })
-		})
-	}, [store, queryClient])
-
-	const { data, error, isRefetching } = useSuspenseQuery(
-		getMapSharesQueryOptions({ store }),
-	)
-
-	return { data, error, isRefetching }
+export function useManyReceivedMapShares() {
+	return useReceivedMapSharesState()
 }
 
 /**
- * Get a single map share based on its ID.
- *
- * Requires `MapServerProvider` to be set up.
+ * Get a single received map share based on its shareId.
  *
  * @param opts.shareId ID of the map share
  *
  * @example
  * ```tsx
  * function MapShareDetail({ shareId }: { shareId: string }) {
- *   const { data: share } = useSingleMapShare({ shareId })
+ *   const share = useSingleReceivedMapShare({ shareId })
  *
  *   return <div>{share.mapName} - {share.state}</div>
  * }
  * ```
  */
-export function useSingleMapShare({ shareId }: { shareId: string }) {
-	const store = useReceivedMapShareStore()
-
-	const { data, error, isRefetching } = useSuspenseQuery(
-		getMapShareByIdQueryOptions({ store, shareId }),
+export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
+	const mapShare = useReceivedMapSharesState(
+		useCallback(
+			(shares: Array<ReceivedMapShareState>) =>
+				shares.find((s) => s.shareId === shareId),
+			[shareId],
+		),
 	)
-
-	return { data, error, isRefetching }
+	if (!mapShare) {
+		throw new Error(`Map share with id ${shareId} not found`)
+	}
+	return mapShare
 }
 
 /**
- * Accept and download a map share that has been received. The mutate promise resolves once the map _starts_ downloading, before it finishes downloading. Use `useManyMapShares` or `useSingleMapShare` to track download progress.
+ * Accept and download a map share that has been received. The mutate promise
+ * resolves once the map _starts_ downloading, before it finishes downloading.
+ * Use `useManyMapShares` or `useSingleMapShare` to track download progress.
  *
- * Requires `MapServerProvider` to be set up.
+ * Throws if the share is not in `status="pending"` or if the download fails to
+ * start (e.g. if the shareId if invalid).
  *
  * @example
  * ```tsx
@@ -171,56 +134,46 @@ export function useSingleMapShare({ shareId }: { shareId: string }) {
  * }
  * ```
  */
-export function useAcceptMapShare() {
-	const queryClient = useQueryClient()
-	const mapServerState = useMapServerFetch()
-	const store = useReceivedMapShareStore()
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		acceptMapShareMutationOptions({ mapServerState, store, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+export function useDownloadReceivedMapShare() {
+	const { download } = useReceivedMapSharesActions()
+	const options = mapSharesMutationOptions({ action: download })
+	const result = useMutation(options)
+	return filterMutationResult(result)
 }
 
 /**
- * Reject a map share that has been received. Notifies the sender that the share was declined.
+ * Decline a map share that has been received. Notifies the sender that the
+ * share was declined.
  *
- * Requires `MapServerProvider` to be set up.
+ * Throws if the share is not with `status="pending"`
+ * Throws if shareId is invalid
+ * Throws if decline request fails (e.g. network error)
  *
  * @example
  * ```tsx
- * function RejectButton({ shareId }: { shareId: string }) {
- *   const { mutate: reject } = useRejectMapShare()
+ * function DeclineButton({ shareId }: { shareId: string }) {
+ *   const { mutate: decline } = useDeclineMapShare()
  *
  *   return (
- *     <button onClick={() => reject({ shareId, reason: 'user_rejected' })}>
- *       Reject
+ *     <button onClick={() => decline({ shareId, reason: 'user_rejected' })}>
+ *       Decline
  *     </button>
  *   )
  * }
  * ```
  */
-export function useRejectMapShare() {
-	const queryClient = useQueryClient()
-	const mapServerState = useMapServerFetch()
-	const store = useReceivedMapShareStore()
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		rejectMapShareMutationOptions({ mapServerState, store, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+export function useDeclineReceivedMapShare() {
+	const { decline } = useReceivedMapSharesActions()
+	const options = mapSharesMutationOptions({ action: decline })
+	const result = useMutation(options)
+	return filterMutationResult(result)
 }
 
 /**
  * Abort an in-progress map share download.
  *
- * Requires `MapServerProvider` to be set up.
+ * Throws if the share is not in `status="downloading"`
+ * Throws if shareId is invalid
  *
  * @example
  * ```tsx
@@ -231,56 +184,11 @@ export function useRejectMapShare() {
  * }
  * ```
  */
-export function useAbortMapShareDownload() {
-	const queryClient = useQueryClient()
-	const mapServerState = useMapServerFetch()
-	const store = useReceivedMapShareStore()
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		abortMapShareDownloadMutationOptions({
-			mapServerState,
-			store,
-			queryClient,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
-}
-
-/**
- * Get download progress for a received map share. Returns `null` if the share is not currently downloading.
- *
- * Requires `MapServerProvider` to be set up.
- *
- * @param opts.shareId ID of the map share
- *
- * @example
- * ```tsx
- * function DownloadProgress({ shareId }: { shareId: string }) {
- *   const progress = useMapShareDownloadProgress({ shareId })
- *
- *   if (!progress) return <div>Not downloading</div>
- *
- *   return <div>{Math.round(progress.progress * 100)}% downloaded</div>
- * }
- * ```
- */
-export function useMapShareDownloadProgress({
-	shareId,
-}: {
-	shareId: string
-}): { progress: number; bytesDownloaded: number; totalBytes: number } | null {
-	const { data: share } = useSingleMapShare({ shareId })
-
-	if (share.state !== 'downloading') return null
-
-	const bytesDownloaded = share.bytesDownloaded
-	const totalBytes = share.estimatedSizeBytes
-	const progress = totalBytes > 0 ? bytesDownloaded / totalBytes : 0
-
-	return { progress, bytesDownloaded, totalBytes }
+export function useAbortReceivedMapShareDownload() {
+	const { abort } = useReceivedMapSharesActions()
+	const options = mapSharesMutationOptions({ action: abort })
+	const result = useMutation(options)
+	return filterMutationResult(result)
 }
 
 // ============================================
@@ -288,19 +196,24 @@ export function useMapShareDownloadProgress({
 // ============================================
 
 /**
- * Share a map with a device. The mutation resolves immediately after sending the share offer, without waiting for the recipient to accept or reject. Use `useSentMapShareProgress` to track the status of the share.
+ * Share a map with a device. The mutation resolves immediately after sending
+ * the share offer, without waiting for the recipient to accept or reject. The
+ * mutation resolves with the created map share object, including its ID, which
+ * can be used to track the share status with `useSingleSentMapShare`.
  *
- * Requires `MapServerProvider` to be set up.
- *
- * @param opts.projectId Public ID of project to send the share on behalf of.
+ * @param opts.projectId Public ID of project for sending the map share: you can only send map shares to users on the same project
  *
  * @example
  * ```tsx
  * function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: string }) {
- *   const { mutate: send } = useSendMapShare({ projectId })
+ *   const { mutate: send } = useSendMapShare({ projectId }, {
+ *     onSuccess: (mapShare) => {
+ *  	   console.log('Share sent with id', mapShare.shareId)
+ *     }
+ *   })
  *
  *   return (
- *     <button onClick={() => send({ deviceId, mapId: 'custom' })}>
+ *     <button onClick={() => send({ receiverDeviceId: deviceId, mapId: 'custom' })}>
  *       Send Map
  *     </button>
  *   )
@@ -308,22 +221,18 @@ export function useMapShareDownloadProgress({
  * ```
  */
 export function useSendMapShare({ projectId }: { projectId: string }) {
-	const mapServerState = useMapServerFetch()
-	const { data: projectApi } = useSingleProject({ projectId })
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		sendMapShareMutationOptions({ mapServerState, projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	const { createAndSend } = useSentMapSharesActions()
+	const options = mapSharesMutationOptions({ action: createAndSend, projectId })
+	const result = useMutation(options)
+	return filterMutationResult(result)
 }
 
 /**
- * Request a cancellation of a map share that was previously sent.
- *
- * Requires `MapServerProvider` to be set up.
+ * Cancel a map share that was previously sent. If the recipient has not yet
+ * started downloading the share, they will not be notified until they attempt
+ * to accept the share and begin downloading it. If they are already downloading
+ * the share, the download will be canceled before completion. If the download
+ * is already complete, this action will throw an error.
  *
  * @param opts.projectId Public ID of project to request the map share cancellation for.
  *
@@ -336,87 +245,53 @@ export function useSendMapShare({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useRequestCancelMapShare({
-	projectId: _projectId,
-}: {
-	projectId: string
-}) {
-	const queryClient = useQueryClient()
-	const mapServerState = useMapServerFetch()
-
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		requestCancelMapShareMutationOptions({ mapServerState, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+export function useCancelSentMapShare() {
+	const { cancel } = useSentMapSharesActions()
+	const options = mapSharesMutationOptions({ action: cancel })
+	const result = useMutation(options)
+	return filterMutationResult(result)
 }
 
 /**
- * Track the progress of a sent map share via SSE. Returns the current state of the share, updated in real-time.
+ * Track the status and progress of a sent map share. Returns the current state
+ * of the share, updated in real-time. When the recipient starts downloading, or
+ * if they decline the share, then the returned share will update.
  *
- * Requires `MapServerProvider` to be set up.
+ * Throws if no share with the specified ID is found.
  *
  * @param opts.shareId ID of the sent map share
- * @param opts.initialState Initial state of the share (from `useSendMapShare` result or server response)
  *
  * @example
  * ```tsx
- * function SentShareStatus({ shareId, initialState }: { shareId: string; initialState: MapShareState }) {
- *   const state = useSentMapShareProgress({ shareId, initialState })
+ * function SentShareStatus({ shareId }: { shareId: string }) {
+ *   const mapShare = useSingleSentMapShare({ shareId })
  *
- *   return <div>Share status: {state.status}</div>
+ *   return (<div>
+ * 		<div>Share status: {mapShare.status}</div>
+ *    {mapShare.status === 'pending' && <div>Waiting for recipient to accept...</div>}
+ *   	{mapShare.status === 'downloading' && (<div>Download in progress: {mapShare.downloadProgress}%</div>)}
+ *   	{mapShare.status === 'declined' && <div>Share was declined by recipient</div>}
+ * 	  {mapShare.status === 'canceled' && <div>Share was canceled</div>}
+ *   </div>)
  * }
  * ```
  */
-export function useSentMapShareProgress({
+export function useSingleSentMapShare({
 	shareId,
-	initialState,
 }: {
 	shareId: string
-	initialState: MapShareState
-}): MapShareState {
-	const mapServerState = useMapServerFetch()
-
-	// Create or retrieve store for this share
-	const storeRef = useRef<SentMapShareStore | null>(null)
-
-	if (!storeRef.current) {
-		let existingStore = SENT_SHARE_STORES.get(shareId)
-		if (!existingStore) {
-			existingStore = new SentMapShareStore(
-				shareId,
-				mapServerState,
-				initialState,
-			)
-			SENT_SHARE_STORES.set(shareId, existingStore)
-		}
-		storeRef.current = existingStore
+}): SentMapShareState {
+	const mapShare = useSentMapSharesState(
+		useCallback(
+			(shares: Array<SentMapShareState>) =>
+				shares.find((s) => s.shareId === shareId),
+			[shareId],
+		),
+	)
+	if (!mapShare) {
+		throw new errors.MAP_SHARE_NOT_FOUND(
+			`Sent map share with id ${shareId} not found`,
+		)
 	}
-
-	const store = storeRef.current
-
-	// Cleanup store from cache when share is in terminal state
-	useEffect(() => {
-		return () => {
-			const currentState = store.getSnapshot()
-			if (
-				currentState.status === 'completed' ||
-				currentState.status === 'canceled' ||
-				currentState.status === 'declined' ||
-				currentState.status === 'error'
-			) {
-				SENT_SHARE_STORES.delete(shareId)
-			}
-		}
-	}, [shareId, store])
-
-	return useSyncExternalStore(store.subscribe, store.getSnapshot)
+	return mapShare
 }
-
-// ============================================
-// TYPE EXPORTS
-// ============================================
-
-export type { ReceivedMapShareState, MapShareState }

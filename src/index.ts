@@ -26,18 +26,24 @@ export {
 } from './hooks/invites.js'
 export {
 	useMapStyleUrl,
-	useAcceptMapShare,
-	useManyMapShares,
-	useRejectMapShare,
-	useRequestCancelMapShare,
+	useManyReceivedMapShares,
+	useSingleReceivedMapShare,
+	useDeclineReceivedMapShare,
+	useDownloadReceivedMapShare,
+	useAbortReceivedMapShareDownload,
 	useSendMapShare,
-	useSingleMapShare,
-	useAbortMapShareDownload,
-	useSentMapShareProgress,
-	useMapShareDownloadProgress,
-	type ReceivedMapShareState,
-	type MapShareState,
+	useCancelSentMapShare,
+	useSingleSentMapShare,
 } from './hooks/maps.js'
+export type {
+	SentMapShareState,
+	ReceivedMapShareState,
+	AbortMapShareOptions,
+	CancelMapShareOptions,
+	DeclineMapShareOptions,
+	DownloadMapShareOptions,
+	CreateAndSendMapShareOptions,
+} from './lib/map-shares-stores.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
@@ -75,4 +81,3 @@ export {
 	type WriteableDocumentType,
 	type WriteableValue,
 } from './lib/types.js'
-export { createMapServerState, MapServerState } from './lib/MapServerState.js'

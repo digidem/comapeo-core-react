@@ -4,14 +4,21 @@ import {
 	type EventSourceOptions,
 } from 'eventsource-client'
 import ky, { type KyInstance } from 'ky'
-import React, {
+import {
 	createContext,
 	createElement,
 	useContext,
+	useMemo,
 	type Context,
 	type JSX,
-	type ReactNode,
+	type PropsWithChildren,
 } from 'react'
+
+import { useClientApi } from '../hooks/client.js'
+import {
+	ReceivedMapSharesProvider,
+	SentMapSharesProvider,
+} from './MapShares.js'
 
 export type MapServerApiOptions = {
 	getBaseUrl(): Promise<URL>
@@ -23,6 +30,7 @@ export type MapServerApiOptions = {
 
 export type MapServerApi = KyInstance & {
 	createEventSource(options: EventSourceOptions): EventSourceClient
+	getMapStyleJsonUrl(mapId: string): Promise<string>
 }
 
 // Placeholder URL used to allow ky to create Request objects with relative URLs in Node.js
@@ -68,11 +76,20 @@ export function createMapServerApi({
 			})
 		},
 	})
+	Object.defineProperty(api, 'getMapStyleJsonUrl', {
+		value: async (mapId: string) => {
+			const baseUrl = await getBaseUrl()
+			return new URL(`/maps/${mapId}/style.json`, baseUrl).href
+		},
+	})
 	return api as MapServerApi
 }
 
 export const MapServerContext: Context<MapServerApi | null> =
 	createContext<MapServerApi | null>(null)
+
+export type MapServerProviderProps = PropsWithChildren<MapServerApiOptions>
+
 /**
  * Create a context provider that holds a `MapServerFetch` function, which waits
  * for the map server to be ready before making requests.
@@ -93,9 +110,11 @@ export const MapServerContext: Context<MapServerApi | null> =
  *   return new URL(`http://localhost:${localPort}/`)
  * }
  *
+ * const mapServerApi = createMapServerApi({ getBaseUrl })
+ *
  * function App() {
  *   return (
- *     <MapServerProvider getBaseUrl={getBaseUrl}>
+ *     <MapServerProvider mapServerApi={mapServerApi}>
  *       <MyApp />
  *     </MapServerProvider>
  *   )
@@ -105,19 +124,33 @@ export const MapServerContext: Context<MapServerApi | null> =
 export function MapServerProvider({
 	children,
 	getBaseUrl,
-	fetch = globalThis.fetch,
-}: MapServerApiOptions & { children: ReactNode }): JSX.Element {
-	const value = React.useMemo(() => {
-		return createMapServerApi({ getBaseUrl, fetch })
-	}, [getBaseUrl, fetch])
-	return createElement(MapServerContext.Provider, { value }, children)
+	fetch,
+}: MapServerProviderProps): JSX.Element {
+	const clientApi = useClientApi()
+	const mapServerApi = useMemo(
+		() => createMapServerApi({ getBaseUrl, fetch }),
+		[getBaseUrl, fetch],
+	)
+	return createElement(
+		MapServerContext.Provider,
+		{ value: mapServerApi },
+		createElement(
+			SentMapSharesProvider,
+			{ clientApi, mapServerApi },
+			createElement(
+				ReceivedMapSharesProvider,
+				{ clientApi, mapServerApi },
+				children,
+			),
+		),
+	)
 }
 
 /**
  * Internal hook to get the MapServerApi (instance of ky) from context.
  * Throws if used outside of MapServerProvider.
  */
-export function useMapServerApi(): KyInstance {
+export function useMapServerApi(): MapServerApi {
 	const api = useContext(MapServerContext)
 	if (!api) {
 		throw new Error('useMapServerApi must be used within a MapServerProvider')

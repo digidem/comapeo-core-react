@@ -1,7 +1,11 @@
 /* eslint-disable no-ex-assign */
 import type { MapShare } from '@comapeo/core'
 import type { MapeoClientApi } from '@comapeo/ipc'
-import type { MapShareState as ServerMapShareState } from '@comapeo/map-server'
+import {
+	CUSTOM_MAP_ID,
+	errors,
+	type MapShareState as ServerMapShareState,
+} from '@comapeo/map-server'
 import ensureError from 'ensure-error'
 import { isHTTPError } from 'ky'
 import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'
@@ -26,6 +30,57 @@ export type ReceivedMapSharesStore = ReturnType<
 >
 export type SentMapSharesStore = ReturnType<typeof createSentMapSharesStore>
 
+// ============================================
+// ACTION OPTIONS TYPES
+// These are defined here so that VSCode tooltips work for the mutation
+// functions - if the documentation comments are added inline for the store
+// actions, they do not show for the mutate() function in hooks.
+// ============================================
+
+/** Known reasons for declining a map share */
+export const DeclineReason = {
+	/** User explicitly rejected the map share */
+	user_rejected: 'user_rejected',
+	/** Device storage is full */
+	storage_full: 'storage_full',
+} as const
+
+/** Options for downloading a received map share */
+export type DownloadMapShareOptions = {
+	/** ID of the map share to download */
+	shareId: string
+}
+
+/** Options for declining a received map share */
+export type DeclineMapShareOptions = {
+	/** ID of the map share to decline */
+	shareId: string
+	/** Reason for declining (e.g., 'user_rejected', 'storage_full') */
+	reason: (typeof DeclineReason)[keyof typeof DeclineReason] | (string & {})
+}
+
+/** Options for aborting an in-progress map share download */
+export type AbortMapShareOptions = {
+	/** ID of the map share download to abort */
+	shareId: string
+}
+
+/** Options for creating and sending a map share */
+export type CreateAndSendMapShareOptions = {
+	/** Public ID of the project to send the share on behalf of */
+	projectId: string
+	/** Device ID of the recipient */
+	receiverDeviceId: string
+	/** ID of the map to share - not needed until we support multiple maps */
+	mapId?: string
+}
+
+/** Options for canceling a sent map share */
+export type CancelMapShareOptions = {
+	/** ID of the map share to cancel */
+	shareId: string
+}
+
 /**
  * This is like a mini zustand store. Keeping the map shares in an external
  * store avoids unnecessary re-renders of the entire app when map shares are
@@ -46,11 +101,26 @@ function createMapSharesStore<
 	const listeners = new Set<() => void>()
 
 	function update(shareId: string, stateUpdate: MapShareStateUpdate) {
-		mapShares = mapShares.map((mapShare) => {
-			if (mapShare.shareId !== shareId) return mapShare
-			assertValidStatusTransition(mapShare.status, stateUpdate.status)
-			return { ...mapShare, ...stateUpdate }
-		})
+		const index = mapShares.findIndex((s) => s.shareId === shareId)
+		const existing = mapShares[index]
+		if (!existing) {
+			throw new errors.MAP_SHARE_NOT_FOUND(
+				`Map share with id ${shareId} not found`,
+			)
+		}
+		assertValidStatusTransition(existing.status, stateUpdate.status)
+		mapShares[index] = { ...existing, ...stateUpdate }
+		const isDownloadProgressUpdate =
+			stateUpdate.status === 'downloading' && existing.status === 'downloading'
+		// IMPORTANT: For download progress updates, the store state is mutated, so
+		// maintains Object.is equality. This means that components listening to the
+		// store state without a selector _will not update_ when download progress
+		// updates. However, all other updates will result in a re-render, and using
+		// a selector to listen to an individual map share will also update during
+		// download progress.
+		if (!isDownloadProgressUpdate) {
+			mapShares = [...mapShares]
+		}
 		emit()
 	}
 
@@ -62,7 +132,9 @@ function createMapSharesStore<
 	function get(shareId: string) {
 		const mapShare = mapShares.find((share) => share.shareId === shareId)
 		if (!mapShare) {
-			throw new Error(`Map share with id ${shareId} not found`)
+			throw new errors.MAP_SHARE_NOT_FOUND(
+				`Map share with id ${shareId} not found`,
+			)
 		}
 		return mapShare
 	}
@@ -146,12 +218,10 @@ export function createReceivedMapSharesStore({
 		add({ ...mapShare, status: 'pending' })
 	})
 
-	return {
-		subscribe,
-		getSnapshot,
-		async download(mapShareId: string) {
-			const mapShare = get(mapShareId)
-			update(mapShareId, { status: 'downloading', bytesDownloaded: 0 })
+	const actions = {
+		async download({ shareId }: DownloadMapShareOptions) {
+			const mapShare = get(shareId)
+			update(shareId, { status: 'downloading', bytesDownloaded: 0 })
 			try {
 				const downloadIdPromise = mapServerApi
 					.post(`downloads`, {
@@ -170,21 +240,21 @@ export function createReceivedMapSharesStore({
 				// setting the promise on the map and awaiting the downloadIdPromise,
 				// which would result in an unhandled rejection without this.
 				downloadIdPromise.catch(noop)
-				downloads.set(mapShareId, downloadIdPromise)
+				downloads.set(shareId, downloadIdPromise)
 				const downloadId = await downloadIdPromise
-				monitor(mapShareId, `downloads/${downloadId}/events`)
+				monitor(shareId, `downloads/${downloadId}/events`)
 			} catch (e) {
-				downloads.delete(mapShareId)
+				downloads.delete(shareId)
 				e = await readHttpError(e)
-				handleError(mapShareId, e)
+				handleError(shareId, e)
 				throw e
 			}
 		},
-		async decline(mapShareId: string, reason: string) {
-			const mapShare = get(mapShareId)
-			update(mapShareId, { status: 'declined', reason })
+		async decline({ shareId, reason }: DeclineMapShareOptions) {
+			const mapShare = get(shareId)
+			update(shareId, { status: 'declined', reason })
 			try {
-				await mapServerApi.post(`mapShares/${mapShareId}/decline`, {
+				await mapServerApi.post(`mapShares/${shareId}/decline`, {
 					json: {
 						senderDeviceId: mapShare.senderDeviceId,
 						mapShareUrls: mapShare.mapShareUrls,
@@ -193,29 +263,34 @@ export function createReceivedMapSharesStore({
 				})
 			} catch (e) {
 				e = await readHttpError(e)
-				handleError(mapShareId, e)
+				handleError(shareId, e)
 				throw e
 			}
 		},
-		async abort(mapShareId: string) {
-			get(mapShareId) // Throws if share doesn't exist
-			update(mapShareId, { status: 'aborted' })
+		async abort({ shareId }: AbortMapShareOptions) {
+			update(shareId, { status: 'aborted' })
 			try {
-				const downloadId = await downloads.get(mapShareId)
+				const downloadId = await downloads.get(shareId)
 				if (!downloadId) {
-					throw new Error(
-						`No download in progress for map share with id ${mapShareId}`,
+					throw new errors.DOWNLOAD_NOT_FOUND(
+						`No download in progress for map share with id ${shareId}`,
 					)
 				}
 				await mapServerApi.post(`downloads/${downloadId}/abort`)
 			} catch (e) {
 				e = await readHttpError(e)
-				handleError(mapShareId, e)
+				handleError(shareId, e)
 				throw e
 			} finally {
-				downloads.delete(mapShareId)
+				downloads.delete(shareId)
 			}
 		},
+	}
+
+	return {
+		subscribe,
+		getSnapshot,
+		actions,
 	}
 }
 
@@ -232,15 +307,12 @@ export function createSentMapSharesStore({
 	const { subscribe, getSnapshot, update, add, handleError, monitor } =
 		createMapSharesStore<SentMapShareState>({ mapServerApi })
 
-	return {
-		subscribe,
-		getSnapshot,
-
+	const actions = {
 		async createAndSend({
 			projectId,
 			receiverDeviceId,
-			mapId,
-		}: Pick<MapShare, 'receiverDeviceId' | 'mapId'> & { projectId: string }) {
+			mapId = CUSTOM_MAP_ID,
+		}: CreateAndSendMapShareOptions) {
 			const mapShare = await mapServerApi
 				.post('mapShares', {
 					json: { receiverDeviceId, mapId },
@@ -264,16 +336,22 @@ export function createSentMapSharesStore({
 			return mapShare
 		},
 
-		async cancel(mapShareId: string) {
-			update(mapShareId, { status: 'canceled' })
+		async cancel({ shareId }: CancelMapShareOptions) {
+			update(shareId, { status: 'canceled' })
 			try {
-				await mapServerApi.post(`mapShares/${mapShareId}/cancel`)
+				await mapServerApi.post(`mapShares/${shareId}/cancel`)
 			} catch (e) {
 				e = await readHttpError(e)
-				handleError(mapShareId, e)
+				handleError(shareId, e)
 				throw e
 			}
 		},
+	}
+
+	return {
+		subscribe,
+		getSnapshot,
+		actions,
 	}
 }
 

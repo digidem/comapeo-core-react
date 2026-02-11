@@ -111,7 +111,9 @@ describe('ReceivedMapSharesStore', () => {
 
 			mockClientApi.emit('map-share', mapShare)
 
-			const downloadPromise = store.download(mapShare.shareId)
+			const downloadPromise = store.actions.download({
+				shareId: mapShare.shareId,
+			})
 
 			// synchronous store update to 'downloading' status
 			expect(store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
@@ -130,7 +132,7 @@ describe('ReceivedMapSharesStore', () => {
 
 		it('should throw when downloading a non-existent share', async () => {
 			await expect(() =>
-				store.download('non-existent-share-id'),
+				store.actions.download({ shareId: 'non-existent-share-id' }),
 			).rejects.toThrow('Map share with id non-existent-share-id not found')
 		})
 	})
@@ -148,7 +150,10 @@ describe('ReceivedMapSharesStore', () => {
 			const listener = vi.fn()
 			store.subscribe(listener)
 
-			const declinePromise = store.decline(mapShare.shareId, 'user_rejected')
+			const declinePromise = store.actions.decline({
+				shareId: mapShare.shareId,
+				reason: 'user_rejected',
+			})
 
 			// Check that status is immediately set to declined
 			const snapshot = store.getSnapshot()
@@ -167,7 +172,10 @@ describe('ReceivedMapSharesStore', () => {
 
 		it('should throw when declining a non-existent share', async () => {
 			await expect(() =>
-				store.decline('non-existent-share-id', 'user_rejected'),
+				store.actions.decline({
+					shareId: 'non-existent-share-id',
+					reason: 'user_rejected',
+				}),
 			).rejects.toThrow('Map share with id non-existent-share-id not found')
 		})
 	})
@@ -183,9 +191,9 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Start the download
-			await store.download(mapShare.shareId)
+			await store.actions.download({ shareId: mapShare.shareId })
 
-			const abortPromise = store.abort(mapShare.shareId)
+			const abortPromise = store.actions.abort({ shareId: mapShare.shareId })
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]?.status).toBe('aborted')
 
@@ -200,9 +208,9 @@ describe('ReceivedMapSharesStore', () => {
 		})
 
 		it('should throw when aborting a non-existent share', async () => {
-			await expect(() => store.abort('non-existent-share-id')).rejects.toThrow(
-				'Map share with id non-existent-share-id not found',
-			)
+			await expect(() =>
+				store.actions.abort({ shareId: 'non-existent-share-id' }),
+			).rejects.toThrow('Map share with id non-existent-share-id not found')
 		})
 	})
 
@@ -217,16 +225,21 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Decline the share (status: pending -> declined)
-			await store.decline(mapShare.shareId, 'user_rejected')
+			await store.actions.decline({
+				shareId: mapShare.shareId,
+				reason: 'user_rejected',
+			})
 
 			// Now trying to download should throw because declined -> downloading is not allowed
-			await expect(() => store.download(mapShare.shareId)).rejects.toThrow(
+			await expect(() =>
+				store.actions.download({ shareId: mapShare.shareId }),
+			).rejects.toThrow(
 				'Invalid status transition from declined to downloading',
 			)
 			// Trying to abort should also throw because declined -> aborted is not allowed
-			await expect(() => store.abort(mapShare.shareId)).rejects.toThrow(
-				'Invalid status transition from declined to aborted',
-			)
+			await expect(() =>
+				store.actions.abort({ shareId: mapShare.shareId }),
+			).rejects.toThrow('Invalid status transition from declined to aborted')
 
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]?.status).toBe('declined')
@@ -242,9 +255,9 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Trying to abort before download should throw because pending -> aborted is not allowed
-			await expect(() => store.abort(mapShare.shareId)).rejects.toThrow(
-				'Invalid status transition from pending to aborted',
-			)
+			await expect(() =>
+				store.actions.abort({ shareId: mapShare.shareId }),
+			).rejects.toThrow('Invalid status transition from pending to aborted')
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]?.status).toBe('pending')
 		})
@@ -259,11 +272,14 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Start the download
-			await store.download(mapShare.shareId)
+			await store.actions.download({ shareId: mapShare.shareId })
 
 			// Now trying to decline should throw because downloading -> declined is not allowed
 			await expect(() =>
-				store.decline(mapShare.shareId, 'user_rejected'),
+				store.actions.decline({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				}),
 			).rejects.toThrow(
 				'Invalid status transition from downloading to declined',
 			)
@@ -282,7 +298,7 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Start the download and wait for completion
-			await store.download(mapShare.shareId)
+			await store.actions.download({ shareId: mapShare.shareId })
 			await waitForStoreState(
 				store,
 				(state) => state[0]?.status === 'completed',
@@ -290,16 +306,21 @@ describe('ReceivedMapSharesStore', () => {
 
 			// Now trying to decline should throw because completed -> declined is not allowed
 			await expect(() =>
-				store.decline(mapShare.shareId, 'user_rejected'),
+				store.actions.decline({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				}),
 			).rejects.toThrow('Invalid status transition from completed to declined')
 
 			// Trying to abort should also throw because completed -> aborted is not allowed
-			await expect(() => store.abort(mapShare.shareId)).rejects.toThrow(
-				'Invalid status transition from completed to aborted',
-			)
+			await expect(() =>
+				store.actions.abort({ shareId: mapShare.shareId }),
+			).rejects.toThrow('Invalid status transition from completed to aborted')
 
 			// Trying download again should also throw because completed -> downloading is not allowed
-			await expect(() => store.download(mapShare.shareId)).rejects.toThrow(
+			await expect(() =>
+				store.actions.download({ shareId: mapShare.shareId }),
+			).rejects.toThrow(
 				'Invalid status transition from completed to downloading',
 			)
 
@@ -374,13 +395,170 @@ describe('ReceivedMapSharesStore', () => {
 			// Download only rejects if the local download action encounters an error.
 			// Errors communicating with the remote server are captured in state
 			// updates.
-			await store.download(mapShare.shareId)
+			await store.actions.download({ shareId: mapShare.shareId })
 
 			await waitForStoreState(store, (state) => state[0]?.status === 'error')
 
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]).toHaveProperty('status', 'error')
 			expect(snapshot[0]).toHaveProperty('error.code', 'DOWNLOAD_ERROR')
+		})
+	})
+
+	describe('Object.is equality for useSyncExternalStore', () => {
+		it('should maintain array reference during download progress updates', async () => {
+			const serverShare = await createShare()
+			const mapShare = createMapShareFromServerShare(
+				sender.deviceId,
+				serverShare,
+			)
+
+			mockClientApi.emit('map-share', mapShare)
+
+			// Start the download - synchronously updates status to 'downloading'
+			const downloadPromise = store.actions.download({
+				shareId: mapShare.shareId,
+			})
+
+			// Capture the snapshot immediately after download starts
+			const snapshotAfterDownloadStart = store.getSnapshot()
+			expect(snapshotAfterDownloadStart[0]).toHaveProperty(
+				'status',
+				'downloading',
+			)
+
+			// Wait for at least one progress update (bytesDownloaded changes while status stays 'downloading')
+			await new Promise<void>((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					unsubscribe()
+					reject(new Error('Timeout waiting for progress update'))
+				}, 5000)
+
+				const initialShare = snapshotAfterDownloadStart[0]
+				const initialBytesDownloaded =
+					initialShare?.status === 'downloading'
+						? initialShare.bytesDownloaded
+						: 0
+
+				const unsubscribe = store.subscribe(() => {
+					const current = store.getSnapshot()
+					const currentShare = current[0]
+					if (
+						currentShare?.status === 'downloading' &&
+						currentShare.bytesDownloaded > initialBytesDownloaded
+					) {
+						clearTimeout(timeout)
+						unsubscribe()
+
+						// Array reference should be the same (Object.is equality)
+						// This is important for useSyncExternalStore - it means components
+						// listening to the raw array won't re-render on progress updates
+						expect(current).toBe(snapshotAfterDownloadStart)
+
+						resolve()
+					}
+				})
+			})
+
+			// Wait for download to complete
+			await downloadPromise
+			await waitForStoreState(
+				store,
+				(state) => state[0]?.status === 'completed',
+			)
+		})
+
+		it('should update individual map share reference during download progress updates', async () => {
+			const serverShare = await createShare()
+			const mapShare = createMapShareFromServerShare(
+				sender.deviceId,
+				serverShare,
+			)
+
+			mockClientApi.emit('map-share', mapShare)
+
+			// Start the download
+			const downloadPromise = store.actions.download({
+				shareId: mapShare.shareId,
+			})
+
+			// Capture the initial map share reference
+			const initialMapShare = store.getSnapshot()[0]
+			expect(initialMapShare).toHaveProperty('status', 'downloading')
+
+			// Wait for at least one progress update
+			await new Promise<void>((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					unsubscribe()
+					reject(new Error('Timeout waiting for progress update'))
+				}, 5000)
+
+				const initialBytesDownloaded =
+					initialMapShare?.status === 'downloading'
+						? initialMapShare.bytesDownloaded
+						: 0
+
+				const unsubscribe = store.subscribe(() => {
+					const currentShare = store.getSnapshot()[0]
+					if (
+						currentShare?.status === 'downloading' &&
+						currentShare.bytesDownloaded > initialBytesDownloaded
+					) {
+						clearTimeout(timeout)
+						unsubscribe()
+
+						// Individual map share should be a different object
+						// This means selectors that return individual map shares will
+						// correctly trigger re-renders on progress updates
+						expect(currentShare).not.toBe(initialMapShare)
+
+						resolve()
+					}
+				})
+			})
+
+			// Wait for download to complete
+			await downloadPromise
+			await waitForStoreState(
+				store,
+				(state) => state[0]?.status === 'completed',
+			)
+		})
+
+		it('should change array reference for status changes (not progress updates)', async () => {
+			const serverShare = await createShare()
+			const mapShare = createMapShareFromServerShare(
+				sender.deviceId,
+				serverShare,
+			)
+
+			mockClientApi.emit('map-share', mapShare)
+
+			// Capture snapshot before download
+			const snapshotBeforeDownload = store.getSnapshot()
+			expect(snapshotBeforeDownload[0]).toHaveProperty('status', 'pending')
+
+			// Start the download
+			const downloadPromise = store.actions.download({
+				shareId: mapShare.shareId,
+			})
+
+			// After status change to 'downloading', array reference should be different
+			const snapshotDuringDownload = store.getSnapshot()
+			expect(snapshotDuringDownload).not.toBe(snapshotBeforeDownload)
+			expect(snapshotDuringDownload[0]).toHaveProperty('status', 'downloading')
+
+			// Wait for download to complete
+			await downloadPromise
+			await waitForStoreState(
+				store,
+				(state) => state[0]?.status === 'completed',
+			)
+
+			// After status change to 'completed', array reference should be different again
+			const snapshotAfterComplete = store.getSnapshot()
+			expect(snapshotAfterComplete).not.toBe(snapshotDuringDownload)
+			expect(snapshotAfterComplete[0]).toHaveProperty('status', 'completed')
 		})
 	})
 
@@ -399,7 +577,7 @@ describe('ReceivedMapSharesStore', () => {
 
 		it('should update status when sender cancels during download', async () => {
 			// Sender creates a share
-			await sentStore.createAndSend({
+			await sentStore.actions.createAndSend({
 				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
@@ -415,11 +593,11 @@ describe('ReceivedMapSharesStore', () => {
 			mockClientApi.emit('map-share', mapShare)
 
 			// Receiver starts downloading
-			await store.download(mapShare.shareId)
+			await store.actions.download({ shareId: mapShare.shareId })
 			expect(store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
 
 			// Sender cancels the share
-			await sentStore.cancel(mapShare.shareId)
+			await sentStore.actions.cancel({ shareId: mapShare.shareId })
 
 			// Receiver's store should see the status update via EventSource
 			await waitForStoreState(store, (state) => state[0]?.status === 'canceled')
