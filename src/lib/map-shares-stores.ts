@@ -1,11 +1,9 @@
 /* eslint-disable no-ex-assign */
 import type { MapShare } from '@comapeo/core'
 import type { MapeoClientApi } from '@comapeo/ipc'
-import {
-	CUSTOM_MAP_ID,
-	errors,
-	type MapShareState as ServerMapShareState,
-} from '@comapeo/map-server'
+import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
+import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
+import { errors } from '@comapeo/map-server/errors.js'
 import ensureError from 'ensure-error'
 import { isHTTPError } from 'ky'
 import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'

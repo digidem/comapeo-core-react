@@ -1,4 +1,4 @@
-import { errors } from '@comapeo/map-server'
+import { errors } from '@comapeo/map-server/errors.js'
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
