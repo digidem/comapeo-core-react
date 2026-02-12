@@ -1,4 +1,4 @@
-import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
+import { DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
 
 import type { MapServerApi } from '../../contexts/MapServer.js'
@@ -51,7 +51,7 @@ export function getStyleJsonUrlQueryKey({
 export function mapStyleJsonUrlQueryOptions({
 	mapServerApi,
 	refreshToken,
-	mapId = CUSTOM_MAP_ID,
+	mapId = DEFAULT_MAP_ID,
 }: {
 	mapServerApi: MapServerApi
 	refreshToken?: string
