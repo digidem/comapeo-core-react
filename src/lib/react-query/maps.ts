@@ -4,7 +4,6 @@ import {
 	type QueryClient,
 	type UseMutationOptions,
 } from '@tanstack/react-query'
-import { type File as ExpoFile } from 'expo-file-system'
 
 import type { MapServerApi } from '../../contexts/MapServer.js'
 import type {
@@ -16,6 +15,15 @@ import {
 	baseQueryOptions,
 	ROOT_QUERY_KEY,
 } from './shared.js'
+
+// Expo's file-system File type is close to the standard File type, so for our
+// import function we accept an object with the compatible properties and
+// methods, and for the expo File, which can represent a file that does not yet
+// exists, we type the `exists` property so that we can check that.
+type CompatFile = Omit<File, 'lastModified' | 'webkitRelativePath'>
+type ExpoFileDuckType = CompatFile & {
+	exists: boolean
+}
 
 // ============================================
 // QUERY KEYS
@@ -99,7 +107,7 @@ export function mapImportMutationOptions({
 	const mapId = CUSTOM_MAP_ID
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ file }: { file: File | ExpoFile }) => {
+		mutationFn: async ({ file }: { file: File | ExpoFileDuckType }) => {
 			if ('exists' in file && !file.exists) {
 				throw new Error('File does not exist or is not accessible')
 			}
