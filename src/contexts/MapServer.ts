@@ -3,7 +3,6 @@ import {
 	type EventSourceClient,
 	type EventSourceOptions,
 } from 'eventsource-client'
-import ky, { type KyInstance } from 'ky'
 import {
 	createContext,
 	createElement,
@@ -15,6 +14,7 @@ import {
 } from 'react'
 
 import { useClientApi } from '../hooks/client.js'
+import { createHttp } from '../lib/http.js'
 import {
 	ReceivedMapSharesProvider,
 	SentMapSharesProvider,
@@ -28,13 +28,10 @@ export type MapServerApiOptions = {
 	): Promise<Response>
 }
 
-export type MapServerApi = KyInstance & {
+export type MapServerApi = ReturnType<typeof createHttp> & {
 	createEventSource(options: EventSourceOptions): EventSourceClient
 	getMapStyleJsonUrl(mapId: string): Promise<string>
 }
-
-// Placeholder URL used to allow ky to create Request objects with relative URLs in Node.js
-const PLACEHOLDER_PREFIX = 'http://placeholder/'
 
 /**
  * Utility function to create a MapServerApi instance.
@@ -48,23 +45,11 @@ export function createMapServerApi({
 	getBaseUrl,
 	fetch = globalThis.fetch,
 }: MapServerApiOptions): MapServerApi {
-	const api = ky.create({
-		prefixUrl: PLACEHOLDER_PREFIX,
-		fetch,
-		hooks: {
-			beforeRequest: [
-				async (request) => {
-					const baseUrl = await getBaseUrl()
-					const requestUrl = new URL(request.url)
-					const realUrl = new URL(
-						requestUrl.pathname + requestUrl.search,
-						baseUrl,
-					)
-					return new Request(realUrl, request)
-				},
-			],
-		},
-	})
+	const wrappedFetch = async (input: string | URL, init?: RequestInit) => {
+		const baseUrl = await getBaseUrl()
+		return fetch(new URL(input, baseUrl), init)
+	}
+	const api = createHttp(wrappedFetch)
 	Object.defineProperty(api, 'createEventSource', {
 		value: (options: EventSourceOptions) => {
 			return createEventSource({
