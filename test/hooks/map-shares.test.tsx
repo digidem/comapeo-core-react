@@ -11,9 +11,11 @@ import type { MapeoClientApi } from '@comapeo/ipc'
 import { errors } from '@comapeo/map-server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { JSDOM } from 'jsdom'
 import { useEffect, useRef, useState, type PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
+
+// Set up minimal DOM globals needed for React rendering in this test file
+import '../helpers/jsdom-setup.js'
 
 import {
 	ClientApiProvider,
@@ -34,20 +36,6 @@ import {
 	type MockClientApi,
 	type ServerInstance,
 } from '../lib/map-shares-test-utils.js'
-
-// Set up minimal DOM globals needed for React
-const dom = new JSDOM('<!doctype html><html><body></body></html>', {
-	url: 'http://localhost',
-	pretendToBeVisual: true,
-})
-globalThis.document = dom.window.document
-globalThis.window = dom.window as unknown as Window & typeof globalThis
-// navigator is a getter-only property in newer Node.js versions, so use defineProperty
-Object.defineProperty(globalThis, 'navigator', {
-	value: dom.window.navigator,
-	writable: true,
-	configurable: true,
-})
 
 // ============================================
 // HELPERS

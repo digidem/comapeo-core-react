@@ -1,5 +1,9 @@
-import { DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
-import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
+import { CUSTOM_MAP_ID, DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
+import {
+	queryOptions,
+	type QueryClient,
+	type UseMutationOptions,
+} from '@tanstack/react-query'
 
 import type { MapServerApi } from '../../contexts/MapServer.js'
 import type {
@@ -16,32 +20,14 @@ import {
 // QUERY KEYS
 // ============================================
 
-export function getMapsQueryKey() {
-	return [ROOT_QUERY_KEY, 'maps'] as const
+const MAPS_ROOT_QUERY_KEY = [ROOT_QUERY_KEY, 'maps'] as const
+
+export function getMapQueryKey({ mapId }: { mapId: string }) {
+	return [...MAPS_ROOT_QUERY_KEY, mapId] as const
 }
 
-export function getMapSharesQueryKey() {
-	return [ROOT_QUERY_KEY, 'maps', 'shares'] as const
-}
-
-export function getMapSharesByIdQueryKey({ shareId }: { shareId: string }) {
-	return [ROOT_QUERY_KEY, 'maps', 'shares', shareId] as const
-}
-
-export function getStyleJsonUrlQueryKey({
-	refreshToken,
-	mapId,
-}: {
-	refreshToken?: string
-	mapId: string
-}) {
-	return [
-		ROOT_QUERY_KEY,
-		'maps',
-		mapId,
-		'stylejson_url',
-		{ refreshToken },
-	] as const
+export function getStyleJsonUrlQueryKey({ mapId }: { mapId: string }) {
+	return [...getMapQueryKey({ mapId }), 'stylejson_url'] as const
 }
 
 // ============================================
@@ -50,26 +36,118 @@ export function getStyleJsonUrlQueryKey({
 
 export function mapStyleJsonUrlQueryOptions({
 	mapServerApi,
-	refreshToken,
 	mapId = DEFAULT_MAP_ID,
 }: {
 	mapServerApi: MapServerApi
-	refreshToken?: string
 	mapId?: string
 }) {
+	if (mapId !== DEFAULT_MAP_ID) {
+		throw new Error('Custom map IDs are not supported yet')
+	}
+
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getStyleJsonUrlQueryKey({ mapId, refreshToken }),
+		queryKey: getStyleJsonUrlQueryKey({ mapId }),
 		queryFn: async () => {
 			const result = await mapServerApi.getMapStyleJsonUrl(mapId)
-
-			if (!refreshToken) return result
-
 			const u = new URL(result)
-			u.searchParams.set('refresh_token', refreshToken)
+			// This ensures that every time this query is refetched, it will have a different search param, forcing the map to reload.
+			u.searchParams.set('refresh_token', Date.now().toString())
 			return u.href
 		},
+		// Keep this cached until the cache is manually invalidated by a map upload
+		staleTime: Infinity,
+		gcTime: Infinity,
 	})
+}
+
+export function mapInfoQueryOptions({
+	mapServerApi,
+	mapId = DEFAULT_MAP_ID,
+}: {
+	mapServerApi: MapServerApi
+	mapId?: string
+}) {
+	if (mapId !== CUSTOM_MAP_ID) {
+		throw new Error('Only custom map ID is currently supported')
+	}
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: [...getMapQueryKey({ mapId }), 'info'] as const,
+		queryFn: async () => {
+			return mapServerApi.get(`maps/${mapId}/info`).json()
+		},
+		// Keep this cached until the cache is manually invalidated by a map upload
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
+}
+
+// ============================================
+// MUTATION OPTIONS
+// ============================================
+
+export function mapImportMutationOptions({
+	mapServerApi,
+	queryClient,
+}: {
+	mapServerApi: MapServerApi
+	queryClient: QueryClient
+}) {
+	// TODO: Support importing to custom map IDs, to support multiple maps.
+	const mapId = CUSTOM_MAP_ID
+	return {
+		...baseMutationOptions(),
+		mutationFn: async ({ file }: { file: File }) => {
+			return mapServerApi.put(`maps/${mapId}`, {
+				body: file,
+				headers: {
+					'Content-Type': 'application/octet-stream',
+				},
+			})
+		},
+		onSuccess: async () => {
+			// Invalidate queries for this map and the default map (which internally
+			// redirects to custom) so that they will be refetched with the new map data.
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: getMapQueryKey({ mapId }),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: getMapQueryKey({ mapId: DEFAULT_MAP_ID }),
+				}),
+			])
+		},
+	}
+}
+
+export function mapRemoveMutationOptions({
+	mapServerApi,
+	queryClient,
+}: {
+	mapServerApi: MapServerApi
+	queryClient: QueryClient
+}) {
+	// TODO: Support removing from custom map IDs, to support multiple maps.
+	const mapId = CUSTOM_MAP_ID
+	return {
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return mapServerApi.delete(`maps/${mapId}`)
+		},
+		onSuccess: async () => {
+			// Invalidate queries for this map and the default map (which internally
+			// redirects to custom) so that they will be refetched with the new map data.
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: getMapQueryKey({ mapId }),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: getMapQueryKey({ mapId: DEFAULT_MAP_ID }),
+				}),
+			])
+		},
+	}
 }
 
 /**

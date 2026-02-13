@@ -26,6 +26,9 @@ export {
 } from './hooks/invites.js'
 export {
 	useMapStyleUrl,
+	useImportCustomMapFile,
+	useRemoveCustomMapFile,
+	useGetCustomMapInfo,
 	useManyReceivedMapShares,
 	useSingleReceivedMapShare,
 	useDeclineReceivedMapShare,

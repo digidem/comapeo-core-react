@@ -1,5 +1,10 @@
+import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { useMapServerApi } from '../contexts/MapServer.js'
@@ -14,6 +19,9 @@ import {
 	type SentMapShareState,
 } from '../lib/map-shares-stores.js'
 import {
+	mapImportMutationOptions,
+	mapInfoQueryOptions,
+	mapRemoveMutationOptions,
 	mapSharesMutationOptions,
 	mapStyleJsonUrlQueryOptions,
 } from '../lib/react-query/maps.js'
@@ -45,15 +53,48 @@ import { filterMutationResult } from '../lib/react-query/mutation-result.js'
  * }
  * ```
  */
-export function useMapStyleUrl({
-	refreshToken,
-}: {
-	refreshToken?: string
-} = {}) {
+export function useMapStyleUrl() {
 	const mapServerApi = useMapServerApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		mapStyleJsonUrlQueryOptions({ mapServerApi, refreshToken }),
+		mapStyleJsonUrlQueryOptions({ mapServerApi }),
+	)
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Import a custom SMP map file, replacing any existing custom map. The mutation
+ * resolves once the file is successfully uploaded and processed by the server.
+ *
+ * @example
+ * ```tsx
+ * function MapImportExample() {
+ *   const { mutate: importMap } = useImportCustomMapFile()
+ *
+ * }
+ * ```
+ */
+export function useImportCustomMapFile() {
+	const mapServerApi = useMapServerApi()
+	const queryClient = useQueryClient()
+	const options = mapImportMutationOptions({ mapServerApi, queryClient })
+	const result = useMutation(options)
+	return filterMutationResult(result)
+}
+
+export function useRemoveCustomMapFile() {
+	const mapServerApi = useMapServerApi()
+	const queryClient = useQueryClient()
+	const options = mapRemoveMutationOptions({ mapServerApi, queryClient })
+	const result = useMutation(options)
+	return filterMutationResult(result)
+}
+
+export function useGetCustomMapInfo() {
+	const mapServerApi = useMapServerApi()
+	const { data, error, isRefetching } = useSuspenseQuery(
+		mapInfoQueryOptions({ mapServerApi, mapId: CUSTOM_MAP_ID }),
 	)
 
 	return { data, error, isRefetching }

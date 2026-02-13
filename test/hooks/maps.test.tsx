@@ -1,74 +1,288 @@
-import { QueryClient } from '@tanstack/react-query'
-import { act, renderHook } from '@testing-library/react'
-import type { ReactNode } from 'react'
-import { afterAll, assert, beforeAll, test, vi } from 'vitest'
+/**
+ * @vitest-environment node
+ *
+ * We use node environment because:
+ * - happy-dom provides its own fetch with CORS restrictions that break real HTTP requests
+ * - Node environment uses native fetch which works with real servers
+ * - renderHook from @testing-library/react can work in node with global-jsdom
+ */
+import fs from 'node:fs'
+import type { MapeoClientApi } from '@comapeo/ipc'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { Suspense, type PropsWithChildren } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 
-import { MapServerProvider, useMapStyleUrl } from '../../src/index.js'
-import { setupCoreIpc } from '../helpers/ipc.js'
-import { createClientApiWrapper } from '../helpers/react.js'
+// Set up minimal DOM globals needed for React rendering in this test file
+import '../helpers/jsdom-setup.js'
 
-const mockGetBaseUrl = async () => new URL('http://localhost:3000')
+import {
+	useGetCustomMapInfo,
+	useImportCustomMapFile,
+	useMapStyleUrl,
+	useRemoveCustomMapFile,
+} from '../../src/hooks/maps.js'
+import { ClientApiProvider, MapServerProvider } from '../../src/index.js'
+import {
+	createMockClientApi,
+	DEMOTILES_Z2,
+	OSM_BRIGHT_Z6,
+	startTestServer,
+} from '../lib/map-shares-test-utils.js'
 
-beforeAll(() => {
-	vi.useFakeTimers({ shouldAdvanceTime: true })
-})
+// ============================================
+// HELPERS
+// ============================================
 
-afterAll(() => {
-	vi.useRealTimers()
-})
+function createWrapper({ getBaseUrl }: { getBaseUrl: () => Promise<URL> }) {
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: { retry: false },
+			mutations: { retry: false },
+		},
+	})
+	const mockClientApi = createMockClientApi() as unknown as MapeoClientApi
 
-test('basic read works', async (t) => {
-	const { client, cleanup, fastifyController } = setupCoreIpc()
+	function Wrapper({ children }: PropsWithChildren) {
+		return (
+			<QueryClientProvider client={queryClient}>
+				<ClientApiProvider clientApi={mockClientApi}>
+					<MapServerProvider getBaseUrl={getBaseUrl}>
+						<Suspense fallback={null}>{children}</Suspense>
+					</MapServerProvider>
+				</ClientApiProvider>
+			</QueryClientProvider>
+		)
+	}
 
-	fastifyController.start()
+	return { Wrapper, queryClient }
+}
 
-	t.onTestFinished(() => {
-		return cleanup()
+function readFixtureAsFile(fixturePath: string, filename: string): File {
+	const buffer = fs.readFileSync(fixturePath)
+	return new File([buffer], filename, {
+		type: 'application/octet-stream',
+	})
+}
+
+// ============================================
+// TESTS
+// ============================================
+
+describe('Map Hooks', () => {
+	describe('useMapStyleUrl', () => {
+		it('returns a valid style URL', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const { result } = renderHook(() => useMapStyleUrl(), {
+				wrapper: Wrapper,
+			})
+
+			await waitFor(() => {
+				expect(result.current.data).toBeDefined()
+			})
+
+			const url = new URL(result.current.data)
+			expect(url.pathname).toBe('/maps/default/style.json')
+			expect(url.searchParams.has('refresh_token')).toBe(true)
+		})
+
+		it('re-mounting returns the same cached URL', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const first = renderHook(() => useMapStyleUrl(), {
+				wrapper: Wrapper,
+			})
+
+			await waitFor(() => {
+				expect(first.result.current.data).toBeDefined()
+			})
+
+			const firstUrl = first.result.current.data
+
+			// This test would always pass regardless of our cache settings because
+			// react query garbage collection runs after a 1000ms delay in tests. With
+			// this test we actually want to test that our cache settings are caching
+			// the style URL returned, so that without any map change, it is always
+			// returning the same value (e.g. same refresh_token). Advancing the fake
+			// timers allows us to test re-render after 5000ms without needing to wait
+			// for that time in the tests. You can validate this works by testing that
+			// this test fails if you set gcTime and staleTime to `0` in the hook
+			// query options.
+			vi.useFakeTimers()
+			first.unmount()
+			await vi.advanceTimersByTimeAsync(5000)
+			vi.useRealTimers()
+
+			const second = renderHook(() => useMapStyleUrl(), {
+				wrapper: Wrapper,
+			})
+
+			await waitFor(() => {
+				expect(second.result.current.data).toBeDefined()
+			})
+
+			expect(second.result.current.data).toBe(firstUrl)
+		})
 	})
 
-	const queryClient = new QueryClient()
+	describe('useImportCustomMapFile', () => {
+		it('importing a map updates the style URL', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
 
-	const ClientApiWrapper = createClientApiWrapper({
-		clientApi: client,
-		queryClient,
+			const { result } = renderHook(
+				() => ({
+					styleUrl: useMapStyleUrl(),
+					importMap: useImportCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).toBeDefined()
+			})
+
+			const urlBefore = result.current.styleUrl.data
+
+			const file = readFixtureAsFile(DEMOTILES_Z2, 'demotiles-z2.smp')
+
+			await act(async () => {
+				await result.current.importMap.mutateAsync({ file })
+			})
+
+			await waitFor(() =>
+				expect(result.current.styleUrl.data).not.toBe(urlBefore),
+			)
+
+			expect(result.current.styleUrl.data).not.toBe(urlBefore)
+		})
+
+		it('style json content changes after map import', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const { result } = renderHook(
+				() => ({
+					styleUrl: useMapStyleUrl(),
+					importMap: useImportCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).toBeDefined()
+			})
+
+			const responseBefore = await fetch(result.current.styleUrl.data)
+			const styleBefore = (await responseBefore.json()) as { name: string }
+
+			const file = readFixtureAsFile(DEMOTILES_Z2, 'demotiles-z2.smp')
+
+			await act(async () => {
+				await result.current.importMap.mutateAsync({ file })
+			})
+
+			const responseAfter = await fetch(result.current.styleUrl.data)
+			const styleAfter = (await responseAfter.json()) as { name: string }
+
+			expect(styleAfter.name).not.toBe(styleBefore.name)
+		})
 	})
 
-	const wrapper = ({ children }: { children: ReactNode }) => (
-		<ClientApiWrapper>
-			<MapServerProvider getBaseUrl={mockGetBaseUrl}>
-				{children}
-			</MapServerProvider>
-		</ClientApiWrapper>
-	)
+	describe('useRemoveCustomMapFile', () => {
+		it('removing a map updates the style URL', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
 
-	const mapStyleUrlHook = renderHook<
-		ReturnType<typeof useMapStyleUrl>,
-		Parameters<typeof useMapStyleUrl>[0]
-	>(({ refreshToken } = {}) => useMapStyleUrl({ refreshToken }), {
-		wrapper,
+			const { result } = renderHook(
+				() => ({
+					styleUrl: useMapStyleUrl(),
+					removeMap: useRemoveCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).toBeDefined()
+			})
+
+			const urlBefore = result.current.styleUrl.data
+
+			await act(async () => {
+				await result.current.removeMap.mutateAsync()
+			})
+
+			await waitFor(() =>
+				expect(result.current.styleUrl.data).not.toBe(urlBefore),
+			)
+
+			expect(result.current.styleUrl.data).not.toBe(urlBefore)
+		})
 	})
 
-	await act(() => vi.advanceTimersByTimeAsync(10))
+	describe('useGetCustomMapInfo', () => {
+		it('returns map info for the custom map', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const expectedSize = fs.statSync(OSM_BRIGHT_Z6).size
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
 
-	const url1 = new URL(mapStyleUrlHook.result.current.data)
+			const { result } = renderHook(() => useGetCustomMapInfo(), {
+				wrapper: Wrapper,
+			})
 
-	assert(url1, 'map style url hook returns valid URL')
+			await waitFor(() => {
+				expect(result.current.data).toBeDefined()
+			})
+			expect(result.current.data).toHaveProperty('name')
+			expect(result.current.data).toHaveProperty('size', expectedSize)
+		})
 
-	mapStyleUrlHook.rerender({ refreshToken: 'abc_123' })
+		it('map info updates after importing a new custom map', async (t) => {
+			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
+			const { Wrapper } = createWrapper({
+				getBaseUrl: async () => new URL(server.localBaseUrl),
+			})
 
-	await act(() => vi.advanceTimersByTimeAsync(10))
+			const { result } = renderHook(
+				() => ({
+					mapInfo: useGetCustomMapInfo(),
+					importMap: useImportCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
 
-	const url2 = new URL(mapStyleUrlHook.result.current.data)
+			await waitFor(() => {
+				expect(result.current.mapInfo.data).toBeDefined()
+			})
 
-	assert.notStrictEqual(
-		url2.href,
-		url1.href,
-		'map style url hook updates after changing refresh token option',
-	)
+			const infoBefore = result.current.mapInfo.data
 
-	assert.strictEqual(
-		url2.searchParams.get('refresh_token'),
-		'abc_123',
-		'map style url has search param containing refresh token',
-	)
+			const file = readFixtureAsFile(DEMOTILES_Z2, 'demotiles-z2.smp')
+
+			await act(async () => {
+				await result.current.importMap.mutateAsync({ file })
+			})
+
+			await waitFor(() =>
+				expect(result.current.mapInfo.data).not.toEqual(infoBefore),
+			)
+
+			expect(result.current.mapInfo.data).not.toEqual(infoBefore)
+		})
+	})
 })
