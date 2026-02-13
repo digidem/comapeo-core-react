@@ -109,5 +109,8 @@
 		"ensure-error": "5.0.0",
 		"eventsource-client": "1.2.0",
 		"ky": "1.14.3"
+	},
+	"optionalDependencies": {
+		"expo-file-system": "^19.0.21"
 	}
 }

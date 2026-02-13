@@ -4,6 +4,7 @@ import {
 	type QueryClient,
 	type UseMutationOptions,
 } from '@tanstack/react-query'
+import { type File as ExpoFile } from 'expo-file-system'
 
 import type { MapServerApi } from '../../contexts/MapServer.js'
 import type {
@@ -98,7 +99,10 @@ export function mapImportMutationOptions({
 	const mapId = CUSTOM_MAP_ID
 	return {
 		...baseMutationOptions(),
-		mutationFn: async ({ file }: { file: File }) => {
+		mutationFn: async ({ file }: { file: File | ExpoFile }) => {
+			if ('exists' in file && !file.exists) {
+				throw new Error('File does not exist or is not accessible')
+			}
 			return mapServerApi.put(`maps/${mapId}`, {
 				body: file,
 				headers: {
