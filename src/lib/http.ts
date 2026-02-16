@@ -24,7 +24,7 @@ function createHttp(
 	) => Promise<Response> = globalThis.fetch,
 ) {
 	const alias =
-		(method: RequestMethod) =>
+		(method: Uppercase<RequestMethod>) =>
 		(input: Input, options: HttpInit = {}): ResponsePromise => {
 			const { json, headers, ...rest } = options
 			const h = new Headers(headers)
@@ -60,7 +60,7 @@ function createHttp(
 
 	const http = {} as Record<RequestMethod, ReturnType<typeof alias>>
 	for (const method of requestMethods) {
-		http[method] = alias(method)
+		http[method] = alias(upperCase(method))
 	}
 	return http
 }
@@ -105,3 +105,7 @@ function isHTTPError(error: unknown): error is HTTPError {
 
 export default http
 export { createHttp, HTTPError, isHTTPError }
+
+function upperCase<T extends string>(str: T): Uppercase<T> {
+	return str.toUpperCase() as Uppercase<T>
+}
