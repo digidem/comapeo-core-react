@@ -47,7 +47,7 @@ export function createMapServerApi({
 }: MapServerApiOptions): MapServerApi {
 	const wrappedFetch = async (input: string | URL, init?: RequestInit) => {
 		const baseUrl = await getBaseUrl()
-		return fetch(new URL(input, baseUrl), init)
+		return fetch(new URL(input, baseUrl).href, init)
 	}
 	const api = createHttp(wrappedFetch)
 	Object.defineProperty(api, 'createEventSource', {
