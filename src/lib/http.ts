@@ -1,3 +1,4 @@
+import { StatusError } from '@comapeo/map-server/errors.js'
 import type { JsonValue } from 'type-fest'
 
 type HttpInit = RequestInit & { json?: JsonValue }
@@ -47,11 +48,19 @@ function createHttp(
 			}) as ResponsePromise
 
 			responsePromise.json = () =>
-				responsePromise.then(async (r) => {
-					if (r.status === 204) return ''
-					const text = await r.text()
-					return text === '' ? '' : JSON.parse(text)
-				})
+				responsePromise
+					.catch((e) => {
+						// For http errors, parse the body as json to get the error details, but rethrow other errors (e.g. network errors)
+						if (isHTTPError(e)) return e.response
+						throw e
+					})
+					.then(async (r) => {
+						if (r.status === 204) return ''
+						const text = await r.text()
+						const parsed = text === '' ? '' : JSON.parse(text)
+						if (r.ok) return parsed
+						throw new StatusError(r.status, parsed)
+					})
 
 			responsePromise.text = () => responsePromise.then((r) => r.text())
 

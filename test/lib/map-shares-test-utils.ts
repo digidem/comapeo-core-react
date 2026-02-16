@@ -40,13 +40,15 @@ let tmpCounter = 0
 
 export async function startTestServer(
 	t: { onTestFinished: (fn: () => Promise<void>) => void },
-	customMapPath: string,
-	seed: number,
+	customMapPath?: string,
+	seed = 0,
 ) {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'map-server-test-'))
 	const tmpCustomMapPath = path.join(tmpDir, `custom-map-${tmpCounter++}.smp`)
 
-	await fs.copyFile(customMapPath, tmpCustomMapPath)
+	if (customMapPath) {
+		await fs.copyFile(customMapPath, tmpCustomMapPath)
+	}
 
 	const keyPair = SecretStreamAgent.keyPair(Buffer.alloc(32, seed))
 	const server = createServer({
