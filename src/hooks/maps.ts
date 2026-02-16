@@ -2,6 +2,7 @@ import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import {
 	useMutation,
+	useQuery,
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
@@ -93,7 +94,7 @@ export function useRemoveCustomMapFile() {
 
 export function useGetCustomMapInfo() {
 	const mapServerApi = useMapServerApi()
-	const { data, error, isRefetching } = useSuspenseQuery(
+	const { data, error, isRefetching } = useQuery(
 		mapInfoQueryOptions({ mapServerApi, mapId: CUSTOM_MAP_ID }),
 	)
 
