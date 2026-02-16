@@ -1,4 +1,3 @@
-import { StatusError } from '@comapeo/map-server/errors.js'
 import type { JsonValue } from 'type-fest'
 
 type HttpInit = RequestInit & { json?: JsonValue }
@@ -59,7 +58,11 @@ function createHttp(
 						const text = await r.text()
 						const parsed = text === '' ? '' : JSON.parse(text)
 						if (r.ok) return parsed
-						throw new StatusError(r.status, parsed)
+						throw new HTTPError(r, {
+							method: options.method ?? 'GET',
+							url: input.toString(),
+							...parsed,
+						})
 					})
 
 			responsePromise.text = () => responsePromise.then((r) => r.text())
@@ -91,17 +94,29 @@ function createHttp(
  */
 const http = createHttp()
 
+type HTTPErrorObject = {
+	message?: string
+	code?: string
+	[key: string]: unknown
+}
+
 class HTTPError extends Error {
 	readonly response: Response
+	readonly status: number
+	readonly code: string = 'UNKNOWN_ERROR';
+	[key: string]: unknown
 
-	constructor(response: Response, request: { method: string; url: string }) {
-		const code = response.status || response.status === 0 ? response.status : ''
-		const title = response.statusText ?? ''
-		const status = `${code} ${title}`.trim()
-		const reason = status ? `status code ${status}` : 'an unknown error'
-
-		super(`Request failed with ${reason}: ${request.method} ${request.url}`)
-
+	constructor(
+		response: Response,
+		{ method, url, ...body }: { method: string; url: string } & HTTPErrorObject,
+	) {
+		const status = response.status || 500
+		const message =
+			body.message || `Request failed with ${status}: ${method} ${url}`
+		super(message)
+		Object.assign(this, body)
+		// override status in body with status from response
+		this.status = status
 		this.name = 'HTTPError'
 		this.response = response
 	}

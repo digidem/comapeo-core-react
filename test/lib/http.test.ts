@@ -1,10 +1,9 @@
 /**
  * @vitest-environment node
  */
-import { StatusError } from '@comapeo/map-server/errors.js'
 import { describe, expect, it } from 'vitest'
 
-import { createHttp } from '../../src/lib/http.js'
+import { createHttp, HTTPError } from '../../src/lib/http.js'
 
 function mockFetch(status: number, body: unknown, headers?: HeadersInit) {
 	return async () =>
@@ -27,16 +26,16 @@ describe('createHttp .json()', () => {
 		expect(result).toBe('')
 	})
 
-	it('throws a StatusError for 404 responses', async () => {
+	it('throws a HTTPError for 404 responses', async () => {
 		const errorBody = { message: 'Not found' }
 		const http = createHttp(mockFetch(404, errorBody))
 
 		await expect(http.get('http://example.com').json()).rejects.toThrow(
-			StatusError,
+			HTTPError,
 		)
 	})
 
-	it('includes status code and body in the thrown StatusError', async () => {
+	it('includes status code and body in the thrown HTTPError', async () => {
 		const errorBody = { message: 'Map not found' }
 		const http = createHttp(mockFetch(404, errorBody))
 
@@ -47,12 +46,12 @@ describe('createHttp .json()', () => {
 			thrownError = e
 		}
 
-		expect(thrownError).toBeInstanceOf(StatusError)
+		expect(thrownError).toBeInstanceOf(HTTPError)
 		expect(thrownError).toHaveProperty('status', 404)
 		expect(thrownError).toHaveProperty('message', 'Map not found')
 	})
 
-	it('throws a StatusError for 500 responses', async () => {
+	it('throws a HTTPError for 500 responses', async () => {
 		const http = createHttp(
 			mockFetch(500, { message: 'Internal server error' }),
 		)
@@ -64,7 +63,7 @@ describe('createHttp .json()', () => {
 			thrownError = e
 		}
 
-		expect(thrownError).toBeInstanceOf(StatusError)
+		expect(thrownError).toBeInstanceOf(HTTPError)
 		expect(thrownError).toHaveProperty('status', 500)
 	})
 

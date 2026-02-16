@@ -8,7 +8,6 @@
  */
 import fs from 'node:fs'
 import type { MapeoClientApi } from '@comapeo/ipc'
-import { StatusError } from '@comapeo/map-server/errors.js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { Suspense, type PropsWithChildren } from 'react'
@@ -24,6 +23,7 @@ import {
 	useRemoveCustomMapFile,
 } from '../../src/hooks/maps.js'
 import { ClientApiProvider, MapServerProvider } from '../../src/index.js'
+import { HTTPError } from '../../src/lib/http.js'
 import {
 	createMockClientApi,
 	DEMOTILES_Z2,
@@ -253,7 +253,7 @@ describe('Map Hooks', () => {
 			expect(result.current.data).toHaveProperty('size', expectedSize)
 		})
 
-		it('returns a 404 StatusError when no custom map exists', async (t) => {
+		it('returns a 404 HTTPError when no custom map exists', async (t) => {
 			const server = await startTestServer(t)
 			const { Wrapper } = createWrapper({
 				getBaseUrl: async () => new URL(server.localBaseUrl),
@@ -267,12 +267,12 @@ describe('Map Hooks', () => {
 				expect(result.current.error).not.toBeNull()
 			})
 
-			expect(result.current.error).toBeInstanceOf(StatusError)
+			expect(result.current.error).toBeInstanceOf(HTTPError)
 			expect(result.current.error).toHaveProperty('status', 404)
 			expect(result.current.error).toHaveProperty('code', 'MAP_NOT_FOUND')
 		})
 
-		it('returns a 404 StatusError after the custom map is removed', async (t) => {
+		it('returns a 404 HTTPError after the custom map is removed', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
 				getBaseUrl: async () => new URL(server.localBaseUrl),
@@ -298,7 +298,7 @@ describe('Map Hooks', () => {
 				expect(result.current.mapInfo.error).not.toBeNull()
 			})
 
-			expect(result.current.mapInfo.error).toBeInstanceOf(StatusError)
+			expect(result.current.mapInfo.error).toBeInstanceOf(HTTPError)
 			expect(result.current.mapInfo.error).toHaveProperty('status', 404)
 			expect(result.current.mapInfo.error).toHaveProperty(
 				'code',
