@@ -57,7 +57,7 @@ export function createMapServerApi({
 				...options,
 				fetch: async (input, init) => {
 					const baseUrl = await getBaseUrl()
-					return fetch(new URL(input, baseUrl), init)
+					return fetch(new URL(input, baseUrl).href, init)
 				},
 			})
 		},
