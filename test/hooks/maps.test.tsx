@@ -48,7 +48,7 @@ function createWrapper({ getBaseUrl }: { getBaseUrl: () => Promise<URL> }) {
 		return (
 			<QueryClientProvider client={queryClient}>
 				<ClientApiProvider clientApi={mockClientApi}>
-					<MapServerProvider getBaseUrl={getBaseUrl}>
+					<MapServerProvider getBaseUrl={getBaseUrl} queryClient={queryClient}>
 						<Suspense fallback={null}>{children}</Suspense>
 					</MapServerProvider>
 				</ClientApiProvider>

@@ -1,3 +1,4 @@
+import { type QueryClient } from '@tanstack/react-query'
 import {
 	createEventSource,
 	type EventSourceClient,
@@ -73,7 +74,9 @@ export function createMapServerApi({
 export const MapServerContext: Context<MapServerApi | null> =
 	createContext<MapServerApi | null>(null)
 
-export type MapServerProviderProps = PropsWithChildren<MapServerApiOptions>
+export type MapServerProviderProps = PropsWithChildren<
+	MapServerApiOptions & { queryClient: QueryClient }
+>
 
 /**
  * Create a context provider that holds a `MapServerFetch` function, which waits
@@ -110,6 +113,7 @@ export function MapServerProvider({
 	children,
 	getBaseUrl,
 	fetch,
+	queryClient,
 }: MapServerProviderProps): JSX.Element {
 	const clientApi = useClientApi()
 	const mapServerApi = useMemo(
@@ -124,7 +128,7 @@ export function MapServerProvider({
 			{ clientApi, mapServerApi },
 			createElement(
 				ReceivedMapSharesProvider,
-				{ clientApi, mapServerApi },
+				{ clientApi, mapServerApi, queryClient },
 				children,
 			),
 		),

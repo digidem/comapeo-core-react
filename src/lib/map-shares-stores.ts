@@ -4,11 +4,13 @@ import type { MapeoClientApi } from '@comapeo/ipc'
 import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
+import { type QueryClient } from '@tanstack/react-query'
 import ensureError from 'ensure-error'
 import { isHTTPError } from 'ky'
 import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'
 
 import type { MapServerApi } from '../contexts/MapServer.js'
+import { invalidateMapQueries } from './react-query/maps.js'
 
 type DistributedIntersection<T, U> = U extends unknown ? Simplify<T & U> : never
 export type ReceivedMapShareState = DistributedIntersection<
@@ -153,26 +155,30 @@ function createMapSharesStore<
 		}
 	}
 
-	function monitor(mapShareId: string, path: string) {
+	async function monitor(mapShareId: string, path: string) {
 		// TODO: add a timeout in case the download stalls and never completes
-		const es = mapServerApi.createEventSource({
-			url: path,
-			onMessage({ data }) {
-				try {
-					const stateUpdate = JSON.parse(data)
-					if (isFinalStatus(stateUpdate.status)) {
+		return new Promise<MapShareStateUpdate>((resolve, reject) => {
+			const es = mapServerApi.createEventSource({
+				url: path,
+				onMessage({ data }) {
+					try {
+						const stateUpdate = JSON.parse(data)
+						update(mapShareId, stateUpdate)
+						if (isFinalStatus(stateUpdate.status)) {
+							es.close()
+							resolve(stateUpdate)
+						}
+					} catch (e) {
+						// NB: Don't handleError here - because we optimistically update the
+						// status, some of the updates from the event source will throw for
+						// being an invalid status transition, but we can just ignore those
+						// errors.
+						// TODO: Custom errors for status transitions, and only ignore those
 						es.close()
+						reject(e)
 					}
-					update(mapShareId, stateUpdate)
-				} catch {
-					// NB: Don't handleError here - because we optimistically update the
-					// status, some of the updates from the event source will throw for
-					// being an invalid status transition, but we can just ignore those
-					// errors.
-					// TODO: Custom errors for status transitions, and only ignore those.
-					es.close()
-				}
-			},
+				},
+			})
 		})
 	}
 
@@ -202,9 +208,11 @@ function createMapSharesStore<
 export function createReceivedMapSharesStore({
 	clientApi,
 	mapServerApi,
+	queryClient,
 }: {
 	clientApi: MapeoClientApi
 	mapServerApi: MapServerApi
+	queryClient: QueryClient
 }) {
 	const { subscribe, getSnapshot, update, add, get, handleError, monitor } =
 		createMapSharesStore<ReceivedMapShareState>({ mapServerApi })
@@ -241,6 +249,16 @@ export function createReceivedMapSharesStore({
 				downloads.set(shareId, downloadIdPromise)
 				const downloadId = await downloadIdPromise
 				monitor(shareId, `downloads/${downloadId}/events`)
+					.then((stateUpdate) => {
+						downloads.delete(shareId)
+						// Invalidate map queries when download completes to trigger reload of map
+						if (stateUpdate.status === 'completed') {
+							return invalidateMapQueries(queryClient, {
+								mapId: mapShare.mapId,
+							})
+						}
+					})
+					.catch(noop)
 			} catch (e) {
 				downloads.delete(shareId)
 				e = await readHttpError(e)
@@ -330,7 +348,9 @@ export function createSentMapSharesStore({
 				throw e
 			}
 			add(mapShare)
-			monitor(mapShare.shareId, `mapShares/${mapShare.shareId}/events`)
+			monitor(mapShare.shareId, `mapShares/${mapShare.shareId}/events`).catch(
+				noop,
+			)
 			return mapShare
 		},
 

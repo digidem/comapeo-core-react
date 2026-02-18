@@ -1,4 +1,5 @@
 import type { MapeoClientApi } from '@comapeo/ipc'
+import type { QueryClient } from '@tanstack/react-query'
 import {
 	createContext,
 	createElement,
@@ -45,10 +46,14 @@ export function ReceivedMapSharesProvider({
 	children,
 	clientApi,
 	mapServerApi,
-}: MapSharesProviderProps): JSX.Element {
+	queryClient,
+}: MapSharesProviderProps & {
+	queryClient: QueryClient
+}): JSX.Element {
 	const mapSharesStore = useMemo(
-		() => createReceivedMapSharesStore({ clientApi, mapServerApi }),
-		[clientApi, mapServerApi],
+		() =>
+			createReceivedMapSharesStore({ clientApi, mapServerApi, queryClient }),
+		[clientApi, mapServerApi, queryClient],
 	)
 	return createElement(
 		ReceivedMapSharesContext.Provider,

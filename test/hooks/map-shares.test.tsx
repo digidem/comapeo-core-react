@@ -11,7 +11,13 @@ import type { MapeoClientApi } from '@comapeo/ipc'
 import { errors } from '@comapeo/map-server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { useEffect, useRef, useState, type PropsWithChildren } from 'react'
+import {
+	Suspense,
+	useEffect,
+	useRef,
+	useState,
+	type PropsWithChildren,
+} from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 // Set up minimal DOM globals needed for React rendering in this test file
@@ -25,6 +31,7 @@ import {
 	useDeclineReceivedMapShare,
 	useDownloadReceivedMapShare,
 	useManyReceivedMapShares,
+	useMapStyleUrl,
 	useSendMapShare,
 	useSingleReceivedMapShare,
 	useSingleSentMapShare,
@@ -104,7 +111,7 @@ function createMapSharesWrapper({
 				<ClientApiProvider
 					clientApi={mockClientApi as unknown as MapeoClientApi}
 				>
-					<MapServerProvider getBaseUrl={getBaseUrl}>
+					<MapServerProvider getBaseUrl={getBaseUrl} queryClient={qc}>
 						{children}
 					</MapServerProvider>
 				</ClientApiProvider>
@@ -426,6 +433,66 @@ describe('Received Map Shares Hooks', () => {
 			// come in.
 			expect(uniqueBytesDownloaded.length).toBe(1)
 			expect(uniqueBytesDownloaded[0]).toBe(0) // should be the initial value when status changes to downloading
+		})
+
+		it('should invalidate map style URL query after download completes', async () => {
+			function CombinedWrapper({ children }: PropsWithChildren) {
+				const BaseWrapper = receiverWrapper
+				return (
+					<BaseWrapper>
+						<Suspense fallback={null}>{children}</Suspense>
+					</BaseWrapper>
+				)
+			}
+
+			const mapShare = await createShare()
+
+			const { result } = renderHook(
+				() => ({
+					styleUrl: useMapStyleUrl(),
+					download: useDownloadReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: CombinedWrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).toBeDefined()
+			})
+
+			const urlBefore = result.current.styleUrl.data
+
+			// Emit the share AFTER the store is listening
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Trigger the download
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('success')
+			})
+
+			// Wait for download to complete
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('completed')
+			})
+
+			// After download completes, the map style URL query should be
+			// invalidated and refetched, resulting in a new refresh_token
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).not.toBe(urlBefore)
+			})
+
+			const urlAfter = result.current.styleUrl.data
+			expect(urlAfter).not.toBe(urlBefore)
 		})
 
 		it('should throw for non-existent shareId', async () => {

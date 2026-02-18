@@ -39,6 +39,24 @@ export function getStyleJsonUrlQueryKey({ mapId }: { mapId: string }) {
 	return [...getMapQueryKey({ mapId }), 'stylejson_url'] as const
 }
 
+/**
+ * Invalidate queries for this map and the default map (which internally
+ * redirects to custom) so that they will be refetched with the new map data.
+ */
+export async function invalidateMapQueries(
+	queryClient: QueryClient,
+	{ mapId }: { mapId: string },
+) {
+	await Promise.all([
+		queryClient.invalidateQueries({
+			queryKey: getMapQueryKey({ mapId }),
+		}),
+		queryClient.invalidateQueries({
+			queryKey: getMapQueryKey({ mapId: DEFAULT_MAP_ID }),
+		}),
+	])
+}
+
 // ============================================
 // QUERY OPTIONS
 // ============================================
@@ -119,16 +137,7 @@ export function mapImportMutationOptions({
 			})
 		},
 		onSuccess: async () => {
-			// Invalidate queries for this map and the default map (which internally
-			// redirects to custom) so that they will be refetched with the new map data.
-			await Promise.all([
-				queryClient.invalidateQueries({
-					queryKey: getMapQueryKey({ mapId }),
-				}),
-				queryClient.invalidateQueries({
-					queryKey: getMapQueryKey({ mapId: DEFAULT_MAP_ID }),
-				}),
-			])
+			await invalidateMapQueries(queryClient, { mapId })
 		},
 	}
 }
@@ -148,16 +157,7 @@ export function mapRemoveMutationOptions({
 			return mapServerApi.delete(`maps/${mapId}`)
 		},
 		onSuccess: async () => {
-			// Invalidate queries for this map and the default map (which internally
-			// redirects to custom) so that they will be refetched with the new map data.
-			await Promise.all([
-				queryClient.invalidateQueries({
-					queryKey: getMapQueryKey({ mapId }),
-				}),
-				queryClient.invalidateQueries({
-					queryKey: getMapQueryKey({ mapId: DEFAULT_MAP_ID }),
-				}),
-			])
+			await invalidateMapQueries(queryClient, { mapId })
 		},
 	}
 }
