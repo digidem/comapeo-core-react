@@ -193,11 +193,12 @@ export function useDownloadReceivedMapShare() {
  *
  * @example
  * ```tsx
+ * import { DeclineReason } from '@comapeo/core-react'
  * function DeclineButton({ shareId }: { shareId: string }) {
  *   const { mutate: decline } = useDeclineMapShare()
  *
  *   return (
- *     <button onClick={() => decline({ shareId, reason: 'user_rejected' })}>
+ *     <button onClick={() => decline({ shareId, reason: DeclineReason.user_rejected })}>
  *       Decline
  *     </button>
  *   )
