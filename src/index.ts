@@ -1,5 +1,4 @@
-export { ClientApiProvider } from './contexts/ClientApi.js'
-export { MapServerProvider } from './contexts/MapServer.js'
+export { ComapeoCoreProvider } from './contexts/ComapeoCore.js'
 export {
 	useClientApi,
 	useIsArchiveDevice,

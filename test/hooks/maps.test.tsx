@@ -22,7 +22,7 @@ import {
 	useMapStyleUrl,
 	useRemoveCustomMapFile,
 } from '../../src/hooks/maps.js'
-import { ClientApiProvider, MapServerProvider } from '../../src/index.js'
+import { ComapeoCoreProvider } from '../../src/index.js'
 import { HTTPError } from '../../src/lib/http.js'
 import {
 	createMockClientApi,
@@ -35,7 +35,11 @@ import {
 // HELPERS
 // ============================================
 
-function createWrapper({ getBaseUrl }: { getBaseUrl: () => Promise<URL> }) {
+function createWrapper({
+	getMapServerBaseUrl,
+}: {
+	getMapServerBaseUrl: () => Promise<URL>
+}) {
 	const queryClient = new QueryClient({
 		defaultOptions: {
 			queries: { retry: false },
@@ -47,11 +51,13 @@ function createWrapper({ getBaseUrl }: { getBaseUrl: () => Promise<URL> }) {
 	function Wrapper({ children }: PropsWithChildren) {
 		return (
 			<QueryClientProvider client={queryClient}>
-				<ClientApiProvider clientApi={mockClientApi}>
-					<MapServerProvider getBaseUrl={getBaseUrl} queryClient={queryClient}>
-						<Suspense fallback={null}>{children}</Suspense>
-					</MapServerProvider>
-				</ClientApiProvider>
+				<ComapeoCoreProvider
+					clientApi={mockClientApi}
+					getMapServerBaseUrl={getMapServerBaseUrl}
+					queryClient={queryClient}
+				>
+					<Suspense fallback={null}>{children}</Suspense>
+				</ComapeoCoreProvider>
 			</QueryClientProvider>
 		)
 	}
@@ -75,7 +81,7 @@ describe('Map Hooks', () => {
 		it('returns a valid style URL', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(() => useMapStyleUrl(), {
@@ -94,7 +100,7 @@ describe('Map Hooks', () => {
 		it('re-mounting returns the same cached URL', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const first = renderHook(() => useMapStyleUrl(), {
@@ -137,7 +143,7 @@ describe('Map Hooks', () => {
 		it('importing a map updates the style URL', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(
@@ -170,7 +176,7 @@ describe('Map Hooks', () => {
 		it('style json content changes after map import', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(
@@ -205,7 +211,7 @@ describe('Map Hooks', () => {
 		it('removing a map updates the style URL', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(
@@ -239,7 +245,7 @@ describe('Map Hooks', () => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const expectedSize = fs.statSync(OSM_BRIGHT_Z6).size
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(() => useGetCustomMapInfo(), {
@@ -256,7 +262,7 @@ describe('Map Hooks', () => {
 		it('returns a 404 HTTPError when no custom map exists', async (t) => {
 			const server = await startTestServer(t)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(() => useGetCustomMapInfo(), {
@@ -275,7 +281,7 @@ describe('Map Hooks', () => {
 		it('returns a 404 HTTPError after the custom map is removed', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(
@@ -309,7 +315,7 @@ describe('Map Hooks', () => {
 		it('map info updates after importing a new custom map', async (t) => {
 			const server = await startTestServer(t, OSM_BRIGHT_Z6, 0)
 			const { Wrapper } = createWrapper({
-				getBaseUrl: async () => new URL(server.localBaseUrl),
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
 			})
 
 			const { result } = renderHook(

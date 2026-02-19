@@ -24,8 +24,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import '../helpers/jsdom-setup.js'
 
 import {
-	ClientApiProvider,
-	MapServerProvider,
+	ComapeoCoreProvider,
 	useAbortReceivedMapShareDownload,
 	useCancelSentMapShare,
 	useDeclineReceivedMapShare,
@@ -89,11 +88,11 @@ async function createShareWithHook({
 
 function createMapSharesWrapper({
 	mockClientApi,
-	getBaseUrl,
+	getMapServerBaseUrl,
 	queryClient,
 }: {
 	mockClientApi: MockClientApi
-	getBaseUrl: () => Promise<URL>
+	getMapServerBaseUrl: () => Promise<URL>
 	queryClient?: QueryClient
 }) {
 	const qc =
@@ -108,13 +107,13 @@ function createMapSharesWrapper({
 	return function Wrapper({ children }: PropsWithChildren) {
 		return (
 			<QueryClientProvider client={qc}>
-				<ClientApiProvider
+				<ComapeoCoreProvider
 					clientApi={mockClientApi as unknown as MapeoClientApi}
+					getMapServerBaseUrl={getMapServerBaseUrl}
+					queryClient={qc}
 				>
-					<MapServerProvider getBaseUrl={getBaseUrl} queryClient={qc}>
-						{children}
-					</MapServerProvider>
-				</ClientApiProvider>
+					{children}
+				</ComapeoCoreProvider>
 			</QueryClientProvider>
 		)
 	}
@@ -147,13 +146,13 @@ describe('Received Map Shares Hooks', () => {
 		// Receiver wrapper - for testing received hooks
 		receiverWrapper = createMapSharesWrapper({
 			mockClientApi,
-			getBaseUrl: async () => new URL(receiver.localBaseUrl),
+			getMapServerBaseUrl: async () => new URL(receiver.localBaseUrl),
 		})
 
 		// Sender wrapper - for creating shares via hooks
 		senderWrapper = createMapSharesWrapper({
 			mockClientApi: createMockClientApi(), // separate mock for sender
-			getBaseUrl: async () => new URL(sender.localBaseUrl),
+			getMapServerBaseUrl: async () => new URL(sender.localBaseUrl),
 		})
 	})
 
@@ -861,7 +860,7 @@ describe('Sent Map Shares Hooks', () => {
 		// For sent hooks, we use the sender's map server
 		wrapper = createMapSharesWrapper({
 			mockClientApi,
-			getBaseUrl: async () => new URL(sender.localBaseUrl),
+			getMapServerBaseUrl: async () => new URL(sender.localBaseUrl),
 		})
 	})
 

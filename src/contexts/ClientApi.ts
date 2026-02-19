@@ -16,6 +16,10 @@ import { getInvitesQueryKey } from '../lib/react-query/invites.js'
 export const ClientApiContext: Context<MapeoClientApi | null> =
 	createContext<MapeoClientApi | null>(null)
 
+export type ClientApiProviderProps = PropsWithChildren<{
+	clientApi: MapeoClientApi
+}>
+
 /**
  * Create a context provider that holds a CoMapeo API client instance.
  *
@@ -26,7 +30,7 @@ export const ClientApiContext: Context<MapeoClientApi | null> =
 export function ClientApiProvider({
 	children,
 	clientApi,
-}: PropsWithChildren<{ clientApi: MapeoClientApi }>): JSX.Element {
+}: ClientApiProviderProps): JSX.Element {
 	const queryClient = useQueryClient()
 
 	useEffect(() => {
