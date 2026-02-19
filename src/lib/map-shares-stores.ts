@@ -150,8 +150,12 @@ function createMapSharesStore<
 					code: errorCode,
 				},
 			})
-		} catch {
-			// TODO: log errors
+		} catch (e) {
+			// TODO: log errors with Sentry
+			console.error(
+				`Failed to update map share ${shareId} with error ${errorCode}:`,
+				e,
+			)
 		}
 	}
 
