@@ -2,7 +2,7 @@ import { type MapeoClientApi } from '@comapeo/ipc'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type PropsWithChildren } from 'react'
 
-import { ClientApiProvider } from '../../src/index.js'
+import { ClientApiProvider } from '../../src/contexts/ClientApi.js'
 
 export function createClientApiWrapper({
 	clientApi,
