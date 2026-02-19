@@ -17,6 +17,18 @@ const requestMethods = [
 	'delete',
 ] as const
 
+/**
+ * http - A minimal fetch wrapper to reduce some boilerplate.
+ *
+ * @example
+ * ```js
+ *   import { createHttp } from './http.js'
+ *   const http = createHttp(myCustomFetch)
+ *
+ *   const data = await http.get('https://api.example.com/items').json()
+ *   await http.post('https://api.example.com/items', { json: { name: 'foo' } }).json()
+ * ```
+ */
 function createHttp(
 	fetchFn: (
 		input: string | URL,
@@ -77,23 +89,6 @@ function createHttp(
 	return http
 }
 
-/**
- * http - A minimal fetch wrapper to reduce some boilerplate.
- *
- * @example
- * ```js
- *   import http from './http.js'
- *
- *   const data = await http.get('https://api.example.com/items').json()
- *   await http.post('https://api.example.com/items', { json: { name: 'foo' } }).json()
- *
- *   // Custom fetch implementation:
- *   import { createHttp } from './http.js'
- *   const http = createHttp(myCustomFetch)
- * ```
- */
-const http = createHttp()
-
 type HTTPErrorObject = {
 	message?: string
 	code?: string
@@ -127,7 +122,6 @@ function isHTTPError(error: unknown): error is HTTPError {
 	return error instanceof HTTPError || (error as any)?.name === HTTPError.name
 }
 
-export default http
 export { createHttp, HTTPError, isHTTPError }
 
 function upperCase<T extends string>(str: T): Uppercase<T> {
