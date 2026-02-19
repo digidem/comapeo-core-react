@@ -95,6 +95,9 @@ type HTTPErrorObject = {
 	[key: string]: unknown
 }
 
+/**
+ * HTTPError - Custom error class to represent HTTP errors with additional context.
+ */
 class HTTPError extends Error {
 	readonly response: Response
 	readonly status: number
@@ -117,12 +120,15 @@ class HTTPError extends Error {
 	}
 }
 
+/**
+ * Type guard to check if an error is an instance of HTTPError.
+ */
 function isHTTPError(error: unknown): error is HTTPError {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return error instanceof HTTPError || (error as any)?.name === HTTPError.name
 }
 
-export { createHttp, HTTPError }
+export { createHttp, HTTPError, isHTTPError }
 
 function upperCase<T extends string>(str: T): Uppercase<T> {
 	return str.toUpperCase() as Uppercase<T>

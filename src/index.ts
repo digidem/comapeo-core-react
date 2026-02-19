@@ -84,3 +84,4 @@ export {
 	type WriteableDocumentType,
 	type WriteableValue,
 } from './lib/types.js'
+export { HTTPError, isHTTPError } from './lib/http.js'
