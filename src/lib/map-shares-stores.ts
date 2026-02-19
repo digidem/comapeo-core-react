@@ -1,4 +1,3 @@
-/* eslint-disable no-ex-assign */
 import type { MapShare } from '@comapeo/core'
 import type { MapeoClientApi } from '@comapeo/ipc'
 import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
@@ -6,7 +5,6 @@ import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import { type QueryClient } from '@tanstack/react-query'
 import ensureError from 'ensure-error'
-import { isHTTPError } from 'ky'
 import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'
 
 import type { MapServerApi } from '../contexts/MapServer.js'
@@ -265,7 +263,6 @@ export function createReceivedMapSharesStore({
 					.catch(noop)
 			} catch (e) {
 				downloads.delete(shareId)
-				e = await readHttpError(e)
 				handleError(shareId, e)
 				throw e
 			}
@@ -282,7 +279,6 @@ export function createReceivedMapSharesStore({
 					},
 				})
 			} catch (e) {
-				e = await readHttpError(e)
 				handleError(shareId, e)
 				throw e
 			}
@@ -298,7 +294,6 @@ export function createReceivedMapSharesStore({
 				}
 				await mapServerApi.post(`downloads/${downloadId}/abort`)
 			} catch (e) {
-				e = await readHttpError(e)
 				handleError(shareId, e)
 				throw e
 			} finally {
@@ -363,7 +358,6 @@ export function createSentMapSharesStore({
 			try {
 				await mapServerApi.post(`mapShares/${shareId}/cancel`)
 			} catch (e) {
-				e = await readHttpError(e)
 				handleError(shareId, e)
 				throw e
 			}
@@ -375,11 +369,6 @@ export function createSentMapSharesStore({
 		getSnapshot,
 		actions,
 	}
-}
-
-async function readHttpError(e: unknown) {
-	if (!isHTTPError(e)) return e
-	return e.response.json().catch((e) => e)
 }
 
 const allowedStatusTransitions: Record<

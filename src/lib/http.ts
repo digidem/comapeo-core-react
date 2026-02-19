@@ -122,7 +122,7 @@ function isHTTPError(error: unknown): error is HTTPError {
 	return error instanceof HTTPError || (error as any)?.name === HTTPError.name
 }
 
-export { createHttp, HTTPError, isHTTPError }
+export { createHttp, HTTPError }
 
 function upperCase<T extends string>(str: T): Uppercase<T> {
 	return str.toUpperCase() as Uppercase<T>
