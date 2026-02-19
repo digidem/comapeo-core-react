@@ -16,6 +16,7 @@
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": false,
 		"paths": {
+			"@comapeo/core-react": ["./src/index.ts"],
 			"*": ["./node_modules/@digidem/types/vendor/*/index.d.ts"]
 		},
 		"resolveJsonModule": true,

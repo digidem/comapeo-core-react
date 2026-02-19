@@ -1,30 +1,17 @@
 /**
  * Shared test utilities for map shares store tests.
  */
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import type { MapShare } from '@comapeo/core'
-import {
-	createServer,
-	type MapShareState as ServerMapShareState,
-} from '@comapeo/map-server'
+import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
 import ky from 'ky'
-import { Agent as SecretStreamAgent } from 'secret-stream-http'
-import { uint8ArrayToHex } from 'uint8array-extras'
 import { vi } from 'vitest'
 
 import {
 	createMapServerApi,
 	type MapServerApi,
 } from '../../src/contexts/MapServer.js'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const FIXTURES_DIR = path.join(__dirname, '../fixtures')
-export const OSM_BRIGHT_Z6 = path.join(FIXTURES_DIR, 'osm-bright-z6.smp')
-export const DEMOTILES_Z2 = path.join(FIXTURES_DIR, 'demotiles-z2.smp')
-export const ONLINE_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
+import { DEMOTILES_Z2, OSM_BRIGHT_Z6 } from '../helpers/constants.js'
+import { startTestServer } from './startTestServer.js'
 
 export type ServerInstance = {
 	get: (typeof ky)['get']
@@ -34,46 +21,6 @@ export type ServerInstance = {
 	deviceId: string
 	eventsPath: (id: string) => string
 	mapServerApi: MapServerApi
-}
-
-let tmpCounter = 0
-
-export async function startTestServer(
-	t: { onTestFinished: (fn: () => Promise<void>) => void },
-	customMapPath?: string,
-	seed = 0,
-) {
-	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'map-server-test-'))
-	const tmpCustomMapPath = path.join(tmpDir, `custom-map-${tmpCounter++}.smp`)
-
-	if (customMapPath) {
-		await fs.copyFile(customMapPath, tmpCustomMapPath)
-	}
-
-	const keyPair = SecretStreamAgent.keyPair(Buffer.alloc(32, seed))
-	const server = createServer({
-		defaultOnlineStyleUrl: ONLINE_STYLE_URL,
-		fallbackMapPath: DEMOTILES_Z2,
-		customMapPath: tmpCustomMapPath,
-		keyPair,
-	})
-
-	t.onTestFinished(async () => {
-		await fs.unlink(tmpCustomMapPath).catch(() => {})
-		await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {})
-		await server.close()
-	})
-
-	const { localPort, remotePort } = await server.listen()
-	const localBaseUrl = `http://127.0.0.1:${localPort}`
-
-	return {
-		localPort,
-		remotePort,
-		localBaseUrl,
-		keyPair,
-		deviceId: uint8ArrayToHex(keyPair.publicKey),
-	}
 }
 
 export async function startTestServers(t: {
@@ -127,59 +74,6 @@ export async function startTestServers(t: {
 		receiver: receiverInstance,
 		createShare,
 	}
-}
-
-export type MockClientApi = {
-	on: ReturnType<typeof vi.fn>
-	off: ReturnType<typeof vi.fn>
-	emit: (event: string, data: unknown) => void
-	listeners: Map<string, Array<(data: unknown) => void>>
-	getProject: ReturnType<typeof vi.fn>
-	$sendMapShare: ReturnType<typeof vi.fn>
-	invite: {
-		addListener: ReturnType<typeof vi.fn>
-		removeListener: ReturnType<typeof vi.fn>
-	}
-}
-
-export function createMockClientApi(): MockClientApi {
-	const listeners = new Map<string, Array<(data: unknown) => void>>()
-
-	const on = vi.fn((event: string, listener: (data: unknown) => void) => {
-		if (!listeners.has(event)) {
-			listeners.set(event, [])
-		}
-		listeners.get(event)!.push(listener)
-	})
-
-	const off = vi.fn((event: string, listener: (data: unknown) => void) => {
-		const eventListeners = listeners.get(event)
-		if (eventListeners) {
-			const index = eventListeners.indexOf(listener)
-			if (index > -1) {
-				eventListeners.splice(index, 1)
-			}
-		}
-	})
-
-	const emit = (event: string, data: unknown) => {
-		const eventListeners = listeners.get(event)
-		if (eventListeners) {
-			for (const listener of eventListeners) {
-				listener(data)
-			}
-		}
-	}
-
-	const $sendMapShare = vi.fn().mockResolvedValue(undefined)
-	const getProject = vi.fn().mockResolvedValue({ $sendMapShare })
-
-	const invite = {
-		addListener: vi.fn(),
-		removeListener: vi.fn(),
-	}
-
-	return { on, off, emit, listeners, getProject, $sendMapShare, invite }
 }
 
 /**

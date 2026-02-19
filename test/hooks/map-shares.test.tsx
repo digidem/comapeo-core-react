@@ -7,24 +7,11 @@
  * - Node environment uses native fetch which works with real servers
  * - renderHook from @testing-library/react can work in node with global-jsdom
  */
-import type { MapeoClientApi } from '@comapeo/ipc'
-import { errors } from '@comapeo/map-server'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import {
-	Suspense,
-	useEffect,
-	useRef,
-	useState,
-	type PropsWithChildren,
-} from 'react'
-import { beforeEach, describe, expect, it } from 'vitest'
 
 // Set up minimal DOM globals needed for React rendering in this test file
 import '../helpers/jsdom-setup.js'
 
 import {
-	ComapeoCoreProvider,
 	useAbortReceivedMapShareDownload,
 	useCancelSentMapShare,
 	useDeclineReceivedMapShare,
@@ -35,13 +22,26 @@ import {
 	useSingleReceivedMapShare,
 	useSingleSentMapShare,
 	type SentMapShareState,
-} from '../../src/index.js'
+} from '@comapeo/core-react'
+import { type MapeoClientApi } from '@comapeo/ipc'
+import { errors } from '@comapeo/map-server'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import {
+	Suspense,
+	useEffect,
+	useRef,
+	useState,
+	type PropsWithChildren,
+} from 'react'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
 	createMockClientApi,
-	startTestServers,
 	type MockClientApi,
-	type ServerInstance,
-} from '../lib/map-shares-test-utils.js'
+} from '../helpers/client-api-mock.js'
+import { DEMOTILES_Z2, OSM_BRIGHT_Z6 } from '../helpers/constants.js'
+import { startMapServer, type ServerInstance } from '../helpers/map-server.js'
+import { createWrapper } from '../helpers/react.js'
 
 // ============================================
 // HELPERS
@@ -55,7 +55,7 @@ async function createShareWithHook({
 	senderWrapper,
 	receiverDeviceId,
 }: {
-	senderWrapper: ReturnType<typeof createMapSharesWrapper>
+	senderWrapper: ReturnType<typeof createWrapper>
 	receiverDeviceId: string
 }): Promise<SentMapShareState> {
 	const { result } = renderHook(
@@ -82,43 +82,6 @@ async function createShareWithHook({
 	return createdShare
 }
 
-// ============================================
-// TEST WRAPPER
-// ============================================
-
-function createMapSharesWrapper({
-	mockClientApi,
-	getMapServerBaseUrl,
-	queryClient,
-}: {
-	mockClientApi: MockClientApi
-	getMapServerBaseUrl: () => Promise<URL>
-	queryClient?: QueryClient
-}) {
-	const qc =
-		queryClient ??
-		new QueryClient({
-			defaultOptions: {
-				queries: { retry: false },
-				mutations: { retry: false },
-			},
-		})
-
-	return function Wrapper({ children }: PropsWithChildren) {
-		return (
-			<QueryClientProvider client={qc}>
-				<ComapeoCoreProvider
-					clientApi={mockClientApi as unknown as MapeoClientApi}
-					getMapServerBaseUrl={getMapServerBaseUrl}
-					queryClient={qc}
-				>
-					{children}
-				</ComapeoCoreProvider>
-			</QueryClientProvider>
-		)
-	}
-}
-
 // Create a stateful wrapper that only renders children once a share exists.
 // This allows useSingleReceivedMapShare to be tested without throwing.
 function WaitForShareWrapper({ children }: PropsWithChildren) {
@@ -134,24 +97,22 @@ describe('Received Map Shares Hooks', () => {
 	let mockClientApi: MockClientApi
 	let sender: ServerInstance
 	let receiver: ServerInstance
-	let receiverWrapper: ReturnType<typeof createMapSharesWrapper>
-	let senderWrapper: ReturnType<typeof createMapSharesWrapper>
+	let receiverWrapper: ReturnType<typeof createWrapper>
+	let senderWrapper: ReturnType<typeof createWrapper>
 
 	beforeEach(async (t) => {
 		mockClientApi = createMockClientApi()
-		const servers = await startTestServers(t)
-		sender = servers.sender
-		receiver = servers.receiver
+		sender = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
+		receiver = await startMapServer(t, { customMapPath: DEMOTILES_Z2 })
 
 		// Receiver wrapper - for testing received hooks
-		receiverWrapper = createMapSharesWrapper({
-			mockClientApi,
+		receiverWrapper = createWrapper({
+			clientApi: mockClientApi as unknown as MapeoClientApi,
 			getMapServerBaseUrl: async () => new URL(receiver.localBaseUrl),
 		})
 
 		// Sender wrapper - for creating shares via hooks
-		senderWrapper = createMapSharesWrapper({
-			mockClientApi: createMockClientApi(), // separate mock for sender
+		senderWrapper = createWrapper({
 			getMapServerBaseUrl: async () => new URL(sender.localBaseUrl),
 		})
 	})
@@ -849,17 +810,16 @@ describe('Sent Map Shares Hooks', () => {
 	let mockClientApi: MockClientApi
 	let sender: ServerInstance
 	let receiver: ServerInstance
-	let wrapper: ReturnType<typeof createMapSharesWrapper>
+	let wrapper: ReturnType<typeof createWrapper>
 
 	beforeEach(async (t) => {
 		mockClientApi = createMockClientApi()
-		const servers = await startTestServers(t)
-		sender = servers.sender
-		receiver = servers.receiver
+		sender = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
+		receiver = await startMapServer(t, { customMapPath: DEMOTILES_Z2 })
 
 		// For sent hooks, we use the sender's map server
-		wrapper = createMapSharesWrapper({
-			mockClientApi,
+		wrapper = createWrapper({
+			clientApi: mockClientApi as unknown as MapeoClientApi,
 			getMapServerBaseUrl: async () => new URL(sender.localBaseUrl),
 		})
 	})

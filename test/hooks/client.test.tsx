@@ -10,7 +10,7 @@ import {
 	useSetOwnDeviceInfo,
 } from '../../src/index.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
-import { createClientApiWrapper } from '../helpers/react.js'
+import { createWrapper } from '../helpers/react.js'
 
 describe('useClientApi()', () => {
 	test('throws when ClientApiProvider is not set up', () => {
@@ -37,7 +37,7 @@ describe('useClientApi()', () => {
 		})
 
 		const { result } = renderHook(() => useClientApi(), {
-			wrapper: createClientApiWrapper({ clientApi: client }),
+			wrapper: createWrapper({ clientApi: client }),
 		})
 
 		assert.isDefined(result.current, 'client is set up properly')
@@ -54,7 +54,7 @@ describe('device info', () => {
 
 		const queryClient = new QueryClient()
 
-		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+		const wrapper = createWrapper({ clientApi: client, queryClient })
 
 		const readHook = renderHook(() => useOwnDeviceInfo(), { wrapper })
 		const writeHook = renderHook(() => useSetOwnDeviceInfo(), { wrapper })
@@ -131,7 +131,7 @@ describe('is archive device', () => {
 
 		const queryClient = new QueryClient()
 
-		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+		const wrapper = createWrapper({ clientApi: client, queryClient })
 
 		const readHook = renderHook(() => useIsArchiveDevice(), { wrapper })
 		const writeHook = renderHook(() => useSetIsArchiveDevice(), { wrapper })
