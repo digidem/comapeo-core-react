@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { createServer } from '@comapeo/map-server'
 import { Agent as SecretStreamAgent } from 'secret-stream-http'
 import { uint8ArrayToHex } from 'uint8array-extras'
 import type { TestContext } from 'vitest'
+
+import { DEMOTILES_Z2, ONLINE_STYLE_URL } from './constants.js'
 
 function noop() {}
 

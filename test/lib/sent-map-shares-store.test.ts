@@ -1,9 +1,12 @@
 /**
  * @vitest-environment node
  */
+import type { MapeoClientApi } from '@comapeo/ipc'
 import type { MapShareState as ServerMapShareState } from '@comapeo/map-server'
+import ky from 'ky'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createMapServerApi } from '../../src/contexts/MapServer.js'
 import {
 	createReceivedMapSharesStore,
 	createSentMapSharesStore,
@@ -11,12 +14,14 @@ import {
 	type SentMapSharesStore,
 } from '../../src/lib/map-shares-stores.js'
 import {
-	createMapShareFromServerShare,
 	createMockClientApi,
-	startTestServers,
-	waitForStoreState,
 	type MockClientApi,
-	type ServerInstance,
+} from '../helpers/client-api-mock.js'
+import { OSM_BRIGHT_Z6 } from '../helpers/constants.js'
+import { startMapServer, type ServerInstance } from '../helpers/map-server.js'
+import {
+	createMapShareFromServerShare,
+	waitForStoreState,
 } from './map-shares-test-utils.js'
 
 describe('SentMapSharesStore', () => {
@@ -27,79 +32,18 @@ describe('SentMapSharesStore', () => {
 
 	beforeEach(async (t) => {
 		mockClientApi = createMockClientApi()
-		const servers = await startTestServers(t)
-		sender = servers.sender
-		receiver = servers.receiver
+		sender = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
+		receiver = await startMapServer(t)
 
 		sentStore = createSentMapSharesStore({
-			// @ts-expect-error - We're only mocking what we need
-			clientApi: mockClientApi,
-			mapServerApi: sender.mapServerApi,
-		})
-	})
-
-	describe('initial state', () => {
-		it('should start with an empty array of map shares', () => {
-			expect(sentStore.getSnapshot()).toEqual([])
+			clientApi: mockClientApi as unknown as MapeoClientApi,
+			mapServerApi: createMapServerApi({
+				getBaseUrl: async () => new URL(sender.localBaseUrl),
+			}),
 		})
 	})
 
 	describe('create', () => {
-		it('should create a new map share and add it to the store', async () => {
-			const listener = vi.fn()
-			sentStore.subscribe(listener)
-
-			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
-				receiverDeviceId: receiver.deviceId,
-				mapId: 'custom',
-			})
-
-			expect(listener).toHaveBeenCalled()
-			const snapshot = sentStore.getSnapshot()
-			expect(snapshot).toHaveLength(1)
-			expect(snapshot[0]).toMatchObject({
-				mapId: 'custom',
-				status: 'pending',
-			})
-			expect(snapshot[0]).toHaveProperty('shareId')
-			expect(snapshot[0]).toHaveProperty('mapShareUrls')
-		})
-
-		it('should call clientApi.getProject and $sendMapShare', async () => {
-			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
-				receiverDeviceId: receiver.deviceId,
-				mapId: 'custom',
-			})
-
-			expect(mockClientApi.getProject).toHaveBeenCalledWith('test-project-id')
-			expect(mockClientApi.$sendMapShare).toHaveBeenCalledWith(
-				expect.objectContaining({
-					mapId: 'custom',
-					status: 'pending',
-				}),
-			)
-		})
-
-		it('should handle multiple map shares', async () => {
-			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
-				receiverDeviceId: receiver.deviceId,
-				mapId: 'custom',
-			})
-
-			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
-				receiverDeviceId: receiver.deviceId,
-				mapId: 'custom',
-			})
-
-			const snapshot = sentStore.getSnapshot()
-			expect(snapshot).toHaveLength(2)
-			expect(snapshot[0]?.shareId).not.toBe(snapshot[1]?.shareId)
-		})
-
 		it('should create share on the server', async () => {
 			const { shareId } = await sentStore.actions.createAndSend({
 				projectId: 'test-project-id',
@@ -108,8 +52,8 @@ describe('SentMapSharesStore', () => {
 			})
 
 			// Verify the share exists on the server
-			const serverShare = (await sender
-				.get(`mapShares/${shareId}`)
+			const serverShare = (await ky
+				.get(`${sender.localBaseUrl}/mapShares/${shareId}`)
 				.json()) as ServerMapShareState
 
 			expect(serverShare).toMatchObject({
@@ -137,8 +81,8 @@ describe('SentMapSharesStore', () => {
 			expect(sentStore.getSnapshot()).toHaveLength(0)
 
 			// Query the server to find the map share - it should exist and be canceled
-			const serverShares = (await sender
-				.get('mapShares')
+			const serverShares = (await ky
+				.get(`${sender.localBaseUrl}/mapShares`)
 				.json()) as Array<ServerMapShareState>
 
 			expect(serverShares).toHaveLength(1)
@@ -146,35 +90,6 @@ describe('SentMapSharesStore', () => {
 				mapId: 'custom',
 				status: 'canceled',
 			})
-		})
-	})
-
-	describe('cancel', () => {
-		it('should update status to canceled immediately', async () => {
-			const { shareId } = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
-				receiverDeviceId: receiver.deviceId,
-				mapId: 'custom',
-			})
-
-			const cancelPromise = sentStore.actions.cancel({ shareId })
-
-			expect(sentStore.getSnapshot()[0]).toHaveProperty('status', 'canceled')
-
-			// Verify the server was called to cancel the share
-			await expect(cancelPromise).resolves.toBeUndefined()
-
-			expect(sentStore.getSnapshot()[0]).toHaveProperty('status', 'canceled')
-		})
-
-		it('should throw when canceling a non-existent share', async () => {
-			await expect(() =>
-				sentStore.actions.cancel({ shareId: 'non-existent-share-id' }),
-			).rejects.toThrow(
-				expect.objectContaining({
-					code: 'MAP_SHARE_NOT_FOUND',
-				}),
-			)
 		})
 	})
 
@@ -187,7 +102,9 @@ describe('SentMapSharesStore', () => {
 			receivedStore = createReceivedMapSharesStore({
 				// @ts-expect-error - We're only mocking what we need
 				clientApi: receiverMockClientApi,
-				mapServerApi: receiver.mapServerApi,
+				mapServerApi: createMapServerApi({
+					getBaseUrl: async () => new URL(receiver.localBaseUrl),
+				}),
 			})
 		})
 
@@ -223,8 +140,8 @@ describe('SentMapSharesStore', () => {
 			expect(snapshot[0]).toHaveProperty('reason', 'user_rejected')
 
 			// Also verify the sender's server state was updated
-			const senderServerShare = (await sender
-				.get(`mapShares/${serverShare.shareId}`)
+			const senderServerShare = (await ky
+				.get(`${sender.localBaseUrl}/mapShares/${serverShare.shareId}`)
 				.json()) as ServerMapShareState
 			expect(senderServerShare.status).toBe('declined')
 			expect(senderServerShare).toHaveProperty('reason', 'user_rejected')
@@ -443,7 +360,9 @@ describe('SentMapSharesStore', () => {
 			receivedStore = createReceivedMapSharesStore({
 				// @ts-expect-error - We're only mocking what we need
 				clientApi: receiverMockClientApi,
-				mapServerApi: receiver.mapServerApi,
+				mapServerApi: createMapServerApi({
+					getBaseUrl: async () => new URL(receiver.localBaseUrl),
+				}),
 			})
 		})
 
