@@ -36,6 +36,7 @@ function App() {
 		<QueryClientProvider client={queryClient}>
 			<ComapeoCoreProvider
 				clientApi={clientApi}
+				queryClient={queryClient}
 				getMapServerBaseUrl={getMapServerBaseUrl}
 			>
 				<MyApp />
