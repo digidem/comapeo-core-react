@@ -8,13 +8,17 @@ import {
 	useEffect,
 	type Context,
 	type JSX,
-	type ReactNode,
+	type PropsWithChildren,
 } from 'react'
 
 import { getInvitesQueryKey } from '../lib/react-query/invites.js'
 
 export const ClientApiContext: Context<MapeoClientApi | null> =
 	createContext<MapeoClientApi | null>(null)
+
+export type ClientApiProviderProps = PropsWithChildren<{
+	clientApi: MapeoClientApi
+}>
 
 /**
  * Create a context provider that holds a CoMapeo API client instance.
@@ -26,23 +30,21 @@ export const ClientApiContext: Context<MapeoClientApi | null> =
 export function ClientApiProvider({
 	children,
 	clientApi,
-}: {
-	children: ReactNode
-	clientApi: MapeoClientApi
-}): JSX.Element {
+}: ClientApiProviderProps): JSX.Element {
 	const queryClient = useQueryClient()
 
 	useEffect(() => {
-		function invalidateCache() {
+		function invalidateInviteCache() {
 			queryClient.invalidateQueries({ queryKey: getInvitesQueryKey() })
 		}
 
-		clientApi.invite.addListener('invite-received', invalidateCache)
-		clientApi.invite.addListener('invite-updated', invalidateCache)
+		// Invite listeners
+		clientApi.invite.addListener('invite-received', invalidateInviteCache)
+		clientApi.invite.addListener('invite-updated', invalidateInviteCache)
 
 		return () => {
-			clientApi.invite.removeListener('invite-received', invalidateCache)
-			clientApi.invite.removeListener('invite-updated', invalidateCache)
+			clientApi.invite.removeListener('invite-received', invalidateInviteCache)
+			clientApi.invite.removeListener('invite-updated', invalidateInviteCache)
 		}
 	}, [clientApi, queryClient])
 

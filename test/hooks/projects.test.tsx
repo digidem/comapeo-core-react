@@ -14,7 +14,7 @@ import {
 	useSyncState,
 } from '../../src/index.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
-import { createClientApiWrapper } from '../helpers/react.js'
+import { createWrapper } from '../helpers/react.js'
 
 describe('sync', () => {
 	async function initializeProject({
@@ -68,7 +68,7 @@ describe('sync', () => {
 
 		const queryClient = new QueryClient()
 
-		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+		const wrapper = createWrapper({ clientApi: client, queryClient })
 
 		const project1Id = await initializeProject({ name: 'project_1', wrapper })
 
@@ -160,7 +160,7 @@ describe('sync', () => {
 
 		const queryClient = new QueryClient()
 
-		const wrapper = createClientApiWrapper({ clientApi: client, queryClient })
+		const wrapper = createWrapper({ clientApi: client, queryClient })
 
 		const project1Id = await initializeProject({ name: 'project_1', wrapper })
 

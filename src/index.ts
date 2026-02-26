@@ -1,4 +1,4 @@
-export { ClientApiProvider } from './contexts/ClientApi.js'
+export { ComapeoCoreProvider } from './contexts/ComapeoCore.js'
 export {
 	useClientApi,
 	useIsArchiveDevice,
@@ -23,7 +23,30 @@ export {
 	useSendInvite,
 	useSingleInvite,
 } from './hooks/invites.js'
-export { useMapStyleUrl } from './hooks/maps.js'
+export {
+	useMapStyleUrl,
+	useImportCustomMapFile,
+	useRemoveCustomMapFile,
+	useGetCustomMapInfo,
+	useManyReceivedMapShares,
+	useSingleReceivedMapShare,
+	useDeclineReceivedMapShare,
+	useDownloadReceivedMapShare,
+	useAbortReceivedMapShareDownload,
+	useSendMapShare,
+	useCancelSentMapShare,
+	useSingleSentMapShare,
+} from './hooks/maps.js'
+export type {
+	SentMapShareState,
+	ReceivedMapShareState,
+	AbortMapShareOptions,
+	CancelMapShareOptions,
+	DeclineMapShareOptions,
+	DownloadMapShareOptions,
+	CreateAndSendMapShareOptions,
+} from './lib/map-shares-stores.js'
+export { DeclineReason } from './lib/map-shares-stores.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,
@@ -61,3 +84,4 @@ export {
 	type WriteableDocumentType,
 	type WriteableValue,
 } from './lib/types.js'
+export { HTTPError, isHTTPError } from './lib/http.js'
