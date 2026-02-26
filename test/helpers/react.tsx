@@ -1,8 +1,8 @@
-import { ComapeoCoreProvider } from '@comapeo/core-react'
 import { type MapeoClientApi } from '@comapeo/ipc'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type PropsWithChildren } from 'react'
 
+import { ComapeoCoreProvider } from '../../src/index.js'
 import { createMockClientApi } from './client-api-mock.js'
 
 export function createWrapper({

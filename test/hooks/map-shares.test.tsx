@@ -11,18 +11,6 @@
 // Set up minimal DOM globals needed for React rendering in this test file
 import '../helpers/jsdom-setup.js'
 
-import {
-	useAbortReceivedMapShareDownload,
-	useCancelSentMapShare,
-	useDeclineReceivedMapShare,
-	useDownloadReceivedMapShare,
-	useManyReceivedMapShares,
-	useMapStyleUrl,
-	useSendMapShare,
-	useSingleReceivedMapShare,
-	useSingleSentMapShare,
-	type SentMapShareState,
-} from '@comapeo/core-react'
 import { type MapeoClientApi } from '@comapeo/ipc'
 import { errors } from '@comapeo/map-server'
 import { act, renderHook, waitFor } from '@testing-library/react'
@@ -35,6 +23,18 @@ import {
 } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import {
+	useAbortReceivedMapShareDownload,
+	useCancelSentMapShare,
+	useDeclineReceivedMapShare,
+	useDownloadReceivedMapShare,
+	useManyReceivedMapShares,
+	useMapStyleUrl,
+	useSendMapShare,
+	useSingleReceivedMapShare,
+	useSingleSentMapShare,
+	type SentMapShareState,
+} from '../../src/index.js'
 import {
 	createMockClientApi,
 	type MockClientApi,
@@ -469,6 +469,46 @@ describe('Received Map Shares Hooks', () => {
 			})
 
 			expect(result.current.error).toHaveProperty('code', 'MAP_SHARE_NOT_FOUND')
+		})
+
+		it('should update status to error when download fails', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			// Create a share with invalid URLs to cause a download error
+			const mapShare = await createShare()
+			const invalidShare = {
+				...mapShare,
+				mapShareUrls: ['http://127.0.0.1:80/invalid'] as const,
+			}
+
+			act(() => {
+				mockClientApi.emit('map-share', invalidShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Start the download - the mutation itself succeeds, but the
+			// download fails asynchronously and the status updates to 'error'
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('error')
+			})
+
+			expect(result.current.shares[0]).toHaveProperty(
+				'error.code',
+				'DOWNLOAD_ERROR',
+			)
 		})
 	})
 

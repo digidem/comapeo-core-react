@@ -10,15 +10,15 @@
 import '../helpers/jsdom-setup.js'
 
 import fs from 'node:fs'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+
 import {
 	useGetCustomMapInfo,
 	useImportCustomMapFile,
 	useMapStyleUrl,
 	useRemoveCustomMapFile,
-} from '@comapeo/core-react'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-
+} from '../../src/index.js'
 import { DEMOTILES_Z2, OSM_BRIGHT_Z6 } from '../helpers/constants.js'
 import { startMapServer } from '../helpers/map-server.js'
 import { createWrapper } from '../helpers/react.js'

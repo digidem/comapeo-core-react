@@ -38,8 +38,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      # In CI tests run against actual built code in `dist`
-      - run: npm run prepack
       - name: Run type checks
         run: npm run types
       - name: Run tests
