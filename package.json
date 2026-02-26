@@ -57,14 +57,14 @@
 		"types": "tsc"
 	},
 	"peerDependencies": {
-		"@comapeo/core": "^5.2.1",
+		"@comapeo/core": "^5.5.0",
 		"@comapeo/ipc": "^6.0.2",
 		"@comapeo/schema": "*",
 		"@tanstack/react-query": "^5",
 		"react": "^18 || ^19"
 	},
 	"devDependencies": {
-		"@comapeo/core": "5.4.0",
+		"@comapeo/core": "5.5.0",
 		"@comapeo/ipc": "6.0.2",
 		"@comapeo/schema": "2.2.0",
 		"@eslint/compat": "2.0.0",
