@@ -302,12 +302,7 @@ export function createProjectMutationOptions({
 		mutationFn: async (opts) => {
 			// Have to avoid passing `undefined` explicitly
 			// See https://github.com/digidem/rpc-reflector/issues/21
-			return opts
-				? clientApi.createProject({
-						configPath: opts.configPath,
-						name: opts.name,
-					})
-				: clientApi.createProject()
+			return opts ? clientApi.createProject(opts) : clientApi.createProject()
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -317,7 +312,7 @@ export function createProjectMutationOptions({
 	} satisfies UseMutationOptions<
 		string,
 		Error,
-		{ name?: string; configPath?: string } | undefined
+		Parameters<MapeoClientApi['createProject']>[0] | undefined
 	>
 }
 
