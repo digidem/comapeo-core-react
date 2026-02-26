@@ -335,13 +335,7 @@ export function createSentMapSharesStore({
 				.json<ServerMapShareState>()
 			try {
 				const project = await clientApi.getProject(projectId)
-				await project.$sendMapShare(
-					// TODO fix up types on this in @comapeo/core so we don't have to cast
-					mapShare as unknown as Omit<
-						SentMapShareState,
-						'mapShareUrls' | 'bounds'
-					> & { mapShareUrls: Array<string>; bounds: Array<number> },
-				)
+				await project.$sendMapShare(mapShare)
 			} catch (e) {
 				await mapServerApi.post(`mapShares/${mapShare.shareId}/cancel`)
 				throw e
