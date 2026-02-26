@@ -7,18 +7,6 @@ import { Agent as SecretStreamAgent } from 'secret-stream-http'
 import { uint8ArrayToHex } from 'uint8array-extras'
 import type { TestContext } from 'vitest'
 
-// Fixtures from the map-server-tests directory
-const MAP_SERVER_TESTS_DIR = path.join(
-	path.dirname(fileURLToPath(import.meta.url)),
-	'../../map-server-tests/fixtures',
-)
-export const OSM_BRIGHT_Z6 = path.join(
-	MAP_SERVER_TESTS_DIR,
-	'osm-bright-z6.smp',
-)
-export const DEMOTILES_Z2 = path.join(MAP_SERVER_TESTS_DIR, 'demotiles-z2.smp')
-export const ONLINE_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
-
 function noop() {}
 
 export type ServerInstance = Awaited<ReturnType<typeof startMapServer>>
