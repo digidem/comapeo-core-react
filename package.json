@@ -66,6 +66,7 @@
 	"devDependencies": {
 		"@comapeo/core": "5.5.0",
 		"@comapeo/ipc": "6.0.2",
+		"@comapeo/map-server": "1.0.0",
 		"@comapeo/schema": "2.2.0",
 		"@eslint/compat": "2.0.0",
 		"@eslint/js": "9.39.2",
@@ -106,7 +107,6 @@
 		"vitest": "4.0.15"
 	},
 	"dependencies": {
-		"@comapeo/map-server": "^1.0.0-pre.7",
 		"ensure-error": "5.0.0",
 		"eventsource-client": "1.2.0",
 		"type-fest": "5.4.4"
