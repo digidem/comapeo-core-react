@@ -106,7 +106,7 @@
 		"vitest": "4.0.15"
 	},
 	"dependencies": {
-		"@comapeo/map-server": "^1.0.0-pre.7",
+		"@comapeo/map-server": "1.0.0",
 		"ensure-error": "5.0.0",
 		"eventsource-client": "1.2.0",
 		"type-fest": "5.4.4"
