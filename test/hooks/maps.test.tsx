@@ -304,5 +304,36 @@ describe('Map Hooks', () => {
 
 			expect(result.current.mapInfo.data).not.toEqual(infoBefore)
 		})
+
+		it('map info updates after removing a custom map', async (t) => {
+			const server = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
+			const Wrapper = createWrapper({
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const { result } = renderHook(
+				() => ({
+					mapInfo: useGetCustomMapInfo(),
+					removeMap: useRemoveCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.mapInfo.data).toBeDefined()
+			})
+
+			const infoBefore = result.current.mapInfo.data
+
+			await act(async () => {
+				await result.current.removeMap.mutateAsync()
+			})
+
+			await waitFor(() =>
+				expect(result.current.mapInfo.error).not.toEqual(infoBefore),
+			)
+
+			expect(result.current.mapInfo.data).not.toEqual(infoBefore)
+		})
 	})
 })
