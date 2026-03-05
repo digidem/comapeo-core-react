@@ -219,6 +219,8 @@ describe('Map Hooks', () => {
 			})
 			expect(result.current.data).toHaveProperty('name')
 			expect(result.current.data).toHaveProperty('size', expectedSize)
+			expect(result.current.data).toHaveProperty('created')
+			expect(typeof result.current.data?.created).toBe('number')
 		})
 
 		it('returns a 404 HTTPError when no custom map exists', async (t) => {
