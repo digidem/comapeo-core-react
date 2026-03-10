@@ -17,6 +17,7 @@
 - [createMapServerApi](#createmapserverapi)
 - [MapServerProvider](#mapserverprovider)
 - [useMapServerApi](#usemapserverapi)
+- [ComapeoCoreProvider](#comapeocoreprovider)
 - [useProjectSettings](#useprojectsettings)
 - [useSingleProject](#usesingleproject)
 - [useManyProjects](#usemanyprojects)
@@ -60,6 +61,9 @@
 - [useSendInvite](#usesendinvite)
 - [useRequestCancelInvite](#userequestcancelinvite)
 - [useMapStyleUrl](#usemapstyleurl)
+- [useImportCustomMapFile](#useimportcustommapfile)
+- [useRemoveCustomMapFile](#useremovecustommapfile)
+- [useGetCustomMapInfo](#usegetcustommapinfo)
 - [useManyReceivedMapShares](#usemanyreceivedmapshares)
 - [useSingleReceivedMapShare](#usesinglereceivedmapshare)
 - [useDownloadReceivedMapShare](#usedownloadreceivedmapshare)
@@ -75,7 +79,7 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: PropsWithChildren<{ clientApi: any; }>) => Element` |
+| `ClientApiProvider` | `({ children, clientApi, }: ClientApiProviderProps) => Element` |
 
 Parameters:
 
@@ -170,7 +174,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, }: MapSharesProviderProps) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: any; mapServerApi: MapServerApi; } and { children?: ReactNode; } and { queryClient: QueryClient; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -236,7 +240,7 @@ for the map server to be ready before making requests.
 
 | Function | Type |
 | ---------- | ---------- |
-| `MapServerProvider` | `({ children, getBaseUrl, fetch, }: MapServerProviderProps) => Element` |
+| `MapServerProvider` | `({ children, getBaseUrl, fetch, queryClient, }: MapServerProviderProps) => Element` |
 
 Parameters:
 
@@ -278,6 +282,12 @@ Throws if used outside of MapServerProvider.
 | Function | Type |
 | ---------- | ---------- |
 | `useMapServerApi` | `() => MapServerApi` |
+
+### ComapeoCoreProvider
+
+| Function | Type |
+| ---------- | ---------- |
+| `ComapeoCoreProvider` | `({ children, clientApi, getMapServerBaseUrl, fetch, queryClient, }: ComapeoCoreProviderProps) => Element` |
 
 ### useProjectSettings
 
@@ -377,7 +387,7 @@ Retrieve all members of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
+| `useManyMembers` | `({ projectId, includeLeft, }: { projectId: string; includeLeft?: boolean or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -388,9 +398,10 @@ Examples:
 
 ```tsx
 function BasicExample() {
-  const { data } = useManyMembers({ projectId: '...' })
+  const activeMembers1 = useManyMembers({ projectId: '...' })
+  const activeMembers2 = useManyMembers({ projectId: '...', includeLeft: false })
 
-  console.log(data.role)
+	 const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
 }
 ```
 
@@ -570,7 +581,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
+| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, any, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, any, unknown>; reset: () => void; status: "error"; } or { ...; }` |
 
 ### useLeaveProject
 
@@ -680,29 +691,31 @@ based on role change events that are received in the background.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useProjectOwnRoleChangeListener` | `({ projectId, listener, }: { projectId: string; listener?: ((event: RoleChangeEvent) => void) or undefined; }) => void` |
-
-Parameters:
-
-* `opts.listener`: Optional listener to invoke when role changes
-
+| `useProjectOwnRoleChangeListener` | `({ projectId, }: { projectId: string; }) => void` |
 
 Examples:
 
 ```tsx
-function SomeComponent({ projectId }: { projectId: string }) {
+function ListenerComponent({ projectId }: { projectId: string }) {
+  // Set up the listener
   useProjectOwnRoleChangeListener({ projectId })
 }
-```
-```tsx
-function ComponentWithListener({ projectId }: { projectId: string }) {
-  useProjectOwnRoleChangeListener({
-    projectId,
-    listener: (event) => {
-      // Handle role change, e.g., navigate to default project
-      console.log('New role:', event.role)
+
+// Handle role change events separately
+function EventHandlerComponent() {
+  const { data: projectApi } = useSingleProject({ projectId })
+
+  useEffect(() => {
+    function handleRoleChangeEvent(event) {
+	     // Do something with event...
     }
-  })
+
+    projectApi.addListener('own-role-change', handleRoleChangeEvent)
+
+    return () => {
+      projectApi.removeListener('own-role-change', handleRoleChangeEvent)
+    }
+  }, [projectApi])
 }
 ```
 
@@ -1103,7 +1116,7 @@ due to hidden internal details by consuming components (e.g. map component from 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useMapStyleUrl` | `({ refreshToken, }?: { refreshToken?: string or undefined; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
+| `useMapStyleUrl` | `() => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -1129,6 +1142,37 @@ function ExampleWithRefreshToken() {
 }
 ```
 
+
+### useImportCustomMapFile
+
+Import a custom SMP map file, replacing any existing custom map. The mutation
+resolves once the file is successfully uploaded and processed by the server.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useImportCustomMapFile` | `() => Pick<Override<MutationObserverIdleResult<Response, Error, { file: File or ExpoFileDuckType; }, unknown>, { mutate: UseMutateFunction<...>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+
+Examples:
+
+```tsx
+function MapImportExample() {
+  const { mutate: importMap } = useImportCustomMapFile()
+
+}
+```
+
+
+### useRemoveCustomMapFile
+
+| Function | Type |
+| ---------- | ---------- |
+| `useRemoveCustomMapFile` | `() => Pick<Override<MutationObserverIdleResult<Response, Error, void, unknown>, { mutate: UseMutateFunction<Response, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+
+### useGetCustomMapInfo
+
+| Function | Type |
+| ---------- | ---------- |
+| `useGetCustomMapInfo` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 ### useManyReceivedMapShares
 
@@ -1223,11 +1267,12 @@ Throws if decline request fails (e.g. network error)
 Examples:
 
 ```tsx
+import { DeclineReason } from '@comapeo/core-react'
 function DeclineButton({ shareId }: { shareId: string }) {
   const { mutate: decline } = useDeclineMapShare()
 
   return (
-    <button onClick={() => decline({ shareId, reason: 'user_rejected' })}>
+    <button onClick={() => decline({ shareId, reason: DeclineReason.user_rejected })}>
       Decline
     </button>
   )
@@ -1390,25 +1435,32 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 ## Types
 
+- [ClientApiProviderProps](#clientapiproviderprops)
 - [MapServerApiOptions](#mapserverapioptions)
 - [MapServerApi](#mapserverapi)
 - [MapServerProviderProps](#mapserverproviderprops)
+
+### ClientApiProviderProps
+
+| Type | Type |
+| ---------- | ---------- |
+| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: MapeoClientApi }>` |
 
 ### MapServerApiOptions
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapServerApiOptions` | `{ getBaseUrl(): Promise<URL> fetch?( input: string or URL or Request, options?: RequestInit, ): Promise<Response> }` |
+| `MapServerApiOptions` | `{ getBaseUrl(): Promise<URL> /** * We assume the passed fetch implementation will only accept a `string` as * input, not a `URL` or `Request`, because right now the expo/fetch * implementation will only accept a `string`. Adding this restriction will * catch potential issues if we try to pass a URL in our code. Can be relaxed * when https://github.com/expo/expo/issues/43193 is fixed upstream. */ fetch?(input: string, options?: RequestInit): Promise<Response> }` |
 
 ### MapServerApi
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapServerApi` | `KyInstance and { createEventSource(options: EventSourceOptions): EventSourceClient getMapStyleJsonUrl(mapId: string): Promise<string> }` |
+| `MapServerApi` | `ReturnType<typeof createHttp> and { createEventSource(options: EventSourceOptions): EventSourceClient getMapStyleJsonUrl(mapId: string): Promise<string> }` |
 
 ### MapServerProviderProps
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapServerProviderProps` | `PropsWithChildren<MapServerApiOptions>` |
+| `MapServerProviderProps` | `PropsWithChildren< MapServerApiOptions and { queryClient: QueryClient } >` |
 
