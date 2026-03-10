@@ -1,9 +1,6 @@
 import type { BlobApi, IconApi } from '@comapeo/core' with {
 	'resolution-mode': 'import',
 }
-import type { RoleChangeEvent } from '@comapeo/core/dist/mapeo-project.js' with {
-	'resolution-mode': 'import',
-}
 import type { MapeoProjectApi } from '@comapeo/ipc' with {
 	'resolution-mode': 'import',
 }
@@ -590,34 +587,37 @@ export function useRemoveMember({ projectId }: { projectId: string }) {
  * It is necessary to use this if you want the project role-related read hooks to update
  * based on role change events that are received in the background.
  *
- * @param opts.listener Optional listener to invoke when role changes
+ *
  *
  * @example
  * ```tsx
- * function SomeComponent({ projectId }: { projectId: string }) {
+ * function ListenerComponent({ projectId }: { projectId: string }) {
+ *   // Set up the listener
  *   useProjectOwnRoleChangeListener({ projectId })
  * }
- * ```
  *
- * @example
- * ```tsx
- * function ComponentWithListener({ projectId }: { projectId: string }) {
- *   useProjectOwnRoleChangeListener({
- *     projectId,
- *     listener: (event) => {
- *       // Handle role change, e.g., navigate to default project
- *       console.log('New role:', event.role)
+ * // Handle role change events separately
+ * function EventHandlerComponent() {
+ *   const { data: projectApi } = useSingleProject({ projectId })
+ *
+ *   useEffect(() => {
+ *     function handleRoleChangeEvent(event) {
+ * 	     // Do something with event...
  *     }
- *   })
+ *
+ *     projectApi.addListener('own-role-change', handleRoleChangeEvent)
+ *
+ *     return () => {
+ *       projectApi.removeListener('own-role-change', handleRoleChangeEvent)
+ *     }
+ *   }, [projectApi])
  * }
  * ```
  */
 export function useProjectOwnRoleChangeListener({
 	projectId,
-	listener,
 }: {
 	projectId: string
-	listener?: (event: RoleChangeEvent) => void
 }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -638,18 +638,6 @@ export function useProjectOwnRoleChangeListener({
 			projectApi.removeListener('own-role-change', invalidateCache)
 		}
 	}, [projectApi, queryClient, projectId])
-
-	useEffect(() => {
-		if (listener) {
-			projectApi.addListener('own-role-change', listener)
-		}
-
-		return () => {
-			if (listener) {
-				projectApi.removeListener('own-role-change', listener)
-			}
-		}
-	}, [projectApi, listener])
 }
 
 /**
