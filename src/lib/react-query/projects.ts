@@ -39,8 +39,20 @@ export function getProjectRoleQueryKey({ projectId }: { projectId: string }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'role'] as const
 }
 
-export function getMembersQueryKey({ projectId }: { projectId: string }) {
-	return [ROOT_QUERY_KEY, 'projects', projectId, 'members'] as const
+export function getMembersQueryKey({
+	projectId,
+	includeLeft,
+}: {
+	projectId: string
+	includeLeft?: boolean
+}) {
+	return [
+		ROOT_QUERY_KEY,
+		'projects',
+		projectId,
+		'members',
+		{ includeLeft },
+	] as const
 }
 
 export function getMemberByIdQueryKey({
@@ -132,15 +144,17 @@ export function projectSettingsQueryOptions({
 export function projectMembersQueryOptions({
 	projectApi,
 	projectId,
+	includeLeft,
 }: {
 	projectApi: MapeoProjectApi
 	projectId: string
+	includeLeft?: boolean
 }) {
 	return queryOptions({
 		...baseQueryOptions(),
-		queryKey: getMembersQueryKey({ projectId }),
+		queryKey: getMembersQueryKey({ projectId, includeLeft }),
 		queryFn: async () => {
-			return projectApi.$member.getMany()
+			return projectApi.$member.getMany({ includeLeft })
 		},
 	})
 }

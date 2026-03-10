@@ -182,17 +182,24 @@ export function useSingleMember({
  * @example
  * ```tsx
  * function BasicExample() {
- *   const { data } = useManyMembers({ projectId: '...' })
+ *   const activeMembers1 = useManyMembers({ projectId: '...' })
+ *   const activeMembers2 = useManyMembers({ projectId: '...', includeLeft: false })
  *
- *   console.log(data.role)
+ * 	 const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
  * }
  * ```
  */
-export function useManyMembers({ projectId }: { projectId: string }) {
+export function useManyMembers({
+	projectId,
+	includeLeft,
+}: {
+	projectId: string
+	includeLeft?: boolean
+}) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const { data, error, isRefetching } = useSuspenseQuery(
-		projectMembersQueryOptions({ projectApi, projectId }),
+		projectMembersQueryOptions({ projectApi, projectId, includeLeft }),
 	)
 
 	return { data, error, isRefetching }
