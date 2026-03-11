@@ -97,7 +97,7 @@
 		"react-dom": "19.2.3",
 		"secret-stream-http": "1.0.1",
 		"tsdoc-markdown": "1.4.1",
-		"tshy": "3.1.0",
+		"tshy": "3.3.2",
 		"typescript": "5.9.3",
 		"typescript-eslint": "8.57.0",
 		"uint8array-extras": "1.5.0",
