@@ -63,6 +63,12 @@
 		"test": "vitest run",
 		"types": "tsc"
 	},
+	"dependencies": {
+		"@comapeo/map-server": "1.0.1",
+		"ensure-error": "5.0.0",
+		"eventsource-client": "1.2.0",
+		"type-fest": "5.4.4"
+	},
 	"peerDependencies": {
 		"@comapeo/core": "^6.0.1",
 		"@comapeo/ipc": "^7.0.0",
@@ -108,11 +114,5 @@
 		"typescript-eslint": "8.57.0",
 		"uint8array-extras": "1.5.0",
 		"vitest": "4.0.18"
-	},
-	"dependencies": {
-		"@comapeo/map-server": "1.0.1",
-		"ensure-error": "5.0.0",
-		"eventsource-client": "1.2.0",
-		"type-fest": "5.4.4"
 	}
 }
