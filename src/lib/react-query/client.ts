@@ -1,7 +1,7 @@
-import type { MapeoClientApi } from '@comapeo/ipc' with {
+import type { DeviceInfo } from '@comapeo/core/schema.js' with {
 	'resolution-mode': 'import',
 }
-import type { DeviceInfo } from '@comapeo/schema' with {
+import type { MapeoClientApi } from '@comapeo/ipc' with {
 	'resolution-mode': 'import',
 }
 import {

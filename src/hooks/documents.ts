@@ -1,4 +1,4 @@
-import type { Preset } from '@comapeo/schema' with {
+import type { Preset } from '@comapeo/core/schema.js' with {
 	'resolution-mode': 'import',
 }
 import {
