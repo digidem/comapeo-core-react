@@ -37,7 +37,7 @@ export class SyncStore {
 		}
 	}
 
-	getStateSnapshot = () => {
+	getStateSnapshot = (): SyncState | null => {
 		if (this.#error) throw this.#error
 		return this.#state
 	}
