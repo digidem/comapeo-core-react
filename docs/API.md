@@ -401,7 +401,7 @@ function BasicExample() {
   const activeMembers1 = useManyMembers({ projectId: '...' })
   const activeMembers2 = useManyMembers({ projectId: '...', includeLeft: false })
 
-	 const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
+  const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
 }
 ```
 
