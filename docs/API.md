@@ -143,7 +143,7 @@ Retrieve whether the current device is an archive device or not.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIsArchiveDevice` | `() => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useIsArchiveDevice` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -414,7 +414,7 @@ _TODO: Explain bitmap opts vs svg opts_
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIconUrl` | `({ projectId, iconId, ...mimeBasedOpts }: { projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => Pick<UseSuspenseQueryResult<string>, "data" or "error" or "isRefetching">` |
+| `useIconUrl` | `({ projectId, iconId, ...mimeBasedOpts }: { projectId: string; iconId: string; } and (BitmapOpts or SvgOpts)) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -459,7 +459,7 @@ _TODO: Explain BlobId in more depth_
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAttachmentUrl` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => Pick<UseSuspenseQueryResult<string>, "data" or "error" or "isRefetching">` |
+| `useAttachmentUrl` | `({ projectId, blobId, }: { projectId: string; blobId: BlobId; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -518,7 +518,7 @@ Retrieve the device ID that created a document.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => UseSuspenseQueryResult<string>` |
+| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -1172,7 +1172,7 @@ function MapImportExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<UseQueryResult<MapInfo>, "data" or "error" or "isRefetching">` |
+| `useGetCustomMapInfo` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
 
 ### useManyReceivedMapShares
 
