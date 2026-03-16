@@ -3,7 +3,9 @@ import type {
 	QueryClient,
 	QueryOptions,
 	UseMutationOptions,
+	UseMutationResult,
 } from '@tanstack/react-query'
+import { DistributedPick } from 'type-fest'
 
 import type { WriteableDocumentType } from './types.js'
 
@@ -29,6 +31,36 @@ export function baseMutationOptions() {
 		retry: false,
 	} satisfies UseMutationOptions
 }
+
+const PICKED_MUTATION_RESULT_KEYS = [
+	'error',
+	'mutate',
+	'mutateAsync',
+	'reset',
+	'status',
+] as const satisfies ReadonlyArray<keyof UseMutationResult>
+
+export type FilteredMutationResult<
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	TResult extends UseMutationResult<any, any, any, any>,
+> = DistributedPick<TResult, (typeof PICKED_MUTATION_RESULT_KEYS)[number]>
+
+/**
+ * Filters a `UseMutationResult` to only include a subset of its keys, and uses
+ * `DistributedPick` to preserve the discriminated union types of the mutation
+ * result based on the `status` property.
+ */
+export function filterMutationResult<
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	TResult extends UseMutationResult<any, any, any, any>,
+>(mutationResult: TResult) {
+	const filteredResult = {} as FilteredMutationResult<TResult>
+	for (const key of PICKED_MUTATION_RESULT_KEYS) {
+		filteredResult[key] = mutationResult[key]
+	}
+	return filteredResult
+}
+
 // #endregion
 
 // #region Client

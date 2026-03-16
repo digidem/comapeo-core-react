@@ -17,6 +17,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
+	filterMutationResult,
 	getDocumentCreatedByQueryKey,
 	getMediaServerOriginQueryKey,
 	getMemberByIdQueryKey,
@@ -25,6 +26,7 @@ import {
 	getProjectRoleQueryKey,
 	getProjectSettingsQueryKey,
 	getProjectsQueryKey,
+	type FilteredMutationResult,
 } from '../lib/react-query.js'
 import { SyncStore, type SyncState } from '../lib/sync.js'
 import { getBlobUrl, getIconUrl } from '../lib/urls.js'
@@ -467,111 +469,106 @@ export function useOwnRoleInProject({
 	return { data, error, isRefetching }
 }
 
-export function useAddServerPeer({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	void,
-	Error,
-	{ baseUrl: string; dangerouslyAllowInsecureConnections?: boolean }
-> {
+export function useAddServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ baseUrl, dangerouslyAllowInsecureConnections }) => {
-			return projectApi.$member.addServerPeer(baseUrl, {
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				baseUrl,
 				dangerouslyAllowInsecureConnections,
-			})
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-		},
-	})
+			}: {
+				baseUrl: string
+				dangerouslyAllowInsecureConnections?: boolean
+			}) => {
+				return projectApi.$member.addServerPeer(baseUrl, {
+					dangerouslyAllowInsecureConnections,
+				})
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
-export function useRemoveServerPeer({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	void,
-	Error,
-	{ serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean }
-> {
+export function useRemoveServerPeer({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({
-			serverDeviceId,
-			dangerouslyAllowInsecureConnections,
-		}) => {
-			return projectApi.$member.removeServerPeer(serverDeviceId, {
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				serverDeviceId,
 				dangerouslyAllowInsecureConnections,
-			})
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-		},
-	})
+			}: {
+				serverDeviceId: string
+				dangerouslyAllowInsecureConnections?: boolean
+			}) => {
+				return projectApi.$member.removeServerPeer(serverDeviceId, {
+					dangerouslyAllowInsecureConnections,
+				})
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
  * Create a new project.
  */
-export function useCreateProject(): UseMutationResult<
-	string,
-	Error,
-	Parameters<MapeoClientApi['createProject']>[0] | undefined
-> {
+export function useCreateProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (opts) => {
-			// Have to avoid passing `undefined` explicitly
-			// See https://github.com/digidem/rpc-reflector/issues/21
-			return opts ? clientApi.createProject(opts) : clientApi.createProject()
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (
+				opts?: Parameters<MapeoClientApi['createProject']>[0],
+			) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return opts ? clientApi.createProject(opts) : clientApi.createProject()
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
  * Leave an existing project.
  */
-export function useLeaveProject(): UseMutationResult<
-	void,
-	Error,
-	{ projectId: string }
-> {
+export function useLeaveProject() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ projectId }) => {
-			return clientApi.leaveProject(projectId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ projectId }: { projectId: string }) => {
+				return clientApi.leaveProject(projectId)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -583,21 +580,23 @@ export function useImportProjectCategories({
 	projectId,
 }: {
 	projectId: string
-}): UseMutationResult<void, Error, { filePath: string }> {
+}) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: ({ filePath }) => {
-			return projectApi.$importCategories({ filePath })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectByIdQueryKey({ projectId }),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: ({ filePath }: { filePath: string }) => {
+				return projectApi.$importCategories({ filePath })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getProjectByIdQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -606,25 +605,23 @@ export function useImportProjectCategories({
  * @deprecated Use `useImportProjectCategories` instead.
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useImportProjectConfig({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<Array<Error>, Error, { configPath: string }> {
+export function useImportProjectConfig({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: ({ configPath }) => {
-			return projectApi.importConfig({ configPath })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectByIdQueryKey({ projectId }),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: ({ configPath }: { configPath: string }) => {
+				return projectApi.importConfig({ configPath })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getProjectByIdQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -636,25 +633,30 @@ export function useUpdateProjectSettings({
 	projectId,
 }: {
 	projectId: string
-}): UseMutationResult<
-	EditableProjectSettings,
-	Error,
-	Partial<EditableProjectSettings>
+}): // NOTE: Needs explicit return type due to TS2742
+FilteredMutationResult<
+	UseMutationResult<
+		EditableProjectSettings,
+		Error,
+		Partial<EditableProjectSettings>
+	>
 > {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (value) => {
-			return projectApi.$setProjectSettings(value)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (value: Partial<EditableProjectSettings>) => {
+				return projectApi.$setProjectSettings(value)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -671,35 +673,32 @@ export function useUpdateProjectSettings({
  * }
  * ```
  */
-export function useChangeMemberRole({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	void,
-	Error,
-	{
-		deviceId: string
-		roleId: MemberApi.RoleIdAssignableToOthers
-	}
-> {
+export function useChangeMemberRole({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ deviceId, roleId }) => {
-			return projectApi.$member.assignRole(deviceId, roleId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-			queryClient.invalidateQueries({
-				queryKey: getProjectRoleQueryKey({ projectId }),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				deviceId,
+				roleId,
+			}: {
+				deviceId: string
+				roleId: MemberApi.RoleIdAssignableToOthers
+			}) => {
+				return projectApi.$member.assignRole(deviceId, roleId)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId }),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getProjectRoleQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -721,36 +720,33 @@ export function useChangeMemberRole({
  * }
  * ```
  */
-export function useRemoveMember({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	void,
-	Error,
-	{
-		deviceId: string
-		reason?: string
-	}
-> {
+export function useRemoveMember({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ deviceId, reason }) => {
-			// Have to avoid passing `undefined` explicitly
-			// See https://github.com/digidem/rpc-reflector/issues/21
-			return reason
-				? projectApi.$member.remove(deviceId, { reason })
-				: projectApi.$member.remove(deviceId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				deviceId,
+				reason,
+			}: {
+				deviceId: string
+				reason?: string
+			}) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return reason
+					? projectApi.$member.remove(deviceId, { reason })
+					: projectApi.$member.remove(deviceId)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -816,36 +812,30 @@ export function useProjectOwnRoleChangeListener({
  *
  * @param opts.projectId Public project ID of project to apply to changes to.
  */
-export function useCreateBlob({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	{
-		driveId: string
-		name: string
-		type: 'photo' | 'audio' | 'video'
-		hash: string
-	},
-	Error,
-	{
-		original: string
-		preview?: string
-		thumbnail?: string
-		metadata: BlobApi.Metadata
-	}
-> {
+export function useCreateBlob({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ original, preview, thumbnail, metadata }) => {
-			return projectApi.$blobs.create(
-				{ original, preview, thumbnail },
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				original,
+				preview,
+				thumbnail,
 				metadata,
-			)
-		},
-	})
+			}: {
+				original: string
+				preview?: string
+				thumbnail?: string
+				metadata: BlobApi.Metadata
+			}) => {
+				return projectApi.$blobs.create(
+					{ original, preview, thumbnail },
+					metadata,
+				)
+			},
+		}),
+	)
 }
 
 const PROJECT_SYNC_STORE_MAP = new WeakMap<MapeoProjectApi, SyncStore>()
@@ -911,85 +901,75 @@ export function useDataSyncProgress({
 	return useSyncExternalStore(subscribe, getDataProgressSnapshot)
 }
 
-export function useStartSync({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	void,
-	Error,
-	{ autostopDataSyncAfter: number | null } | undefined
-> {
+export function useStartSync({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (opts) => {
-			// Have to avoid passing `undefined` explicitly
-			// See https://github.com/digidem/rpc-reflector/issues/21
-			return opts ? projectApi.$sync.start(opts) : projectApi.$sync.start()
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (opts?: { autostopDataSyncAfter: number | null }) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return opts ? projectApi.$sync.start(opts) : projectApi.$sync.start()
+			},
+		}),
+	)
 }
 
-export function useStopSync({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<void, Error, void> {
+export function useStopSync({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async () => {
-			return projectApi.$sync.stop()
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async () => {
+				return projectApi.$sync.stop()
+			},
+		}),
+	)
 }
 
-export function useConnectSyncServers({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<void, Error, void> {
+export function useConnectSyncServers({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async () => {
-			return projectApi.$sync.connectServers()
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async () => {
+				return projectApi.$sync.connectServers()
+			},
+		}),
+	)
 }
 
-export function useDisconnectSyncServers({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<void, Error, void> {
+export function useDisconnectSyncServers({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async () => {
-			return projectApi.$sync.disconnectServers()
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async () => {
+				return projectApi.$sync.disconnectServers()
+			},
+		}),
+	)
 }
 
 export function useSetAutostopDataSyncTimeout({
 	projectId,
 }: {
 	projectId: string
-}): UseMutationResult<void, Error, { after: number | null }> {
+}) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ after }) => {
-			return projectApi.$sync.setAutostopDataSyncTimeout(after)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ after }: { after: number | null }) => {
+				return projectApi.$sync.setAutostopDataSyncTimeout(after)
+			},
+		}),
+	)
 }
 
 /**
@@ -997,30 +977,24 @@ export function useSetAutostopDataSyncTimeout({
  *
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useExportGeoJSON({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	string,
-	Error,
-	{
-		path: string
-		exportOptions: {
-			observations?: boolean
-			tracks?: boolean
-			lang?: string
-		}
-	}
-> {
+export function useExportGeoJSON({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (opts) => {
-			return projectApi.exportGeoJSONFile(opts.path, opts.exportOptions)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (opts: {
+				path: string
+				exportOptions: {
+					observations?: boolean
+					tracks?: boolean
+					lang?: string
+				}
+			}) => {
+				return projectApi.exportGeoJSONFile(opts.path, opts.exportOptions)
+			},
+		}),
+	)
 }
 
 /**
@@ -1028,29 +1002,23 @@ export function useExportGeoJSON({
  *
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useExportZipFile({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	string,
-	Error,
-	{
-		path: string
-		exportOptions: {
-			observations?: boolean
-			tracks?: boolean
-			lang?: string
-			attachments?: boolean
-		}
-	}
-> {
+export function useExportZipFile({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (opts) => {
-			return projectApi.exportZipFile(opts.path, opts.exportOptions)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (opts: {
+				path: string
+				exportOptions: {
+					observations?: boolean
+					tracks?: boolean
+					lang?: string
+					attachments?: boolean
+				}
+			}) => {
+				return projectApi.exportZipFile(opts.path, opts.exportOptions)
+			},
+		}),
+	)
 }

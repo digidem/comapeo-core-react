@@ -1,7 +1,6 @@
 import { InviteApi, MemberApi } from '@comapeo/core'
 import {
 	useMutation,
-	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
 	UseSuspenseQueryResult,
@@ -10,6 +9,7 @@ import {
 import {
 	baseMutationOptions,
 	baseQueryOptions,
+	filterMutationResult,
 	getInvitesByIdQueryKey,
 	getInvitesQueryKey,
 	getMembersQueryKey,
@@ -81,55 +81,51 @@ export function useSingleInvite({
 /**
  * Accept an invite that has been received.
  */
-export function useAcceptInvite(): UseMutationResult<
-	string,
-	Error,
-	{ inviteId: string }
-> {
+export function useAcceptInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ inviteId }) => {
-			return clientApi.invite.accept({ inviteId })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getInvitesQueryKey(),
-			})
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ inviteId }: { inviteId: string }) => {
+				return clientApi.invite.accept({ inviteId })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getInvitesQueryKey(),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
  * Reject an invite that has been received.
  */
-export function useRejectInvite(): UseMutationResult<
-	string,
-	Error,
-	{ inviteId: string }
-> {
+export function useRejectInvite() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ inviteId }) => {
-			return clientApi.invite.accept({ inviteId })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getInvitesQueryKey(),
-			})
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ inviteId }: { inviteId: string }) => {
+				return clientApi.invite.accept({ inviteId })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getInvitesQueryKey(),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -137,37 +133,34 @@ export function useRejectInvite(): UseMutationResult<
  *
  * @param opts.projectId Public ID of project to send the invite on behalf of.
  */
-export function useSendInvite({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<
-	'ACCEPT' | 'REJECT' | 'ALREADY',
-	Error,
-	{
-		deviceId: string
-		roleDescription?: string
-		roleId: MemberApi.RoleIdForNewInvite
-		roleName?: string
-	}
-> {
+export function useSendInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ deviceId, ...role }) => {
-			return projectApi.$member.invite(deviceId, role)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getInvitesQueryKey(),
-			})
-			queryClient.invalidateQueries({
-				queryKey: getMembersQueryKey({ projectId }),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				deviceId,
+				...role
+			}: {
+				deviceId: string
+				roleDescription?: string
+				roleId: MemberApi.RoleIdForNewInvite
+				roleName?: string
+			}) => {
+				return projectApi.$member.invite(deviceId, role)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getInvitesQueryKey(),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId }),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -175,23 +168,21 @@ export function useSendInvite({
  *
  * @param opts.projectId Public ID of project to request the invite cancellation for.
  */
-export function useRequestCancelInvite({
-	projectId,
-}: {
-	projectId: string
-}): UseMutationResult<void, Error, { deviceId: string }> {
+export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ deviceId }) => {
-			return projectApi.$member.requestCancelInvite(deviceId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getInvitesQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ deviceId }: { deviceId: string }) => {
+				return projectApi.$member.requestCancelInvite(deviceId)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getInvitesQueryKey(),
+				})
+			},
+		}),
+	)
 }

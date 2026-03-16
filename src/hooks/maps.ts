@@ -1,9 +1,8 @@
-import { MapInfo, MapShareState } from '@comapeo/map-server'
+import { MapInfo } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID, DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import {
 	useMutation,
-	UseMutationResult,
 	useQuery,
 	useQueryClient,
 	UseQueryResult,
@@ -30,6 +29,7 @@ import {
 import {
 	baseMutationOptions,
 	baseQueryOptions,
+	filterMutationResult,
 	getMapInfoQueryKey,
 	getStyleJsonUrlQueryKey,
 	invalidateMapQueries,
@@ -106,55 +106,51 @@ type ExpoFileDuckType = CompatFile & {
  * }
  * ```
  */
-export function useImportCustomMapFile(): UseMutationResult<
-	Response,
-	Error,
-	{ file: File | ExpoFileDuckType }
-> {
+export function useImportCustomMapFile() {
 	const mapServerApi = useMapServerApi()
 	const queryClient = useQueryClient()
 
 	// TODO: Support importing to other custom map IDs, to support multiple maps.
 	const mapId = CUSTOM_MAP_ID
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ file }) => {
-			if ('exists' in file && !file.exists) {
-				throw new Error('File does not exist or is not accessible')
-			}
-			return mapServerApi.put(`maps/${mapId}`, {
-				body: file,
-				headers: {
-					'Content-Type': 'application/octet-stream',
-				},
-			})
-		},
-		onSuccess: async () => {
-			await invalidateMapQueries(queryClient, { mapId })
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ file }: { file: File | ExpoFileDuckType }) => {
+				if ('exists' in file && !file.exists) {
+					throw new Error('File does not exist or is not accessible')
+				}
+				return mapServerApi.put(`maps/${mapId}`, {
+					body: file,
+					headers: {
+						'Content-Type': 'application/octet-stream',
+					},
+				})
+			},
+			onSuccess: async () => {
+				await invalidateMapQueries(queryClient, { mapId })
+			},
+		}),
+	)
 }
 
-export function useRemoveCustomMapFile(): UseMutationResult<
-	Response,
-	Error,
-	void
-> {
+export function useRemoveCustomMapFile() {
 	const mapServerApi = useMapServerApi()
 	const queryClient = useQueryClient()
 
 	const mapId = CUSTOM_MAP_ID
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async () => {
-			return mapServerApi.delete(`maps/${mapId}`)
-		},
-		onSuccess: async () => {
-			await invalidateMapQueries(queryClient, { mapId })
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async () => {
+				return mapServerApi.delete(`maps/${mapId}`)
+			},
+			onSuccess: async () => {
+				await invalidateMapQueries(queryClient, { mapId })
+			},
+		}),
+	)
 }
 
 export function useGetCustomMapInfo(): Pick<
@@ -255,19 +251,17 @@ export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
  * }
  * ```
  */
-export function useDownloadReceivedMapShare(): UseMutationResult<
-	void,
-	Error,
-	DownloadMapShareOptions
-> {
+export function useDownloadReceivedMapShare() {
 	const { download } = useReceivedMapSharesActions()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (options) => {
-			return download(options)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: DownloadMapShareOptions) => {
+				return download(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -292,19 +286,17 @@ export function useDownloadReceivedMapShare(): UseMutationResult<
  * }
  * ```
  */
-export function useDeclineReceivedMapShare(): UseMutationResult<
-	void,
-	Error,
-	DeclineMapShareOptions
-> {
+export function useDeclineReceivedMapShare() {
 	const { decline } = useReceivedMapSharesActions()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (options) => {
-			return decline(options)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: DeclineMapShareOptions) => {
+				return decline(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -322,19 +314,17 @@ export function useDeclineReceivedMapShare(): UseMutationResult<
  * }
  * ```
  */
-export function useAbortReceivedMapShareDownload(): UseMutationResult<
-	void,
-	Error,
-	AbortMapShareOptions
-> {
+export function useAbortReceivedMapShareDownload() {
 	const { abort } = useReceivedMapSharesActions()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (options) => {
-			return abort(options)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: AbortMapShareOptions) => {
+				return abort(options)
+			},
+		}),
+	)
 }
 
 // ============================================
@@ -362,19 +352,17 @@ export function useAbortReceivedMapShareDownload(): UseMutationResult<
  * }
  * ```
  */
-export function useSendMapShare(): UseMutationResult<
-	MapShareState,
-	Error,
-	CreateAndSendMapShareOptions
-> {
+export function useSendMapShare() {
 	const { createAndSend } = useSentMapSharesActions()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (options) => {
-			return createAndSend(options)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: CreateAndSendMapShareOptions) => {
+				return createAndSend(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -395,19 +383,17 @@ export function useSendMapShare(): UseMutationResult<
  * }
  * ```
  */
-export function useCancelSentMapShare(): UseMutationResult<
-	void,
-	Error,
-	CancelMapShareOptions
-> {
+export function useCancelSentMapShare() {
 	const { cancel } = useSentMapSharesActions()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async (options) => {
-			return cancel(options)
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: CancelMapShareOptions) => {
+				return cancel(options)
+			},
+		}),
+	)
 }
 
 /**

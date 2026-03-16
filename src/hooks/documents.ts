@@ -1,4 +1,3 @@
-import type { Preset } from '@comapeo/core/schema.js'
 import { MapeoProjectApi } from '@comapeo/ipc'
 import {
 	useMutation,
@@ -13,10 +12,12 @@ import { getPresetsSelection } from '../lib/presets.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
+	filterMutationResult,
 	getDocumentByDocIdQueryKey,
 	getDocumentByVersionIdQueryKey,
 	getDocumentsQueryKey,
 	getManyDocumentsQueryKey,
+	type FilteredMutationResult,
 } from '../lib/react-query.js'
 import type { WriteableDocumentType, WriteableValue } from '../lib/types.js'
 import { useProjectSettings, useSingleProject } from './projects.js'
@@ -233,32 +234,41 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 }: {
 	docType: D
 	projectId: string
-}): UseMutationResult<
-	Awaited<ReturnType<MapeoProjectApi[D]['create']>>,
-	Error,
-	{ value: Omit<WriteableValue<D>, 'schemaName'> }
+}): // NOTE: Needs explicit return type due to TS struggles with inference
+FilteredMutationResult<
+	UseMutationResult<
+		Awaited<ReturnType<MapeoProjectApi[D]['create']>>,
+		Error,
+		{ value: Omit<WriteableValue<D>, 'schemaName'> }
+	>
 > {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ value }) => {
-			return (
-				projectApi[docType]
-					// @ts-expect-error TS not handling this well
-					.create({ ...value, schemaName: docType })
-			)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
-					projectId,
-					docType,
-				}),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				value,
+			}: {
+				value: Omit<WriteableValue<D>, 'schemaName'>
+			}) => {
+				return (
+					projectApi[docType]
+						// @ts-expect-error TS not handling this well
+						.create({ ...value, schemaName: docType })
+				)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getDocumentsQueryKey({
+						projectId,
+						docType,
+					}),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -268,37 +278,50 @@ export function useCreateDocument<D extends WriteableDocumentType>({
  * @param opts.projectId Public ID of project document belongs to.
  */
 export function useUpdateDocument<D extends WriteableDocumentType>({
+	// TODO: Make this a mutation parameter instead of a hook parameter
 	docType,
 	projectId,
 }: {
 	docType: D
 	projectId: string
-}): UseMutationResult<
-	Awaited<ReturnType<MapeoProjectApi[D]['update']>>,
-	Error,
-	{ versionId: string; value: Omit<WriteableValue<D>, 'schemaName'> }
+}): // NOTE: Needs explicit return type due to TS struggles with inference
+FilteredMutationResult<
+	UseMutationResult<
+		Awaited<ReturnType<MapeoProjectApi[D]['update']>>,
+		Error,
+		{ value: Omit<WriteableValue<D>, 'schemaName'> }
+	>
 > {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ versionId, value }) => {
-			return (
-				projectApi[docType]
-					// @ts-expect-error TS not handling this well
-					.update(versionId, value)
-			)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
-					projectId,
-					docType,
-				}),
-			})
-		},
-	})
+	// @ts-expect-error Not sure why TS complains here
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				versionId,
+				value,
+			}: {
+				versionId: string
+				value: Omit<WriteableValue<D>, 'schemaName'>
+			}) => {
+				return (
+					projectApi[docType]
+						// @ts-expect-error TS not handling this well
+						.update(versionId, value)
+				)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getDocumentsQueryKey({
+						projectId,
+						docType,
+					}),
+				})
+			},
+		}),
+	)
 }
 
 /**
@@ -308,34 +331,40 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
  * @param opts.projectId Public ID of project document belongs to.
  */
 export function useDeleteDocument<D extends WriteableDocumentType>({
+	// TODO: Make this a mutation parameter instead of a hook parameter
 	docType,
 	projectId,
 }: {
 	docType: D
 	projectId: string
-}): UseMutationResult<
-	Awaited<ReturnType<MapeoProjectApi[D]['delete']>>,
-	Error,
-	{ docId: string }
+}): // NOTE: Needs explicit return type due to TS2742
+FilteredMutationResult<
+	UseMutationResult<
+		Awaited<ReturnType<MapeoProjectApi[D]['delete']>>,
+		Error,
+		{ docId: string }
+	>
 > {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	// @ts-expect-error Not sure why TS is complaining
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ docId }) => {
-			return projectApi[docType].delete(docId)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getDocumentsQueryKey({
-					projectId,
-					docType,
-				}),
-			})
-		},
-	})
+	// @ts-expect-error Not sure why TS complains here
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ docId }: { docId: string }) => {
+				return projectApi[docType].delete(docId)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getDocumentsQueryKey({
+						projectId,
+						docType,
+					}),
+				})
+			},
+		}),
+	)
 }
 
 const dataTypeToGeometry = {
@@ -380,7 +409,7 @@ export function usePresetsSelection({
 	projectId: string
 	dataType: 'observation' | 'track'
 	lang?: string
-}): Array<Preset> {
+}) {
 	const { data: projectSettings } = useProjectSettings({ projectId })
 	const { data: presets } = useManyDocs({
 		projectId,

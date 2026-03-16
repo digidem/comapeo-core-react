@@ -2,7 +2,6 @@ import type { DeviceInfo } from '@comapeo/core/schema.js'
 import type { MapeoClientApi } from '@comapeo/ipc'
 import {
 	useMutation,
-	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
 	UseSuspenseQueryResult,
@@ -13,6 +12,7 @@ import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
 	baseMutationOptions,
 	baseQueryOptions,
+	filterMutationResult,
 	getDeviceInfoQueryKey,
 	getIsArchiveDeviceQueryKey,
 	getProjectsQueryKey,
@@ -114,50 +114,52 @@ export function useIsArchiveDevice(): Pick<
 /**
  * Update the device info for the current device.
  */
-export function useSetOwnDeviceInfo(): UseMutationResult<
-	void,
-	Error,
-	{ name: string; deviceType: DeviceInfo['deviceType'] }
-> {
+export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ name, deviceType }) => {
-			return clientApi.setDeviceInfo({ name, deviceType })
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getDeviceInfoQueryKey(),
-			})
-			queryClient.invalidateQueries({
-				queryKey: getProjectsQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				name,
+				deviceType,
+			}: {
+				name: string
+				deviceType: DeviceInfo['deviceType']
+			}) => {
+				return clientApi.setDeviceInfo({ name, deviceType })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getDeviceInfoQueryKey(),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
+	)
 }
 
 /**
  * Set or unset the current device as an archive device.
  */
-export function useSetIsArchiveDevice(): UseMutationResult<
-	void,
-	Error,
-	{ isArchiveDevice: boolean }
-> {
+export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	return useMutation({
-		...baseMutationOptions(),
-		mutationFn: async ({ isArchiveDevice }) => {
-			return clientApi.setIsArchiveDevice(isArchiveDevice)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: getIsArchiveDeviceQueryKey(),
-			})
-		},
-	})
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ isArchiveDevice }: { isArchiveDevice: boolean }) => {
+				return clientApi.setIsArchiveDevice(isArchiveDevice)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getIsArchiveDeviceQueryKey(),
+				})
+			},
+		}),
+	)
 }
