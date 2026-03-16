@@ -6,9 +6,13 @@ jobs:
   lockfile_version:
     name: Lockfile version check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Check out a copy of the repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Check package-lock.json version has not been changed
         uses: mansona/npm-lockfile-version@85d9138b7776b4f8f768259f8a3e4f2611457d8f # v1
         with:
@@ -16,11 +20,16 @@ jobs:
   lockfile_changes:
     name: Lockfile changes check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Check out a copy of the repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: app-token
         with:
           app-id: ${{ vars.LOCKFILE_BOT_APP_ID }}
