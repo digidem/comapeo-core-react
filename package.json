@@ -99,7 +99,7 @@
 		"fastify": "4.29.1",
 		"globals": "17.4.0",
 		"husky": "9.1.7",
-		"jsdom": "28.1.0",
+		"jsdom": "29.0.0",
 		"ky": "1.14.3",
 		"lint-staged": "16.3.3",
 		"npm-run-all2": "8.0.4",
