@@ -338,13 +338,21 @@ export function useAbortReceivedMapShareDownload() {
  * @example
  * ```tsx
  * function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: string }) {
- *   const { mutate: send } = useSendMapShare()
+ *	const { mutate: send } = useSendMapShare()
  *
- *   return (
- *     <button onClick={() => send({ projectId, receiverDeviceId: deviceId, mapId: 'custom' }, {})}>
- *       Send Map
- *     </button>
- *   )
+ *	return (
+ *		<button
+ *			onClick={() =>
+ *				send({ projectId, receiverDeviceId: deviceId, mapId: 'custom' }, {
+ *                    onSuccess: (mapShare) => {
+ *                        console.log('Share sent with id', mapShare.shareId)
+ *                    }
+ *              )
+ *			}
+ *		>
+ *			Send Map
+ *		</button>
+ *	)
  * }
  * ```
  */
