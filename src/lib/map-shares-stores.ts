@@ -3,12 +3,12 @@ import type { MapeoClientApi } from '@comapeo/ipc'
 import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
-import { type QueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import ensureError from 'ensure-error'
 import type { DistributedOmit, SharedUnionFields, Simplify } from 'type-fest'
 
 import type { MapServerApi } from '../contexts/MapServer.js'
-import { invalidateMapQueries } from './react-query/maps.js'
+import { invalidateMapQueries } from './react-query.js'
 
 type DistributedIntersection<T, U> = U extends unknown ? Simplify<T & U> : never
 export type ReceivedMapShareState = DistributedIntersection<

@@ -1,12 +1,10 @@
-import type { MapeoProjectApi } from '@comapeo/ipc' with {
-	'resolution-mode': 'import',
-}
+import type { MapeoProjectApi } from '@comapeo/ipc'
 
 export type SyncState = Awaited<
 	ReturnType<MapeoProjectApi['$sync']['getState']>
 >
 
-export function getDataSyncCountForDevice(
+function getDataSyncCountForDevice(
 	syncStateForDevice: SyncState['remoteDeviceSyncState'][string],
 ) {
 	const { data } = syncStateForDevice
@@ -37,7 +35,7 @@ export class SyncStore {
 		}
 	}
 
-	getStateSnapshot = () => {
+	getStateSnapshot = (): SyncState | null => {
 		if (this.#error) throw this.#error
 		return this.#state
 	}

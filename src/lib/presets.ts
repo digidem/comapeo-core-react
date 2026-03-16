@@ -1,6 +1,4 @@
-import type { Preset } from '@comapeo/schema' with {
-	'resolution-mode': 'import',
-}
+import type { Preset } from '@comapeo/core/schema.js'
 
 /**
  * Internal helper to sort presets alphabetically by name (case-insensitive).

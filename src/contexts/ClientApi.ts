@@ -1,6 +1,4 @@
-import type { MapeoClientApi } from '@comapeo/ipc' with {
-	'resolution-mode': 'import',
-}
+import type { MapeoClientApi } from '@comapeo/ipc'
 import { useQueryClient } from '@tanstack/react-query'
 import {
 	createContext,
@@ -11,7 +9,7 @@ import {
 	type PropsWithChildren,
 } from 'react'
 
-import { getInvitesQueryKey } from '../lib/react-query/invites.js'
+import { getInvitesQueryKey } from '../lib/react-query.js'
 
 export const ClientApiContext: Context<MapeoClientApi | null> =
 	createContext<MapeoClientApi | null>(null)

@@ -1,4 +1,5 @@
-import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
+import type { MapInfo } from '@comapeo/map-server'
+import { CUSTOM_MAP_ID, DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import {
 	useMutation,
@@ -15,18 +16,23 @@ import {
 	useSentMapSharesActions,
 	useSentMapSharesState,
 } from '../contexts/MapShares.js'
-import {
-	type ReceivedMapShareState,
-	type SentMapShareState,
+import type {
+	AbortMapShareOptions,
+	CancelMapShareOptions,
+	CreateAndSendMapShareOptions,
+	DeclineMapShareOptions,
+	DownloadMapShareOptions,
+	ReceivedMapShareState,
+	SentMapShareState,
 } from '../lib/map-shares-stores.js'
 import {
-	mapImportMutationOptions,
-	mapInfoQueryOptions,
-	mapRemoveMutationOptions,
-	mapSharesMutationOptions,
-	mapStyleJsonUrlQueryOptions,
-} from '../lib/react-query/maps.js'
-import { filterMutationResult } from '../lib/react-query/mutation-result.js'
+	baseMutationOptions,
+	baseQueryOptions,
+	filterMutationResult,
+	getMapInfoQueryKey,
+	getStyleJsonUrlQueryKey,
+	invalidateMapQueries,
+} from '../lib/react-query.js'
 
 /**
  * Get a URL that points to a StyleJSON resource served by the embedded HTTP server.
@@ -57,11 +63,34 @@ import { filterMutationResult } from '../lib/react-query/mutation-result.js'
 export function useMapStyleUrl() {
 	const mapServerApi = useMapServerApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		mapStyleJsonUrlQueryOptions({ mapServerApi }),
-	)
+	// TODO: Support custom maps
+	const mapId = DEFAULT_MAP_ID
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getStyleJsonUrlQueryKey({ mapId }),
+		queryFn: async () => {
+			const result = await mapServerApi.getMapStyleJsonUrl(mapId)
+			const u = new URL(result)
+			// This ensures that every time this query is refetched, it will have a different search param, forcing the map to reload.
+			u.searchParams.set('refresh_token', Date.now().toString())
+			return u.href
+		},
+		// Keep this cached until the cache is manually invalidated by a map upload
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
 
 	return { data, error, isRefetching }
+}
+
+// Expo's file-system File type is close to the standard File type, so for our
+// import function we accept an object with the compatible properties and
+// methods, and for the expo File, which can represent a file that does not yet
+// exists, we type the `exists` property so that we can check that.
+type CompatFile = Omit<File, 'lastModified' | 'webkitRelativePath'>
+type ExpoFileDuckType = CompatFile & {
+	exists: boolean
 }
 
 /**
@@ -79,24 +108,66 @@ export function useMapStyleUrl() {
 export function useImportCustomMapFile() {
 	const mapServerApi = useMapServerApi()
 	const queryClient = useQueryClient()
-	const options = mapImportMutationOptions({ mapServerApi, queryClient })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	// TODO: Support importing to other custom map IDs, to support multiple maps.
+	const mapId = CUSTOM_MAP_ID
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ file }: { file: File | ExpoFileDuckType }) => {
+				if ('exists' in file && !file.exists) {
+					throw new Error('File does not exist or is not accessible')
+				}
+				return mapServerApi.put(`maps/${mapId}`, {
+					body: file,
+					headers: {
+						'Content-Type': 'application/octet-stream',
+					},
+				})
+			},
+			onSuccess: async () => {
+				await invalidateMapQueries(queryClient, { mapId })
+			},
+		}),
+	)
 }
 
 export function useRemoveCustomMapFile() {
 	const mapServerApi = useMapServerApi()
 	const queryClient = useQueryClient()
-	const options = mapRemoveMutationOptions({ mapServerApi, queryClient })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	const mapId = CUSTOM_MAP_ID
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async () => {
+				return mapServerApi.delete(`maps/${mapId}`)
+			},
+			onSuccess: async () => {
+				await invalidateMapQueries(queryClient, { mapId })
+			},
+		}),
+	)
 }
 
 export function useGetCustomMapInfo() {
 	const mapServerApi = useMapServerApi()
-	const { data, error, isRefetching } = useQuery(
-		mapInfoQueryOptions({ mapServerApi, mapId: CUSTOM_MAP_ID }),
-	)
+
+	// TODO: Support custom maps
+	const mapId = CUSTOM_MAP_ID
+
+	const { data, error, isRefetching } = useQuery({
+		...baseQueryOptions(),
+		queryKey: getMapInfoQueryKey({ mapId }),
+		queryFn: async () => {
+			return mapServerApi.get(`maps/${mapId}/info`).json<MapInfo>()
+		},
+		// Keep this cached until the cache is manually invalidated by a map upload
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
 
 	return { data, error, isRefetching }
 }
@@ -178,9 +249,15 @@ export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
  */
 export function useDownloadReceivedMapShare() {
 	const { download } = useReceivedMapSharesActions()
-	const options = mapSharesMutationOptions({ action: download })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: DownloadMapShareOptions) => {
+				return download(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -207,9 +284,15 @@ export function useDownloadReceivedMapShare() {
  */
 export function useDeclineReceivedMapShare() {
 	const { decline } = useReceivedMapSharesActions()
-	const options = mapSharesMutationOptions({ action: decline })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: DeclineMapShareOptions) => {
+				return decline(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -229,9 +312,15 @@ export function useDeclineReceivedMapShare() {
  */
 export function useAbortReceivedMapShareDownload() {
 	const { abort } = useReceivedMapSharesActions()
-	const options = mapSharesMutationOptions({ action: abort })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: AbortMapShareOptions) => {
+				return abort(options)
+			},
+		}),
+	)
 }
 
 // ============================================
@@ -249,25 +338,35 @@ export function useAbortReceivedMapShareDownload() {
  * @example
  * ```tsx
  * function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: string }) {
- *   const { mutate: send } = useSendMapShare({ projectId }, {
- *     onSuccess: (mapShare) => {
- *  	   console.log('Share sent with id', mapShare.shareId)
- *     }
- *   })
+ *	const { mutate: send } = useSendMapShare()
  *
- *   return (
- *     <button onClick={() => send({ receiverDeviceId: deviceId, mapId: 'custom' })}>
- *       Send Map
- *     </button>
- *   )
+ *	return (
+ *		<button
+ *			onClick={() =>
+ *				send({ projectId, receiverDeviceId: deviceId, mapId: 'custom' }, {
+ *                    onSuccess: (mapShare) => {
+ *                        console.log('Share sent with id', mapShare.shareId)
+ *                    }
+ *              )
+ *			}
+ *		>
+ *			Send Map
+ *		</button>
+ *	)
  * }
  * ```
  */
-export function useSendMapShare({ projectId }: { projectId: string }) {
+export function useSendMapShare() {
 	const { createAndSend } = useSentMapSharesActions()
-	const options = mapSharesMutationOptions({ action: createAndSend, projectId })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: CreateAndSendMapShareOptions) => {
+				return createAndSend(options)
+			},
+		}),
+	)
 }
 
 /**
@@ -290,9 +389,15 @@ export function useSendMapShare({ projectId }: { projectId: string }) {
  */
 export function useCancelSentMapShare() {
 	const { cancel } = useSentMapSharesActions()
-	const options = mapSharesMutationOptions({ action: cancel })
-	const result = useMutation(options)
-	return filterMutationResult(result)
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (options: CancelMapShareOptions) => {
+				return cancel(options)
+			},
+		}),
+	)
 }
 
 /**
