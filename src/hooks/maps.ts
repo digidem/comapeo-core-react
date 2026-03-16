@@ -1,4 +1,4 @@
-import type { MapInfo } from '@comapeo/map-server'
+import type { MapInfoResponse } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID, DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import {
@@ -162,7 +162,7 @@ export function useGetCustomMapInfo() {
 		...baseQueryOptions(),
 		queryKey: getMapInfoQueryKey({ mapId }),
 		queryFn: async () => {
-			return mapServerApi.get(`maps/${mapId}/info`).json<MapInfo>()
+			return mapServerApi.get(`maps/${mapId}/info`).json<MapInfoResponse>()
 		},
 		// Keep this cached until the cache is manually invalidated by a map upload
 		staleTime: Infinity,
