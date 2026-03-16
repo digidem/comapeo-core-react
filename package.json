@@ -70,13 +70,13 @@
 		"type-fest": "5.4.4"
 	},
 	"peerDependencies": {
-		"@comapeo/core": "^6.0.1",
+		"@comapeo/core": "^6.0.2",
 		"@comapeo/ipc": "^7.0.0",
 		"@tanstack/react-query": "^5",
 		"react": "^18 || ^19"
 	},
 	"devDependencies": {
-		"@comapeo/core": "6.0.1",
+		"@comapeo/core": "6.0.2",
 		"@comapeo/ipc": "7.0.0",
 		"@eslint/compat": "2.0.3",
 		"@eslint/js": "9.39.4",

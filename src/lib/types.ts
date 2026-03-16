@@ -1,6 +1,4 @@
-import type { ComapeoDoc, ComapeoValue } from '@comapeo/core/schema.js' with {
-	'resolution-mode': 'import',
-}
+import type { ComapeoDoc, ComapeoValue } from '@comapeo/core/schema.js'
 
 export type WriteableDocumentType = Extract<
 	ComapeoDoc['schemaName'],

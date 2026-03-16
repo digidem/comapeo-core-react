@@ -78,10 +78,10 @@ export {
 	useExportGeoJSON,
 	useExportZipFile,
 } from './hooks/projects.js'
-export { type SyncState } from './lib/sync.js'
-export {
-	type WriteableDocument,
-	type WriteableDocumentType,
-	type WriteableValue,
+export type { SyncState } from './lib/sync.js'
+export type {
+	WriteableDocument,
+	WriteableDocumentType,
+	WriteableValue,
 } from './lib/types.js'
 export { HTTPError, isHTTPError } from './lib/http.js'
