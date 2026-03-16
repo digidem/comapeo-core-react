@@ -387,13 +387,7 @@ Retrieve all members of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-<<<<<<< HEAD
-| `useManyMembers` | `({ projectId, includeLeft, }: { projectId: string; includeLeft?: boolean or undefined; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
-||||||| 8297e59
-| `useManyMembers` | `({ projectId }: { projectId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
-=======
 | `useManyMembers` | `<T extends boolean>({ projectId, includeLeft, }: { projectId: string; includeLeft?: T or undefined; }) => Pick<UseSuspenseQueryResult<T extends true ? MemberInfo[] : ActiveMemberInfo[]>, "data" or ... 1 more ... or "isRefetching">` |
->>>>>>> main
 
 Parameters:
 
@@ -407,13 +401,7 @@ function BasicExample() {
   const activeMembers1 = useManyMembers({ projectId: '...' })
   const activeMembers2 = useManyMembers({ projectId: '...', includeLeft: false })
 
-<<<<<<< HEAD
-	 const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
-||||||| 8297e59
-  console.log(data.role)
-=======
   const allMembers = useManyMembers({ projectId: '...', includeLeft: true })
->>>>>>> main
 }
 ```
 
@@ -593,13 +581,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-<<<<<<< HEAD
-| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, any, unknown>; mutateAsync: UseMutateAsyncFunction<any, Error, any, unknown>; reset: () => void; status: "error"; } or { ...; }` |
-||||||| 8297e59
-| `useCreateProject` | `() => { error: Error; mutate: UseMutateFunction<any, Error, { name?: string or undefined; configPath?: string or undefined; } or undefined, unknown>; mutateAsync: UseMutateAsyncFunction<...>; reset: () => void; status: "error"; } or { ...; }` |
-=======
 | `useCreateProject` | `() => Pick<Override<MutationObserverIdleResult<any, Error, any, unknown>, { mutate: UseMutateFunction<any, Error, any, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
->>>>>>> main
 
 ### useLeaveProject
 
