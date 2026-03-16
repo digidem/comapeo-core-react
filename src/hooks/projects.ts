@@ -1,45 +1,31 @@
-import type { BlobApi, IconApi } from '@comapeo/core' with {
-	'resolution-mode': 'import',
-}
-import type { MapeoProjectApi } from '@comapeo/ipc' with {
-	'resolution-mode': 'import',
-}
+import type {
+	BlobApi,
+	EditableProjectSettings,
+	IconApi,
+	MemberApi,
+} from '@comapeo/core'
+import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import {
 	useMutation,
+	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
+	UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useEffect, useSyncExternalStore } from 'react'
 
 import {
-	addServerPeerMutationOptions,
-	changeMemberRoleMutationOptions,
-	connectSyncServersMutationOptions,
-	createBlobMutationOptions,
-	createProjectMutationOptions,
-	disconnectSyncServersMutationOptions,
-	documentCreatedByQueryOptions,
-	exportGeoJSONMutationOptions,
-	exportZipFileMutationOptions,
+	baseMutationOptions,
+	baseQueryOptions,
+	getDocumentCreatedByQueryKey,
+	getMediaServerOriginQueryKey,
+	getMemberByIdQueryKey,
 	getMembersQueryKey,
+	getProjectByIdQueryKey,
 	getProjectRoleQueryKey,
-	importProjectCategoriesMutationOptions,
-	importProjectConfigMutationOptions,
-	leaveProjectMutationOptions,
-	mediaServerOriginQueryOptions,
-	projectByIdQueryOptions,
-	projectMemberByIdQueryOptions,
-	projectMembersQueryOptions,
-	projectOwnRoleQueryOptions,
-	projectSettingsQueryOptions,
-	projectsQueryOptions,
-	removeProjectMemberMutationOptions,
-	removeServerPeerMutationOptions,
-	setAutostopDataSyncTimeoutMutationOptions,
-	startSyncMutationOptions,
-	stopSyncMutationOptions,
-	updateProjectSettingsMutationOptions,
-} from '../lib/react-query/projects.js'
+	getProjectSettingsQueryKey,
+	getProjectsQueryKey,
+} from '../lib/react-query.js'
 import { SyncStore, type SyncState } from '../lib/sync.js'
 import { getBlobUrl, getIconUrl } from '../lib/urls.js'
 import { useClientApi } from './client.js'
@@ -58,22 +44,25 @@ import { useClientApi } from './client.js'
  * }
  * ```
  */
-export function useProjectSettings({ projectId }: { projectId: string }) {
-	const clientApi = useClientApi()
+export function useProjectSettings({
+	projectId,
+}: {
+	projectId: string
+}): Pick<
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<MapeoProjectApi['$getProjectSettings']>>
+	>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data: projectApi } = useSuspenseQuery(
-		projectByIdQueryOptions({
-			projectId,
-			clientApi,
-		}),
-	)
-
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectSettingsQueryOptions({
-			projectApi,
-			projectId,
-		}),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getProjectSettingsQueryKey({ projectId }),
+		queryFn: async () => {
+			return projectApi.$getProjectSettings()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -92,18 +81,22 @@ export function useProjectSettings({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useSingleProject({ projectId }: { projectId: string }): {
-	data: MapeoProjectApi
-	error: Error | null
-	isRefetching: boolean
-} {
+export function useSingleProject({
+	projectId,
+}: {
+	projectId: string
+}): Pick<
+	UseSuspenseQueryResult<MapeoProjectApi>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery({
-		...projectByIdQueryOptions({
-			clientApi,
-			projectId,
-		}),
+		...baseQueryOptions(),
+		queryKey: getProjectByIdQueryKey({ projectId }),
+		queryFn: async () => {
+			return clientApi.getProject(projectId)
+		},
 		// Keep project instances around indefinitely - shouldn't be a memory
 		// problem because these are only lightweight proxy objects, and project
 		// references are kept indefinitely on the backend anyway once they are
@@ -127,14 +120,19 @@ export function useSingleProject({ projectId }: { projectId: string }): {
  * }
  * ```
  */
-export function useManyProjects() {
+export function useManyProjects(): Pick<
+	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['listProjects']>>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectsQueryOptions({
-			clientApi,
-		}),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getProjectsQueryKey(),
+		queryFn: async () => {
+			return clientApi.listProjects()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -160,16 +158,21 @@ export function useSingleMember({
 }: {
 	projectId: string
 	deviceId: string
-}) {
+}): Pick<
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<MapeoProjectApi['$member']['getById']>>
+	>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectMemberByIdQueryOptions({
-			projectApi,
-			projectId,
-			deviceId,
-		}),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getMemberByIdQueryKey({ projectId, deviceId }),
+		queryFn: async () => {
+			return projectApi.$member.getById(deviceId)
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -189,18 +192,29 @@ export function useSingleMember({
  * }
  * ```
  */
-export function useManyMembers({
+export function useManyMembers<T extends boolean>({
 	projectId,
 	includeLeft,
 }: {
 	projectId: string
-	includeLeft?: boolean
-}) {
+	includeLeft?: T
+}): Pick<
+	UseSuspenseQueryResult<
+		T extends true
+			? Array<MemberApi.MemberInfo>
+			: Array<MemberApi.ActiveMemberInfo>
+	>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectMembersQueryOptions({ projectApi, projectId, includeLeft }),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getMembersQueryKey({ projectId, includeLeft }),
+		queryFn: async () => {
+			return projectApi.$member.getMany({ includeLeft })
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -247,7 +261,10 @@ export function useIconUrl({
 }: {
 	projectId: string
 	iconId: string
-} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
+} & (IconApi.BitmapOpts | IconApi.SvgOpts)): Pick<
+	UseSuspenseQueryResult<string>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const {
@@ -255,6 +272,7 @@ export function useIconUrl({
 		error,
 		isRefetching,
 	} = useMediaServerOrigin({ projectApi })
+
 	const iconUrl = getIconUrl({
 		serverOrigin,
 		iconId,
@@ -322,7 +340,7 @@ export function useAttachmentUrl({
 }: {
 	projectId: string
 	blobId: BlobApi.BlobId
-}) {
+}): Pick<UseSuspenseQueryResult<string>, 'data' | 'error' | 'isRefetching'> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const {
@@ -330,21 +348,43 @@ export function useAttachmentUrl({
 		error,
 		isRefetching,
 	} = useMediaServerOrigin({ projectApi })
+
 	const blobUrl = getBlobUrl({ serverOrigin, projectId, blobId })
 
 	return { data: blobUrl, error, isRefetching }
+}
+
+// Used as a placeholder so that we can read the server port from the $blobs.getUrl() method
+const FAKE_BLOB_ID: BlobApi.BlobId = {
+	type: 'photo',
+	variant: 'original',
+	name: 'name',
+	driveId: 'drive-id',
 }
 
 /**
  * @internal
  * Hack to retrieve the media server origin (protocol + host).
  */
-function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
-	const { data, error, isRefetching } = useSuspenseQuery(
-		mediaServerOriginQueryOptions({
-			projectApi,
-		}),
-	)
+function useMediaServerOrigin({
+	projectApi,
+}: {
+	projectApi: MapeoProjectApi
+}): Pick<UseSuspenseQueryResult<string>, 'data' | 'error' | 'isRefetching'> {
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		// HACK: The server doesn't yet expose a method to get its origin, so we use
+		// the existing $blobs.getUrl() to get the origin with a fake BlobId. The origin
+		// is the same regardless of the blobId, so it's not necessary to include it
+		// as a dep for the query key.
+		queryKey: getMediaServerOriginQueryKey(),
+		queryFn: async () => {
+			const url = await projectApi.$blobs.getUrl(FAKE_BLOB_ID)
+			return new URL(url).origin
+		},
+		staleTime: 'static',
+		gcTime: Infinity,
+	})
 
 	return { data, error, isRefetching }
 }
@@ -374,14 +414,21 @@ export function useDocumentCreatedBy({
 }: {
 	projectId: string
 	originalVersionId: string
-}) {
+}): UseSuspenseQueryResult<string> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		documentCreatedByQueryOptions({ projectApi, projectId, originalVersionId }),
-	)
-
-	return { data, error, isRefetching }
+	return useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getDocumentCreatedByQueryKey({
+			projectId,
+			originalVersionId,
+		}),
+		queryFn: async () => {
+			return projectApi.$originalVersionIdToDeviceId(originalVersionId)
+		},
+		staleTime: 'static',
+		gcTime: Infinity,
+	})
 }
 
 /**
@@ -399,72 +446,132 @@ export function useDocumentCreatedBy({
  * }
  * ```
  */
-export function useOwnRoleInProject({ projectId }: { projectId: string }) {
+export function useOwnRoleInProject({
+	projectId,
+}: {
+	projectId: string
+}): Pick<
+	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi['$getOwnRole']>>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		projectOwnRoleQueryOptions({ projectApi, projectId }),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getProjectRoleQueryKey({ projectId }),
+		queryFn: async () => {
+			return projectApi.$getOwnRole()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
 
-export function useAddServerPeer({ projectId }: { projectId: string }) {
+export function useAddServerPeer({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	void,
+	Error,
+	{ baseUrl: string; dangerouslyAllowInsecureConnections?: boolean }
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		addServerPeerMutationOptions({ projectApi, projectId, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ baseUrl, dangerouslyAllowInsecureConnections }) => {
+			return projectApi.$member.addServerPeer(baseUrl, {
+				dangerouslyAllowInsecureConnections,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
-export function useRemoveServerPeer({ projectId }: { projectId: string }) {
+export function useRemoveServerPeer({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	void,
+	Error,
+	{ serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean }
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		removeServerPeerMutationOptions({ projectApi, projectId, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({
+			serverDeviceId,
+			dangerouslyAllowInsecureConnections,
+		}) => {
+			return projectApi.$member.removeServerPeer(serverDeviceId, {
+				dangerouslyAllowInsecureConnections,
+			})
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
  * Create a new project.
  */
-export function useCreateProject() {
+export function useCreateProject(): UseMutationResult<
+	string,
+	Error,
+	Parameters<MapeoClientApi['createProject']>[0] | undefined
+> {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		createProjectMutationOptions({ clientApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return opts ? clientApi.createProject(opts) : clientApi.createProject()
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
 }
 
 /**
  * Leave an existing project.
  */
-export function useLeaveProject() {
+export function useLeaveProject(): UseMutationResult<
+	void,
+	Error,
+	{ projectId: string }
+> {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		leaveProjectMutationOptions({ clientApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ projectId }) => {
+			return clientApi.leaveProject(projectId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
 }
 
 /**
@@ -476,21 +583,21 @@ export function useImportProjectCategories({
 	projectId,
 }: {
 	projectId: string
-}) {
+}): UseMutationResult<void, Error, { filePath: string }> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		importProjectCategoriesMutationOptions({
-			queryClient,
-			projectApi,
-			projectId,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: ({ filePath }) => {
+			return projectApi.$importCategories({ filePath })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectByIdQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
@@ -499,17 +606,25 @@ export function useImportProjectCategories({
  * @deprecated Use `useImportProjectCategories` instead.
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useImportProjectConfig({ projectId }: { projectId: string }) {
+export function useImportProjectConfig({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<Array<Error>, Error, { configPath: string }> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		importProjectConfigMutationOptions({ queryClient, projectApi, projectId }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: ({ configPath }) => {
+			return projectApi.importConfig({ configPath })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectByIdQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
@@ -517,17 +632,29 @@ export function useImportProjectConfig({ projectId }: { projectId: string }) {
  *
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
+export function useUpdateProjectSettings({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	EditableProjectSettings,
+	Error,
+	Partial<EditableProjectSettings>
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		updateProjectSettingsMutationOptions({ projectApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async (value) => {
+			return projectApi.$setProjectSettings(value)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
 }
 
 /**
@@ -544,17 +671,35 @@ export function useUpdateProjectSettings({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useChangeMemberRole({ projectId }: { projectId: string }) {
+export function useChangeMemberRole({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	void,
+	Error,
+	{
+		deviceId: string
+		roleId: MemberApi.RoleIdAssignableToOthers
+	}
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		changeMemberRoleMutationOptions({ projectApi, projectId, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ deviceId, roleId }) => {
+			return projectApi.$member.assignRole(deviceId, roleId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectRoleQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
@@ -576,17 +721,36 @@ export function useChangeMemberRole({ projectId }: { projectId: string }) {
  * }
  * ```
  */
-export function useRemoveMember({ projectId }: { projectId: string }) {
+export function useRemoveMember({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	void,
+	Error,
+	{
+		deviceId: string
+		reason?: string
+	}
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		removeProjectMemberMutationOptions({ projectId, projectApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ deviceId, reason }) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return reason
+				? projectApi.$member.remove(deviceId, { reason })
+				: projectApi.$member.remove(deviceId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
@@ -652,16 +816,36 @@ export function useProjectOwnRoleChangeListener({
  *
  * @param opts.projectId Public project ID of project to apply to changes to.
  */
-export function useCreateBlob({ projectId }: { projectId: string }) {
+export function useCreateBlob({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	{
+		driveId: string
+		name: string
+		type: 'photo' | 'audio' | 'video'
+		hash: string
+	},
+	Error,
+	{
+		original: string
+		preview?: string
+		thumbnail?: string
+		metadata: BlobApi.Metadata
+	}
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		createBlobMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ original, preview, thumbnail, metadata }) => {
+			return projectApi.$blobs.create(
+				{ original, preview, thumbnail },
+				metadata,
+			)
+		},
+	})
 }
 
 const PROJECT_SYNC_STORE_MAP = new WeakMap<MapeoProjectApi, SyncStore>()
@@ -727,68 +911,85 @@ export function useDataSyncProgress({
 	return useSyncExternalStore(subscribe, getDataProgressSnapshot)
 }
 
-export function useStartSync({ projectId }: { projectId: string }) {
+export function useStartSync({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	void,
+	Error,
+	{ autostopDataSyncAfter: number | null } | undefined
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		startSyncMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			// Have to avoid passing `undefined` explicitly
+			// See https://github.com/digidem/rpc-reflector/issues/21
+			return opts ? projectApi.$sync.start(opts) : projectApi.$sync.start()
+		},
+	})
 }
 
-export function useStopSync({ projectId }: { projectId: string }) {
+export function useStopSync({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<void, Error, void> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		stopSyncMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.stop()
+		},
+	})
 }
 
-export function useConnectSyncServers({ projectId }: { projectId: string }) {
+export function useConnectSyncServers({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<void, Error, void> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		connectSyncServersMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.connectServers()
+		},
+	})
 }
 
-export function useDisconnectSyncServers({ projectId }: { projectId: string }) {
+export function useDisconnectSyncServers({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<void, Error, void> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		disconnectSyncServersMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async () => {
+			return projectApi.$sync.disconnectServers()
+		},
+	})
 }
 
 export function useSetAutostopDataSyncTimeout({
 	projectId,
 }: {
 	projectId: string
-}) {
+}): UseMutationResult<void, Error, { after: number | null }> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		setAutostopDataSyncTimeoutMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ after }) => {
+			return projectApi.$sync.setAutostopDataSyncTimeout(after)
+		},
+	})
 }
 
 /**
@@ -796,16 +997,30 @@ export function useSetAutostopDataSyncTimeout({
  *
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useExportGeoJSON({ projectId }: { projectId: string }) {
+export function useExportGeoJSON({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	string,
+	Error,
+	{
+		path: string
+		exportOptions: {
+			observations?: boolean
+			tracks?: boolean
+			lang?: string
+		}
+	}
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		exportGeoJSONMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			return projectApi.exportGeoJSONFile(opts.path, opts.exportOptions)
+		},
+	})
 }
 
 /**
@@ -813,14 +1028,29 @@ export function useExportGeoJSON({ projectId }: { projectId: string }) {
  *
  * @param opts.projectId Public ID of the project to apply changes to.
  */
-export function useExportZipFile({ projectId }: { projectId: string }) {
+export function useExportZipFile({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	string,
+	Error,
+	{
+		path: string
+		exportOptions: {
+			observations?: boolean
+			tracks?: boolean
+			lang?: string
+			attachments?: boolean
+		}
+	}
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		exportZipFileMutationOptions({ projectApi }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async (opts) => {
+			return projectApi.exportZipFile(opts.path, opts.exportOptions)
+		},
+	})
 }

@@ -1,6 +1,4 @@
-import type { ComapeoDoc, ComapeoValue } from '@comapeo/core/schema.js' with {
-	'resolution-mode': 'import',
-}
+import type { ComapeoDoc, ComapeoValue } from '@comapeo/core/schema.js'
 
 export type WriteableDocumentType = Extract<
 	ComapeoDoc['schemaName'],
@@ -14,11 +12,5 @@ export type WriteableDocument<D extends WriteableDocumentType> = Extract<
 	ComapeoDoc,
 	{ schemaName: D }
 >
-
-export type DerivedDocFields = {
-	forks: Array<string>
-	createdBy: string
-	updatedBy: string
-}
 
 export {}

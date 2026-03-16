@@ -1,17 +1,20 @@
+import { InviteApi, MemberApi } from '@comapeo/core'
 import {
 	useMutation,
+	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
+	UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 
 import {
-	acceptInviteMutationOptions,
-	getInviteByIdQueryOptions,
-	getInvitesQueryOptions,
-	rejectInviteMutationOptions,
-	requestCancelInviteMutationOptions,
-	sendInviteMutationOptions,
-} from '../lib/react-query/invites.js'
+	baseMutationOptions,
+	baseQueryOptions,
+	getInvitesByIdQueryKey,
+	getInvitesQueryKey,
+	getMembersQueryKey,
+	getProjectsQueryKey,
+} from '../lib/react-query.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 
@@ -25,11 +28,19 @@ import { useSingleProject } from './projects.js'
  * }
  * ```
  */
-export function useManyInvites() {
+export function useManyInvites(): Pick<
+	UseSuspenseQueryResult<Array<InviteApi.Invite>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
-	const { data, error, isRefetching } = useSuspenseQuery(
-		getInvitesQueryOptions({ clientApi }),
-	)
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getInvitesQueryKey(),
+		queryFn: async () => {
+			return clientApi.invite.getMany()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -46,12 +57,23 @@ export function useManyInvites() {
  * }
  * ```
  */
-export function useSingleInvite({ inviteId }: { inviteId: string }) {
+export function useSingleInvite({
+	inviteId,
+}: {
+	inviteId: string
+}): Pick<
+	UseSuspenseQueryResult<InviteApi.Invite>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		getInviteByIdQueryOptions({ clientApi, inviteId }),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getInvitesByIdQueryKey({ inviteId }),
+		queryFn: async () => {
+			return clientApi.invite.getById(inviteId)
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -59,33 +81,55 @@ export function useSingleInvite({ inviteId }: { inviteId: string }) {
 /**
  * Accept an invite that has been received.
  */
-export function useAcceptInvite() {
+export function useAcceptInvite(): UseMutationResult<
+	string,
+	Error,
+	{ inviteId: string }
+> {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		acceptInviteMutationOptions({ clientApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ inviteId }) => {
+			return clientApi.invite.accept({ inviteId })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
 }
 
 /**
  * Reject an invite that has been received.
  */
-export function useRejectInvite() {
+export function useRejectInvite(): UseMutationResult<
+	string,
+	Error,
+	{ inviteId: string }
+> {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		rejectInviteMutationOptions({ clientApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ inviteId }) => {
+			return clientApi.invite.accept({ inviteId })
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getProjectsQueryKey(),
+			})
+		},
+	})
 }
 
 /**
@@ -93,17 +137,37 @@ export function useRejectInvite() {
  *
  * @param opts.projectId Public ID of project to send the invite on behalf of.
  */
-export function useSendInvite({ projectId }: { projectId: string }) {
+export function useSendInvite({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<
+	'ACCEPT' | 'REJECT' | 'ALREADY',
+	Error,
+	{
+		deviceId: string
+		roleDescription?: string
+		roleId: MemberApi.RoleIdForNewInvite
+		roleName?: string
+	}
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		sendInviteMutationOptions({ projectApi, projectId, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ deviceId, ...role }) => {
+			return projectApi.$member.invite(deviceId, role)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+			queryClient.invalidateQueries({
+				queryKey: getMembersQueryKey({ projectId }),
+			})
+		},
+	})
 }
 
 /**
@@ -111,15 +175,23 @@ export function useSendInvite({ projectId }: { projectId: string }) {
  *
  * @param opts.projectId Public ID of project to request the invite cancellation for.
  */
-export function useRequestCancelInvite({ projectId }: { projectId: string }) {
+export function useRequestCancelInvite({
+	projectId,
+}: {
+	projectId: string
+}): UseMutationResult<void, Error, { deviceId: string }> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		requestCancelInviteMutationOptions({ projectApi, queryClient }),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ deviceId }) => {
+			return projectApi.$member.requestCancelInvite(deviceId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getInvitesQueryKey(),
+			})
+		},
+	})
 }

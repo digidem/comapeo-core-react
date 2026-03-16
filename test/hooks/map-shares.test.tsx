@@ -58,10 +58,9 @@ async function createShareWithHook({
 	senderWrapper: ReturnType<typeof createWrapper>
 	receiverDeviceId: string
 }): Promise<SentMapShareState> {
-	const { result } = renderHook(
-		() => useSendMapShare({ projectId: 'test-project-id' }),
-		{ wrapper: senderWrapper },
-	)
+	const { result } = renderHook(() => useSendMapShare(), {
+		wrapper: senderWrapper,
+	})
 
 	let createdShare: Awaited<
 		ReturnType<typeof result.current.mutateAsync>
@@ -866,19 +865,13 @@ describe('Sent Map Shares Hooks', () => {
 
 	describe('useSendMapShare', () => {
 		it('should have idle status initially', () => {
-			const { result } = renderHook(
-				() => useSendMapShare({ projectId: 'test-project-id' }),
-				{ wrapper },
-			)
+			const { result } = renderHook(() => useSendMapShare(), { wrapper })
 
 			expect(result.current.status).toBe('idle')
 		})
 
 		it('should create and send a map share', async () => {
-			const { result } = renderHook(
-				() => useSendMapShare({ projectId: 'test-project-id' }),
-				{ wrapper },
-			)
+			const { result } = renderHook(() => useSendMapShare(), { wrapper })
 
 			let createdShare: Awaited<
 				ReturnType<typeof result.current.mutateAsync>
@@ -905,10 +898,7 @@ describe('Sent Map Shares Hooks', () => {
 		})
 
 		it('should call clientApi.getProject and $sendMapShare', async () => {
-			const { result } = renderHook(
-				() => useSendMapShare({ projectId: 'test-project-id' }),
-				{ wrapper },
-			)
+			const { result } = renderHook(() => useSendMapShare(), { wrapper })
 
 			act(() => {
 				result.current.mutate({
@@ -937,7 +927,7 @@ describe('Sent Map Shares Hooks', () => {
 		it('should cancel a pending sent share', async () => {
 			const { result } = renderHook(
 				() => ({
-					send: useSendMapShare({ projectId: 'test-project-id' }),
+					send: useSendMapShare(),
 					cancel: useCancelSentMapShare(),
 				}),
 				{ wrapper },
@@ -1008,7 +998,7 @@ describe('Sent Map Shares Hooks', () => {
 			// Stateful wrapper that creates a share and only renders children
 			// once the share exists in the store
 			function WaitForShareWrapper({ children }: PropsWithChildren) {
-				const send = useSendMapShare({ projectId: 'test-project-id' })
+				const send = useSendMapShare()
 				const [localShareId, setLocalShareId] = useState<string | null>(null)
 				const mutationStarted = useRef(false)
 

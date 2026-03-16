@@ -1,23 +1,24 @@
-import type { Preset } from '@comapeo/core/schema.js' with {
-	'resolution-mode': 'import',
-}
+import type { Preset } from '@comapeo/core/schema.js'
+import { MapeoProjectApi } from '@comapeo/ipc'
 import {
 	useMutation,
+	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
+	UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { getPresetsSelection } from '../lib/presets.js'
 import {
-	createDocumentMutationOptions,
-	deleteDocumentMutationOptions,
-	documentByDocumentIdQueryOptions,
-	documentByVersionIdQueryOptions,
-	documentsQueryOptions,
-	updateDocumentMutationOptions,
-} from '../lib/react-query/documents.js'
-import type { WriteableDocumentType } from '../lib/types.js'
+	baseMutationOptions,
+	baseQueryOptions,
+	getDocumentByDocIdQueryKey,
+	getDocumentByVersionIdQueryKey,
+	getDocumentsQueryKey,
+	getManyDocumentsQueryKey,
+} from '../lib/react-query.js'
+import type { WriteableDocumentType, WriteableValue } from '../lib/types.js'
 import { useProjectSettings, useSingleProject } from './projects.js'
 
 /**
@@ -53,21 +54,32 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
 	docType: D
 	docId: string
 	lang?: string
-}) {
+}): Pick<
+	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getByDocId']>>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		documentByDocumentIdQueryOptions({
-			projectApi,
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getDocumentByDocIdQueryKey({
 			projectId,
 			docType,
 			docId,
 			lang,
 		}),
-	)
+		queryFn: async () => {
+			return projectApi[docType].getByDocId(docId, {
+				lang,
+				// We want to make sure that this throws in the case that no match is found
+				mustBeFound: true,
+			})
+		},
+	})
 
 	return {
-		data: data as Extract<typeof data, { schemaName: D }>,
+		// @ts-expect-error Not smart enough
+		data,
 		error,
 		isRefetching,
 	}
@@ -106,21 +118,30 @@ export function useSingleDocByVersionId<D extends WriteableDocumentType>({
 	docType: D
 	versionId: string
 	lang?: string
-}) {
+}): Pick<
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<MapeoProjectApi[D]['getByVersionId']>>
+	>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		documentByVersionIdQueryOptions({
-			projectApi,
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getDocumentByVersionIdQueryKey({
 			projectId,
 			docType,
 			versionId,
 			lang,
 		}),
-	)
+		queryFn: async () => {
+			return projectApi[docType].getByVersionId(versionId, { lang })
+		},
+	})
 
 	return {
-		data: data as Extract<typeof data, { schemaName: D }>,
+		// @ts-expect-error Not smart enough
+		data,
 		error,
 		isRefetching,
 	}
@@ -170,21 +191,31 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	docType: D
 	includeDeleted?: boolean
 	lang?: string
-}) {
+}): Pick<
+	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getMany']>>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		documentsQueryOptions({
-			projectApi,
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getManyDocumentsQueryKey({
 			projectId,
 			docType,
 			includeDeleted,
 			lang,
 		}),
-	)
+		queryFn: async () => {
+			return projectApi[docType].getMany({
+				includeDeleted,
+				lang,
+			})
+		},
+	})
 
 	return {
-		data: data as Extract<typeof data, Array<{ schemaName: D }>>,
+		// @ts-expect-error Not smart enough
+		data,
 		error,
 		isRefetching,
 	}
@@ -202,22 +233,32 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 }: {
 	docType: D
 	projectId: string
-}) {
+}): UseMutationResult<
+	Awaited<ReturnType<MapeoProjectApi[D]['create']>>,
+	Error,
+	{ value: Omit<WriteableValue<D>, 'schemaName'> }
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		createDocumentMutationOptions({
-			docType,
-			projectApi,
-			projectId,
-			queryClient,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ value }) => {
+			return (
+				projectApi[docType]
+					// @ts-expect-error TS not handling this well
+					.create({ ...value, schemaName: docType })
+			)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	})
 }
 
 /**
@@ -232,22 +273,32 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
 }: {
 	docType: D
 	projectId: string
-}) {
+}): UseMutationResult<
+	Awaited<ReturnType<MapeoProjectApi[D]['update']>>,
+	Error,
+	{ versionId: string; value: Omit<WriteableValue<D>, 'schemaName'> }
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		updateDocumentMutationOptions({
-			docType,
-			projectApi,
-			projectId,
-			queryClient,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ versionId, value }) => {
+			return (
+				projectApi[docType]
+					// @ts-expect-error TS not handling this well
+					.update(versionId, value)
+			)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	})
 }
 
 /**
@@ -262,23 +313,31 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 }: {
 	docType: D
 	projectId: string
-}) {
+}): UseMutationResult<
+	Awaited<ReturnType<MapeoProjectApi[D]['delete']>>,
+	Error,
+	{ docId: string }
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		deleteDocumentMutationOptions({
-			docType,
-			projectApi,
-			projectId,
-			queryClient,
-		}),
-	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
+	// @ts-expect-error Not sure why TS is complaining
+	return useMutation({
+		...baseMutationOptions(),
+		mutationFn: async ({ docId }) => {
+			return projectApi[docType].delete(docId)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: getDocumentsQueryKey({
+					projectId,
+					docType,
+				}),
+			})
+		},
+	})
 }
+
 const dataTypeToGeometry = {
 	observation: 'point',
 	track: 'line',
