@@ -13,10 +13,4 @@ export type WriteableDocument<D extends WriteableDocumentType> = Extract<
 	{ schemaName: D }
 >
 
-export type DerivedDocFields = {
-	forks: Array<string>
-	createdBy: string
-	updatedBy: string
-}
-
 export {}
