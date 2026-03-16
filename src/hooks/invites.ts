@@ -1,9 +1,9 @@
-import { InviteApi, MemberApi } from '@comapeo/core'
+import type { InviteApi, MemberApi } from '@comapeo/core'
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
-	UseSuspenseQueryResult,
+	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 
 import {
@@ -28,7 +28,8 @@ import { useSingleProject } from './projects.js'
  * }
  * ```
  */
-export function useManyInvites(): Pick<
+export function useManyInvites(): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<Array<InviteApi.Invite>>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -61,7 +62,8 @@ export function useSingleInvite({
 	inviteId,
 }: {
 	inviteId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<InviteApi.Invite>,
 	'data' | 'error' | 'isRefetching'
 > {

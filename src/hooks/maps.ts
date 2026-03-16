@@ -1,11 +1,10 @@
-import { MapInfo } from '@comapeo/map-server'
+import type { MapInfo } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID, DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
 import {
 	useMutation,
 	useQuery,
 	useQueryClient,
-	UseQueryResult,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
 import { useCallback } from 'react'
@@ -17,14 +16,14 @@ import {
 	useSentMapSharesActions,
 	useSentMapSharesState,
 } from '../contexts/MapShares.js'
-import {
+import type {
 	AbortMapShareOptions,
 	CancelMapShareOptions,
 	CreateAndSendMapShareOptions,
 	DeclineMapShareOptions,
 	DownloadMapShareOptions,
-	type ReceivedMapShareState,
-	type SentMapShareState,
+	ReceivedMapShareState,
+	SentMapShareState,
 } from '../lib/map-shares-stores.js'
 import {
 	baseMutationOptions,
@@ -153,10 +152,7 @@ export function useRemoveCustomMapFile() {
 	)
 }
 
-export function useGetCustomMapInfo(): Pick<
-	UseQueryResult<MapInfo>,
-	'data' | 'error' | 'isRefetching'
-> {
+export function useGetCustomMapInfo() {
 	const mapServerApi = useMapServerApi()
 
 	// TODO: Support custom maps

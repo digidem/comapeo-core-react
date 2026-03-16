@@ -1,10 +1,10 @@
-import { MapeoProjectApi } from '@comapeo/ipc'
+import type { MapeoProjectApi } from '@comapeo/ipc'
 import {
 	useMutation,
-	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
-	UseSuspenseQueryResult,
+	type UseMutationResult,
+	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
@@ -55,7 +55,8 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
 	docType: D
 	docId: string
 	lang?: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS struggles with inference
+Pick<
 	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getByDocId']>>>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -119,7 +120,8 @@ export function useSingleDocByVersionId<D extends WriteableDocumentType>({
 	docType: D
 	versionId: string
 	lang?: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS struggles with inference
+Pick<
 	UseSuspenseQueryResult<
 		Awaited<ReturnType<MapeoProjectApi[D]['getByVersionId']>>
 	>,
@@ -192,7 +194,8 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	docType: D
 	includeDeleted?: boolean
 	lang?: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS struggles with inference
+Pick<
 	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getMany']>>>,
 	'data' | 'error' | 'isRefetching'
 > {

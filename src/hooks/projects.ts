@@ -10,7 +10,7 @@ import {
 	UseMutationResult,
 	useQueryClient,
 	useSuspenseQuery,
-	UseSuspenseQueryResult,
+	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useEffect, useSyncExternalStore } from 'react'
 
@@ -50,7 +50,8 @@ export function useProjectSettings({
 	projectId,
 }: {
 	projectId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<
 		Awaited<ReturnType<MapeoProjectApi['$getProjectSettings']>>
 	>,
@@ -87,7 +88,8 @@ export function useSingleProject({
 	projectId,
 }: {
 	projectId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<MapeoProjectApi>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -122,7 +124,8 @@ export function useSingleProject({
  * }
  * ```
  */
-export function useManyProjects(): Pick<
+export function useManyProjects(): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['listProjects']>>>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -160,7 +163,8 @@ export function useSingleMember({
 }: {
 	projectId: string
 	deviceId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<
 		Awaited<ReturnType<MapeoProjectApi['$member']['getById']>>
 	>,
@@ -200,7 +204,8 @@ export function useManyMembers<T extends boolean>({
 }: {
 	projectId: string
 	includeLeft?: T
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<
 		T extends true
 			? Array<MemberApi.MemberInfo>
@@ -263,10 +268,7 @@ export function useIconUrl({
 }: {
 	projectId: string
 	iconId: string
-} & (IconApi.BitmapOpts | IconApi.SvgOpts)): Pick<
-	UseSuspenseQueryResult<string>,
-	'data' | 'error' | 'isRefetching'
-> {
+} & (IconApi.BitmapOpts | IconApi.SvgOpts)) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const {
@@ -342,7 +344,7 @@ export function useAttachmentUrl({
 }: {
 	projectId: string
 	blobId: BlobApi.BlobId
-}): Pick<UseSuspenseQueryResult<string>, 'data' | 'error' | 'isRefetching'> {
+}) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
 	const {
@@ -368,11 +370,7 @@ const FAKE_BLOB_ID: BlobApi.BlobId = {
  * @internal
  * Hack to retrieve the media server origin (protocol + host).
  */
-function useMediaServerOrigin({
-	projectApi,
-}: {
-	projectApi: MapeoProjectApi
-}): Pick<UseSuspenseQueryResult<string>, 'data' | 'error' | 'isRefetching'> {
+function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
 	const { data, error, isRefetching } = useSuspenseQuery({
 		...baseQueryOptions(),
 		// HACK: The server doesn't yet expose a method to get its origin, so we use
@@ -416,10 +414,10 @@ export function useDocumentCreatedBy({
 }: {
 	projectId: string
 	originalVersionId: string
-}): UseSuspenseQueryResult<string> {
+}) {
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	return useSuspenseQuery({
+	const { data, error, isRefetching } = useSuspenseQuery({
 		...baseQueryOptions(),
 		queryKey: getDocumentCreatedByQueryKey({
 			projectId,
@@ -431,6 +429,8 @@ export function useDocumentCreatedBy({
 		staleTime: 'static',
 		gcTime: Infinity,
 	})
+
+	return { data, error, isRefetching }
 }
 
 /**
@@ -452,7 +452,8 @@ export function useOwnRoleInProject({
 	projectId,
 }: {
 	projectId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi['$getOwnRole']>>>,
 	'data' | 'error' | 'isRefetching'
 > {

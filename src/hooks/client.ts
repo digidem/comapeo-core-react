@@ -65,7 +65,8 @@ export function useClientApi(): MapeoClientApi {
  * }
  * ```
  */
-export function useOwnDeviceInfo(): Pick<
+export function useOwnDeviceInfo(): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['getDeviceInfo']>>>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -92,12 +93,7 @@ export function useOwnDeviceInfo(): Pick<
  * }
  * ```
  */
-export function useIsArchiveDevice(): Pick<
-	UseSuspenseQueryResult<
-		Awaited<ReturnType<MapeoClientApi['getIsArchiveDevice']>>
-	>,
-	'data' | 'error' | 'isRefetching'
-> {
+export function useIsArchiveDevice() {
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery({
