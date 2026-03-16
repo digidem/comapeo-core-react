@@ -1,17 +1,15 @@
-import type { MapeoDoc, MapeoValue } from '@comapeo/schema' with {
-	'resolution-mode': 'import',
-}
+import type { ComapeoDoc, ComapeoValue } from '@comapeo/core/schema.js'
 
 export type WriteableDocumentType = Extract<
-	MapeoDoc['schemaName'],
+	ComapeoDoc['schemaName'],
 	'field' | 'observation' | 'preset' | 'track' | 'remoteDetectionAlert'
 >
 export type WriteableValue<D extends WriteableDocumentType> = Extract<
-	MapeoValue,
+	ComapeoValue,
 	{ schemaName: D }
 >
 export type WriteableDocument<D extends WriteableDocumentType> = Extract<
-	MapeoDoc,
+	ComapeoDoc,
 	{ schemaName: D }
 >
 

@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module'
-import type { Preset } from '@comapeo/schema'
+import type { Preset } from '@comapeo/core/schema.js'
 import { generate } from '@mapeo/mock-data'
 import { describe, expect, it } from 'vitest'
 

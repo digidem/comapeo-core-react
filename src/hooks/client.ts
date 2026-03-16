@@ -1,20 +1,22 @@
-import type { MapeoClientApi } from '@comapeo/ipc' with {
-	'resolution-mode': 'import',
-}
+import type { DeviceInfo } from '@comapeo/core/schema.js'
+import type { MapeoClientApi } from '@comapeo/ipc'
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
+	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useContext } from 'react'
 
 import { ClientApiContext } from '../contexts/ClientApi.js'
 import {
-	deviceInfoQueryOptions,
-	isArchiveDeviceQueryOptions,
-	setIsArchiveDeviceMutationOptions,
-	setOwnDeviceInfoMutationOptions,
-} from '../lib/react-query/client.js'
+	baseMutationOptions,
+	baseQueryOptions,
+	filterMutationResult,
+	getDeviceInfoQueryKey,
+	getIsArchiveDeviceQueryKey,
+	getProjectsQueryKey,
+} from '../lib/react-query.js'
 
 /**
  * Access a client API instance. If a ClientApiContext provider is not
@@ -63,12 +65,20 @@ export function useClientApi(): MapeoClientApi {
  * }
  * ```
  */
-export function useOwnDeviceInfo() {
+export function useOwnDeviceInfo(): // NOTE: Needs explicit return type due to TS2742
+Pick<
+	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['getDeviceInfo']>>>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		deviceInfoQueryOptions({ clientApi }),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getDeviceInfoQueryKey(),
+		queryFn: async () => {
+			return clientApi.getDeviceInfo()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -86,9 +96,13 @@ export function useOwnDeviceInfo() {
 export function useIsArchiveDevice() {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery(
-		isArchiveDeviceQueryOptions({ clientApi }),
-	)
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getIsArchiveDeviceQueryKey(),
+		queryFn: async () => {
+			return clientApi.getIsArchiveDevice()
+		},
+	})
 
 	return { data, error, isRefetching }
 }
@@ -100,13 +114,28 @@ export function useSetOwnDeviceInfo() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, reset, status } = useMutation(
-		setOwnDeviceInfoMutationOptions({ clientApi, queryClient }),
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				name,
+				deviceType,
+			}: {
+				name: string
+				deviceType: DeviceInfo['deviceType']
+			}) => {
+				return clientApi.setDeviceInfo({ name, deviceType })
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getDeviceInfoQueryKey(),
+				})
+				queryClient.invalidateQueries({
+					queryKey: getProjectsQueryKey(),
+				})
+			},
+		}),
 	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
 }
 
 /**
@@ -116,11 +145,17 @@ export function useSetIsArchiveDevice() {
 	const queryClient = useQueryClient()
 	const clientApi = useClientApi()
 
-	const { error, mutate, mutateAsync, status, reset } = useMutation(
-		setIsArchiveDeviceMutationOptions({ clientApi, queryClient }),
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ isArchiveDevice }: { isArchiveDevice: boolean }) => {
+				return clientApi.setIsArchiveDevice(isArchiveDevice)
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: getIsArchiveDeviceQueryKey(),
+				})
+			},
+		}),
 	)
-
-	return status === 'error'
-		? { error, mutate, mutateAsync, reset, status }
-		: { error: null, mutate, mutateAsync, reset, status }
 }
