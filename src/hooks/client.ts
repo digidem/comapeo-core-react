@@ -4,7 +4,7 @@ import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
-	UseSuspenseQueryResult,
+	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 import { useContext } from 'react'
 
