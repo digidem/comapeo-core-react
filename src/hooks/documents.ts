@@ -292,13 +292,12 @@ FilteredMutationResult<
 	UseMutationResult<
 		Awaited<ReturnType<MapeoProjectApi[D]['update']>>,
 		Error,
-		{ value: Omit<WriteableValue<D>, 'schemaName'> }
+		{ value: Omit<WriteableValue<D>, 'schemaName'>; versionId: string }
 	>
 > {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
-	// @ts-expect-error Not sure why TS complains here
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
