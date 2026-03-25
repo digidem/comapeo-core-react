@@ -65,8 +65,6 @@ export type AbortMapShareOptions = {
 
 /** Options for creating and sending a map share */
 export type CreateAndSendMapShareOptions = {
-	/** Public ID of the project to send the share on behalf of */
-	projectId: string
 	/** Device ID of the recipient */
 	receiverDeviceId: string
 	/** ID of the map to share - not needed until we support multiple maps */
@@ -324,7 +322,6 @@ export function createSentMapSharesStore({
 
 	const actions = {
 		async createAndSend({
-			projectId,
 			receiverDeviceId,
 			mapId = CUSTOM_MAP_ID,
 		}: CreateAndSendMapShareOptions) {
@@ -334,8 +331,7 @@ export function createSentMapSharesStore({
 				})
 				.json<ServerMapShareState>()
 			try {
-				const project = await clientApi.getProject(projectId)
-				await project.$sendMapShare(mapShare)
+				await clientApi.sendMapShare(mapShare)
 			} catch (e) {
 				await mapServerApi.post(`mapShares/${mapShare.shareId}/cancel`)
 				throw e
