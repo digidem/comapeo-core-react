@@ -5,7 +5,6 @@ export type MockClientApi = {
 	off: ReturnType<typeof vi.fn>
 	emit: (event: string, data: unknown) => void
 	listeners: Map<string, Array<(data: unknown) => void>>
-	getProject: ReturnType<typeof vi.fn>
 	sendMapShare: ReturnType<typeof vi.fn>
 	invite: {
 		addListener: ReturnType<typeof vi.fn>
@@ -43,12 +42,11 @@ export function createMockClientApi(): MockClientApi {
 	}
 
 	const sendMapShare = vi.fn().mockResolvedValue(undefined)
-	const getProject = vi.fn()
 
 	const invite = {
 		addListener: vi.fn(),
 		removeListener: vi.fn(),
 	}
 
-	return { on, off, emit, listeners, getProject, sendMapShare, invite }
+	return { on, off, emit, listeners, sendMapShare, invite }
 }
