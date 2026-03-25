@@ -68,7 +68,6 @@ async function createShareWithHook({
 
 	await act(async () => {
 		createdShare = await result.current.mutateAsync({
-			projectId: 'test-project-id',
 			receiverDeviceId,
 			mapId: 'custom',
 		})
@@ -879,7 +878,6 @@ describe('Sent Map Shares Hooks', () => {
 
 			await act(async () => {
 				createdShare = await result.current.mutateAsync({
-					projectId: 'test-project-id',
 					receiverDeviceId: receiver.deviceId,
 					mapId: 'custom',
 				})
@@ -897,12 +895,11 @@ describe('Sent Map Shares Hooks', () => {
 			expect(createdShare).toHaveProperty('shareId')
 		})
 
-		it('should call clientApi.getProject and $sendMapShare', async () => {
+		it('should call clientApi.sendMapShare', async () => {
 			const { result } = renderHook(() => useSendMapShare(), { wrapper })
 
 			act(() => {
 				result.current.mutate({
-					projectId: 'test-project-id',
 					receiverDeviceId: receiver.deviceId,
 					mapId: 'custom',
 				})
@@ -912,8 +909,7 @@ describe('Sent Map Shares Hooks', () => {
 				expect(result.current.status).toBe('success')
 			})
 
-			expect(mockClientApi.getProject).toHaveBeenCalledWith('test-project-id')
-			expect(mockClientApi.$sendMapShare).toHaveBeenCalled()
+			expect(mockClientApi.sendMapShare).toHaveBeenCalled()
 		})
 	})
 
@@ -940,7 +936,6 @@ describe('Sent Map Shares Hooks', () => {
 			// First create a share
 			await act(async () => {
 				createdShare = await result.current.send.mutateAsync({
-					projectId: 'test-project-id',
 					receiverDeviceId: receiver.deviceId,
 					mapId: 'custom',
 				})
@@ -1008,7 +1003,6 @@ describe('Sent Map Shares Hooks', () => {
 						mutationStarted.current = true
 						send
 							.mutateAsync({
-								projectId: 'test-project-id',
 								receiverDeviceId: receiver.deviceId,
 								mapId: 'custom',
 							})

@@ -111,7 +111,6 @@ describe('ReceivedMapSharesStore', () => {
 		it('should update status when sender cancels during download', async () => {
 			// Sender creates a share
 			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
