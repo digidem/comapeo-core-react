@@ -12,7 +12,6 @@
 import '../helpers/jsdom-setup.js'
 
 import { type MapeoClientApi } from '@comapeo/ipc'
-import { errors } from '@comapeo/map-server'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import {
 	Suspense,
@@ -187,7 +186,7 @@ describe('Received Map Shares Hooks', () => {
 					() => useSingleReceivedMapShare({ shareId: 'non-existent' }),
 					{ wrapper: receiverWrapper },
 				)
-			}).toThrow('Map share with id non-existent not found')
+			}).toThrow(expect.objectContaining({ code: 'MAP_SHARE_NOT_FOUND' }))
 		})
 
 		it('should return the specific map share', async () => {
@@ -1140,17 +1139,11 @@ describe('Sent Map Shares Hooks', () => {
 
 	describe('useSingleSentMapShare', () => {
 		it('should throw MAP_SHARE_NOT_FOUND error when shareId is not found', () => {
-			let caughtError: unknown
-
-			try {
+			expect(() => {
 				renderHook(() => useSingleSentMapShare({ shareId: 'non-existent' }), {
 					wrapper,
 				})
-			} catch (e) {
-				caughtError = e
-			}
-
-			expect(caughtError).toBeInstanceOf(errors.MAP_SHARE_NOT_FOUND)
+			}).toThrow(expect.objectContaining({ code: 'MAP_SHARE_NOT_FOUND' }))
 		})
 
 		it('should return the specific sent map share', async () => {
