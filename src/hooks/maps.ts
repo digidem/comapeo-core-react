@@ -207,6 +207,9 @@ export function useManyReceivedMapShares() {
  *
  * @param opts.shareId ID of the map share
  *
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no received share
+ *   with the given `shareId` exists.
+ *
  * @example
  * ```tsx
  * function MapShareDetail({ shareId }: { shareId: string }) {
@@ -225,7 +228,9 @@ export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
 		),
 	)
 	if (!mapShare) {
-		throw new Error(`Map share with id ${shareId} not found`)
+		throw new errors.MAP_SHARE_NOT_FOUND(
+			`Received map share with id ${shareId} not found`,
+		)
 	}
 	return mapShare
 }
@@ -242,11 +247,14 @@ export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
  * receiver discovers that a share has been canceled — check `share.status`
  * after the download settles.
  *
- * @throws {MapShareCanceledError} If the share is already known to be canceled
- *   (i.e. `status` is `'canceled'` in the store, e.g. after a previous
- *   download attempt discovered the cancellation).
- * @throws {InvalidStatusTransitionError} If the share is not in a valid state
- *   to start downloading (e.g. already downloading, completed, or declined).
+ * @throws An error with code `'MAP_SHARE_CANCELED'` if the share is already
+ *   known to be canceled (i.e. `status` is `'canceled'` in the store, e.g.
+ *   after a previous download attempt discovered the cancellation).
+ * @throws An error with code `'INVALID_STATUS_TRANSITION'` if the share is
+ *   not in a valid state to start downloading (e.g. already downloading,
+ *   completed, or declined).
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no share with the
+ *   given `shareId` exists in the store.
  *
  * @example
  * ```tsx
@@ -279,12 +287,15 @@ export function useDownloadReceivedMapShare() {
  * share status will transition to `'canceled'` (not `'error'`) and the
  * mutation will throw a `MapShareCanceledError`.
  *
- * @throws {MapShareCanceledError} If the share is already known to be
- *   canceled, or if the server reports that the sender canceled the share
- *   while the decline was in flight. In both cases `share.status` will be
- *   `'canceled'`.
- * @throws {InvalidStatusTransitionError} If the share is not in
- *   `status='pending'` (e.g. already downloading, completed, or declined).
+ * @throws An error with code `'MAP_SHARE_CANCELED'` if the share is already
+ *   known to be canceled, or if the server reports that the sender canceled
+ *   the share while the decline was in flight. In both cases `share.status`
+ *   will be `'canceled'`.
+ * @throws An error with code `'INVALID_STATUS_TRANSITION'` if the share is
+ *   not in `status='pending'` (e.g. already downloading, completed, or
+ *   declined).
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no share with the
+ *   given `shareId` exists in the store.
  *
  * @example
  * ```tsx
@@ -316,10 +327,15 @@ export function useDeclineReceivedMapShare() {
 /**
  * Abort an in-progress map share download.
  *
- * @throws {MapShareCanceledError} If the share is already known to be canceled.
- * @throws {InvalidStatusTransitionError} If the share is not in
- *   `status='downloading'` (e.g. still pending, already completed, or
+ * @throws An error with code `'MAP_SHARE_CANCELED'` if the share is already
+ *   known to be canceled.
+ * @throws An error with code `'INVALID_STATUS_TRANSITION'` if the share is
+ *   not in `status='downloading'` (e.g. still pending, already completed, or
  *   declined).
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no share with the
+ *   given `shareId` exists in the store.
+ * @throws An error with code `'DOWNLOAD_NOT_FOUND'` if no download is
+ *   currently tracked for this share (e.g. the download was never started).
  *
  * @example
  * ```tsx
@@ -394,6 +410,12 @@ export function useSendMapShare() {
  * the share, the download will be canceled before completion. If the download
  * is already complete, this action will throw an error.
  *
+ * @throws An error with code `'INVALID_STATUS_TRANSITION'` if the share is
+ *   not in `status='pending'` or `status='downloading'` (e.g. already
+ *   completed, canceled, aborted, or declined).
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no share with the
+ *   given `shareId` exists in the store.
+ *
  * @param opts.projectId Public ID of project to request the map share cancellation for.
  *
  * @example
@@ -423,7 +445,8 @@ export function useCancelSentMapShare() {
  * of the share, updated in real-time. When the recipient starts downloading, or
  * if they decline the share, then the returned share will update.
  *
- * Throws if no share with the specified ID is found.
+ * @throws An error with code `'MAP_SHARE_NOT_FOUND'` if no sent share with
+ *   the given `shareId` exists in the store.
  *
  * @param opts.shareId ID of the sent map share
  *
