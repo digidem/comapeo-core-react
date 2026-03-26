@@ -333,8 +333,6 @@ export function useAbortReceivedMapShareDownload() {
  * mutation resolves with the created map share object, including its ID, which
  * can be used to track the share status with `useSingleSentMapShare`.
  *
- * @param opts.projectId Public ID of project for sending the map share: you can only send map shares to users on the same project
- *
  * @example
  * ```tsx
  * function SendMapButton({ projectId, deviceId }: { projectId: string; deviceId: string }) {
@@ -343,7 +341,7 @@ export function useAbortReceivedMapShareDownload() {
  *	return (
  *		<button
  *			onClick={() =>
- *				send({ projectId, receiverDeviceId: deviceId, mapId: 'custom' }, {
+ *				send({ receiverDeviceId: deviceId, mapId: 'custom' }, {
  *                    onSuccess: (mapShare) => {
  *                        console.log('Share sent with id', mapShare.shareId)
  *                    }

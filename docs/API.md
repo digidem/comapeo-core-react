@@ -210,7 +210,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSentMapSharesActions` | `() => { createAndSend({ projectId, receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }` |
+| `useSentMapSharesActions` | `() => { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }` |
 
 ### useSentMapSharesState
 
@@ -965,7 +965,7 @@ Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<any, Error, { value: Omit<any, "schemaName">; }>>` |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<any, Error, { value: Omit<any, "schemaName">; versionId: string; }>>` |
 
 Parameters:
 
@@ -1313,11 +1313,6 @@ can be used to track the share status with `useSingleSentMapShare`.
 | ---------- | ---------- |
 | `useSendMapShare` | `() => Pick<Override<MutationObserverIdleResult<ServerMapShareState, Error, CreateAndSendMapShareOptions, unknown>, { mutate: UseMutateFunction<ServerMapShareState, Error, CreateAndSendMapShareOptions, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
-Parameters:
-
-* `opts.projectId`: Public ID of project for sending the map share: you can only send map shares to users on the same project
-
-
 Examples:
 
 ```tsx
@@ -1327,7 +1322,7 @@ const { mutate: send } = useSendMapShare()
 return (
 	<button
 		onClick={() =>
-			send({ projectId, receiverDeviceId: deviceId, mapId: 'custom' }, {
+			send({ receiverDeviceId: deviceId, mapId: 'custom' }, {
                    onSuccess: (mapShare) => {
                        console.log('Share sent with id', mapShare.shareId)
                    }
@@ -1427,7 +1422,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `SentMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ServerMapShareState[]; actions: { createAndSend({ projectId, receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }; } or null>` |
+| `SentMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ServerMapShareState[]; actions: { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }; } or null>` |
 
 ### MapServerContext
 

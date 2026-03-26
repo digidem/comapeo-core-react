@@ -46,7 +46,6 @@ describe('SentMapSharesStore', () => {
 	describe('create', () => {
 		it('should create share on the server', async () => {
 			const { shareId } = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -63,15 +62,14 @@ describe('SentMapSharesStore', () => {
 			})
 		})
 
-		it('should cancel the map share on the server if $sendMapShare throws', async () => {
-			// Make $sendMapShare throw an error
+		it('should cancel the map share on the server if sendMapShare throws', async () => {
+			// Make sendMapShare throw an error
 			const sendError = new Error('Failed to send map share')
-			mockClientApi.$sendMapShare.mockRejectedValueOnce(sendError)
+			mockClientApi.sendMapShare.mockRejectedValueOnce(sendError)
 
 			// createAndSend should throw
 			await expect(
 				sentStore.actions.createAndSend({
-					projectId: 'test-project-id',
 					receiverDeviceId: receiver.deviceId,
 					mapId: 'custom',
 				}),
@@ -111,7 +109,6 @@ describe('SentMapSharesStore', () => {
 		it('should update status when receiver declines the share', async () => {
 			// Sender creates a share
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -150,7 +147,6 @@ describe('SentMapSharesStore', () => {
 		it('should update status to completed when download finishes', async () => {
 			// Sender creates a share
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -184,7 +180,6 @@ describe('SentMapSharesStore', () => {
 		it('should update status when receiver aborts download', async () => {
 			// Sender creates a share
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -217,7 +212,6 @@ describe('SentMapSharesStore', () => {
 		it('should maintain array reference during download progress updates (Object.is equality)', async () => {
 			// Sender creates a share
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -286,7 +280,6 @@ describe('SentMapSharesStore', () => {
 		it('should update individual map share reference during download progress updates', async () => {
 			// Sender creates a share
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -368,7 +361,6 @@ describe('SentMapSharesStore', () => {
 
 		it('should not allow cancel after decline', async () => {
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -401,7 +393,6 @@ describe('SentMapSharesStore', () => {
 
 		it('should not allow cancel after completion', async () => {
 			const serverShare = await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -441,7 +432,6 @@ describe('SentMapSharesStore', () => {
 			sentStore.subscribe(listener3)
 
 			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -456,7 +446,6 @@ describe('SentMapSharesStore', () => {
 			const unsubscribe = sentStore.subscribe(listener)
 
 			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
@@ -467,7 +456,6 @@ describe('SentMapSharesStore', () => {
 
 			// Create another share
 			await sentStore.actions.createAndSend({
-				projectId: 'test-project-id',
 				receiverDeviceId: receiver.deviceId,
 				mapId: 'custom',
 			})
