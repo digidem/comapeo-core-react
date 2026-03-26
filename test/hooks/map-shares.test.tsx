@@ -671,6 +671,10 @@ describe('Received Map Shares Hooks', () => {
 			expect(result.current.abort.error?.message).toContain(
 				'Invalid status transition',
 			)
+			expect(result.current.abort.error).toHaveProperty(
+				'code',
+				'INVALID_STATUS_TRANSITION',
+			)
 		})
 	})
 
@@ -835,6 +839,169 @@ describe('Received Map Shares Hooks', () => {
 
 			expect(result.current.abort.error?.message).toContain(
 				'Invalid status transition',
+			)
+		})
+	})
+
+	describe('sender cancels before receiver acts', () => {
+		const cancelOnSender = async (shareId: string) => {
+			const url = new URL(`mapShares/${shareId}/cancel`, sender.localBaseUrl)
+			const response = await fetch(url, { method: 'POST' })
+			if (!response.ok) {
+				throw new Error(`Failed to cancel share: ${response.status}`)
+			}
+		}
+
+		it('should end at canceled status when downloading after sender canceled', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			await cancelOnSender(mapShare.shareId)
+
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('success')
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('canceled')
+			})
+		})
+
+		it('should throw MAP_SHARE_CANCELED when declining after sender canceled', async () => {
+			const { result } = renderHook(
+				() => ({
+					decline: useDeclineReceivedMapShare(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			await cancelOnSender(mapShare.shareId)
+
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			act(() => {
+				result.current.decline.mutate({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.decline.status).toBe('error')
+			})
+
+			expect(result.current.decline.error).toHaveProperty(
+				'code',
+				'MAP_SHARE_CANCELED',
+			)
+			expect(result.current.shares[0]).toHaveProperty('status', 'canceled')
+		})
+
+		it('should not allow any action after share reaches canceled status', async () => {
+			const { result } = renderHook(
+				() => ({
+					download: useDownloadReceivedMapShare(),
+					decline: useDeclineReceivedMapShare(),
+					abort: useAbortReceivedMapShareDownload(),
+					shares: useManyReceivedMapShares(),
+				}),
+				{ wrapper: receiverWrapper },
+			)
+
+			const mapShare = await createShare()
+			await cancelOnSender(mapShare.shareId)
+
+			act(() => {
+				mockClientApi.emit('map-share', mapShare)
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares).toHaveLength(1)
+			})
+
+			// Download to discover cancellation - share will end at 'canceled'
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.shares[0]?.status).toBe('canceled')
+			})
+
+			// Reset the download mutation to test again
+			act(() => {
+				result.current.download.reset()
+			})
+
+			// Try to download again - should fail with MAP_SHARE_CANCELED
+			act(() => {
+				result.current.download.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.download.status).toBe('error')
+			})
+
+			expect(result.current.download.error).toHaveProperty(
+				'code',
+				'MAP_SHARE_CANCELED',
+			)
+
+			// Try to decline - should fail with MAP_SHARE_CANCELED
+			act(() => {
+				result.current.decline.mutate({
+					shareId: mapShare.shareId,
+					reason: 'user_rejected',
+				})
+			})
+
+			await waitFor(() => {
+				expect(result.current.decline.status).toBe('error')
+			})
+
+			expect(result.current.decline.error).toHaveProperty(
+				'code',
+				'MAP_SHARE_CANCELED',
+			)
+
+			// Try to abort - should fail with MAP_SHARE_CANCELED
+			act(() => {
+				result.current.abort.mutate({ shareId: mapShare.shareId })
+			})
+
+			await waitFor(() => {
+				expect(result.current.abort.status).toBe('error')
+			})
+
+			expect(result.current.abort.error).toHaveProperty(
+				'code',
+				'MAP_SHARE_CANCELED',
 			)
 		})
 	})

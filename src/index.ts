@@ -46,7 +46,13 @@ export type {
 	DownloadMapShareOptions,
 	CreateAndSendMapShareOptions,
 } from './lib/map-shares-stores.js'
-export { DeclineReason } from './lib/map-shares-stores.js'
+export {
+	DeclineReason,
+	MapShareErrorCode,
+	getErrorCode,
+	MapShareCanceledError,
+	InvalidStatusTransitionError,
+} from './lib/map-shares-stores.js'
 export {
 	useAddServerPeer,
 	useAttachmentUrl,

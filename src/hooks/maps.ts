@@ -233,15 +233,25 @@ export function useSingleReceivedMapShare({ shareId }: { shareId: string }) {
 /**
  * Accept and download a map share that has been received. The mutate promise
  * resolves once the map _starts_ downloading, before it finishes downloading.
- * Use `useManyMapShares` or `useSingleMapShare` to track download progress.
+ * Use `useManyReceivedMapShares` or `useSingleReceivedMapShare` to track
+ * download progress and final status.
  *
- * Throws if the share is not in `status="pending"` or if the download fails to
- * start (e.g. if the shareId if invalid).
+ * If the sender canceled the share before the receiver calls this, the
+ * mutation will still resolve (the download starts), but the share status will
+ * end up as `'canceled'` rather than `'completed'`. This is the only way the
+ * receiver discovers that a share has been canceled — check `share.status`
+ * after the download settles.
+ *
+ * @throws {MapShareCanceledError} If the share is already known to be canceled
+ *   (i.e. `status` is `'canceled'` in the store, e.g. after a previous
+ *   download attempt discovered the cancellation).
+ * @throws {InvalidStatusTransitionError} If the share is not in a valid state
+ *   to start downloading (e.g. already downloading, completed, or declined).
  *
  * @example
  * ```tsx
  * function AcceptButton({ shareId }: { shareId: string }) {
- *   const { mutate: accept } = useAcceptMapShare()
+ *   const { mutate: accept } = useDownloadReceivedMapShare()
  *
  *   return <button onClick={() => accept({ shareId })}>Accept</button>
  * }
@@ -262,17 +272,25 @@ export function useDownloadReceivedMapShare() {
 
 /**
  * Decline a map share that has been received. Notifies the sender that the
- * share was declined.
+ * share was declined. The share status is only updated to `'declined'` after
+ * the server confirms the decline — there is no optimistic update.
  *
- * Throws if the share is not with `status="pending"`
- * Throws if shareId is invalid
- * Throws if decline request fails (e.g. network error)
+ * If the sender canceled the share before the decline reaches the server, the
+ * share status will transition to `'canceled'` (not `'error'`) and the
+ * mutation will throw a `MapShareCanceledError`.
+ *
+ * @throws {MapShareCanceledError} If the share is already known to be
+ *   canceled, or if the server reports that the sender canceled the share
+ *   while the decline was in flight. In both cases `share.status` will be
+ *   `'canceled'`.
+ * @throws {InvalidStatusTransitionError} If the share is not in
+ *   `status='pending'` (e.g. already downloading, completed, or declined).
  *
  * @example
  * ```tsx
  * import { DeclineReason } from '@comapeo/core-react'
  * function DeclineButton({ shareId }: { shareId: string }) {
- *   const { mutate: decline } = useDeclineMapShare()
+ *   const { mutate: decline } = useDeclineReceivedMapShare()
  *
  *   return (
  *     <button onClick={() => decline({ shareId, reason: DeclineReason.user_rejected })}>
@@ -298,13 +316,15 @@ export function useDeclineReceivedMapShare() {
 /**
  * Abort an in-progress map share download.
  *
- * Throws if the share is not in `status="downloading"`
- * Throws if shareId is invalid
+ * @throws {MapShareCanceledError} If the share is already known to be canceled.
+ * @throws {InvalidStatusTransitionError} If the share is not in
+ *   `status='downloading'` (e.g. still pending, already completed, or
+ *   declined).
  *
  * @example
  * ```tsx
  * function AbortButton({ shareId }: { shareId: string }) {
- *   const { mutate: abort } = useAbortMapShareDownload()
+ *   const { mutate: abort } = useAbortReceivedMapShareDownload()
  *
  *   return <button onClick={() => abort({ shareId })}>Cancel Download</button>
  * }

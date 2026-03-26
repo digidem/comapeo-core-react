@@ -35,6 +35,129 @@ export type SentMapSharesStore = ReturnType<typeof createSentMapSharesStore>
 // actions, they do not show for the mutate() function in hooks.
 // ============================================
 
+/**
+ * Error codes for map share operations. Use with {@link getErrorCode} to safely
+ * check the error code of an unknown error thrown by a map share mutation, or
+ * to check the `error.code` on a share in `status='error'`.
+ *
+ * ## Receiver errors
+ *
+ * **Mutation errors** (thrown by receiver hooks, check via
+ * `getErrorCode(mutation.error)`):
+ * - `MAP_SHARE_CANCELED` — the sender canceled the share
+ * - `INVALID_STATUS_TRANSITION` — the action is not valid for the share's
+ *   current status (e.g. declining a share that is already downloading)
+ * - `MAP_SHARE_NOT_FOUND` — no share with the given `shareId` exists
+ * - `DOWNLOAD_NOT_FOUND` — abort was called but no download is tracked for
+ *   this share
+ *
+ * **Share state errors** (on received `share.error.code` when
+ * `share.status === 'error'`):
+ * - `DOWNLOAD_ERROR` — the download failed (network, disk, or server error)
+ * - `DECLINE_CANNOT_CONNECT` — the decline was accepted locally but the sender
+ *   could not be reached to notify them
+ *
+ * ## Sender errors
+ *
+ * **Mutation errors** (thrown by sender hooks, check via
+ * `getErrorCode(mutation.error)`):
+ * - `INVALID_STATUS_TRANSITION` — the action is not valid for the share's
+ *   current status (e.g. canceling a share that is already canceled)
+ * - `MAP_SHARE_NOT_FOUND` — no share with the given `shareId` exists
+ *
+ * **Share state errors** (on sent `share.error.code` when
+ * `share.status === 'error'`):
+ * - `CANCEL_SHARE_NOT_CANCELABLE` — the cancel request reached the server but
+ *   the share is already in a final state (e.g. completed or declined)
+ *
+ * ## Common
+ *
+ * - `UNKNOWN_ERROR` — fallback when the original error has no specific code.
+ *   Can appear as both a mutation error and a share state error for either
+ *   sender or receiver.
+ *
+ * @example
+ * ```tsx
+ * import { getErrorCode, MapShareErrorCode } from '@comapeo/core-react'
+ *
+ * // Receiver: checking a mutation error
+ * const decline = useDeclineReceivedMapShare()
+ * // ... after mutation fails:
+ * if (getErrorCode(decline.error) === MapShareErrorCode.MAP_SHARE_CANCELED) {
+ *   // Show "this share was canceled by the sender"
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Receiver: checking a share state error
+ * const share = useSingleReceivedMapShare({ shareId })
+ * if (share.status === 'error') {
+ *   if (share.error.code === MapShareErrorCode.DOWNLOAD_ERROR) {
+ *     // Show "download failed, try again?"
+ *   }
+ * }
+ * ```
+ */
+export const MapShareErrorCode = {
+	// --- Receiver mutation errors (thrown by receiver actions) ---
+
+	/** Receiver: the sender canceled the share before the action could complete */
+	MAP_SHARE_CANCELED: 'MAP_SHARE_CANCELED',
+	/** Receiver/Sender: the action is not valid for the share's current status */
+	INVALID_STATUS_TRANSITION: 'INVALID_STATUS_TRANSITION',
+	/** Receiver/Sender: no map share with the given `shareId` exists in the store */
+	MAP_SHARE_NOT_FOUND: 'MAP_SHARE_NOT_FOUND',
+	/** Receiver: abort was called but no download is tracked for this share */
+	DOWNLOAD_NOT_FOUND: 'DOWNLOAD_NOT_FOUND',
+
+	// --- Receiver share state errors (in share.error.code) ---
+
+	/** Receiver: the download failed due to a network, disk, or server error */
+	DOWNLOAD_ERROR: 'DOWNLOAD_ERROR',
+	/** Receiver: could not connect to the sender to notify them of the decline */
+	DECLINE_CANNOT_CONNECT: 'DECLINE_CANNOT_CONNECT',
+
+	// --- Sender share state errors (in share.error.code) ---
+
+	/** Sender: cancel failed because the share is already in a final state on the server */
+	CANCEL_SHARE_NOT_CANCELABLE: 'CANCEL_SHARE_NOT_CANCELABLE',
+
+	// --- Common ---
+
+	/** Receiver/Sender: fallback code when the original error has no specific code */
+	UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+} as const
+
+/**
+ * Safely extract the `code` property from an unknown error. Returns `undefined`
+ * if the value is not an Error or has no string `code` property.
+ *
+ * @example
+ * ```tsx
+ * import { getErrorCode, MapShareErrorCode } from '@comapeo/core-react'
+ *
+ * try {
+ *   await decline.mutateAsync({ shareId, reason: 'user_rejected' })
+ * } catch (e) {
+ *   const code = getErrorCode(e)
+ *   if (code === MapShareErrorCode.MAP_SHARE_CANCELED) {
+ *     // handle cancellation
+ *   }
+ * }
+ * ```
+ */
+export function getErrorCode(error: unknown): string | undefined {
+	if (
+		error instanceof Error &&
+		'code' in error &&
+		typeof error.code === 'string'
+	) {
+		return error.code
+	}
+	return undefined
+}
+
 /** Known reasons for declining a map share */
 export const DeclineReason = {
 	/** User explicitly rejected the map share */
@@ -75,6 +198,32 @@ export type CreateAndSendMapShareOptions = {
 export type CancelMapShareOptions = {
 	/** ID of the map share to cancel */
 	shareId: string
+}
+
+/**
+ * Thrown when a receiver action (download, decline, or abort) is attempted on a
+ * map share that has been canceled by the sender. Has `code: 'MAP_SHARE_CANCELED'`.
+ */
+export class MapShareCanceledError extends Error {
+	code = 'MAP_SHARE_CANCELED' as const
+	constructor(shareId: string) {
+		super(`Map share ${shareId} has been canceled by the sender`)
+		this.name = 'MapShareCanceledError'
+	}
+}
+
+/**
+ * Thrown when an action is attempted on a map share whose current status does
+ * not allow the requested transition (e.g. declining a share that is already
+ * downloading, or aborting a share that is still pending).
+ * Has `code: 'INVALID_STATUS_TRANSITION'`.
+ */
+export class InvalidStatusTransitionError extends Error {
+	code = 'INVALID_STATUS_TRANSITION' as const
+	constructor(current: string, next: string) {
+		super(`Invalid status transition from ${current} to ${next}`)
+		this.name = 'InvalidStatusTransitionError'
+	}
 }
 
 /**
@@ -227,6 +376,13 @@ export function createReceivedMapSharesStore({
 	const actions = {
 		async download({ shareId }: DownloadMapShareOptions) {
 			const mapShare = get(shareId)
+			// This path should be be impossible, because the map share only receives
+			// status updates from the receiver after the download starts, but adding
+			// for completeness, and the edge-case of the receiving trying to
+			// download() a second time.
+			if (mapShare.status === 'canceled') {
+				throw new MapShareCanceledError(shareId)
+			}
 			update(shareId, { status: 'downloading', bytesDownloaded: 0 })
 			try {
 				const downloadIdPromise = mapServerApi
@@ -267,21 +423,38 @@ export function createReceivedMapSharesStore({
 		},
 		async decline({ shareId, reason }: DeclineMapShareOptions) {
 			const mapShare = get(shareId)
-			update(shareId, { status: 'declined', reason })
+			if (mapShare.status === 'canceled') {
+				throw new MapShareCanceledError(shareId)
+			}
+			if (mapShare.status !== 'pending') {
+				throw new InvalidStatusTransitionError(mapShare.status, 'declined')
+			}
 			try {
-				await mapServerApi.post(`mapShares/${shareId}/decline`, {
-					json: {
-						senderDeviceId: mapShare.senderDeviceId,
-						mapShareUrls: mapShare.mapShareUrls,
-						reason,
-					},
-				})
+				await mapServerApi
+					.post(`mapShares/${shareId}/decline`, {
+						json: {
+							senderDeviceId: mapShare.senderDeviceId,
+							mapShareUrls: mapShare.mapShareUrls,
+							reason,
+						},
+					})
+					.json()
+				update(shareId, { status: 'declined', reason })
 			} catch (e) {
+				const error = ensureError(e)
+				if ('code' in error && error.code === 'MAP_SHARE_CANCELED') {
+					update(shareId, { status: 'canceled' })
+					throw new MapShareCanceledError(shareId)
+				}
 				handleError(shareId, e)
 				throw e
 			}
 		},
 		async abort({ shareId }: AbortMapShareOptions) {
+			const mapShare = get(shareId)
+			if (mapShare.status === 'canceled') {
+				throw new MapShareCanceledError(shareId)
+			}
 			update(shareId, { status: 'aborted' })
 			try {
 				const downloadId = await downloads.get(shareId)
@@ -383,7 +556,7 @@ function assertValidStatusTransition(
 	next: MapShareStatus,
 ) {
 	if (!allowedStatusTransitions[current].includes(next)) {
-		throw new Error(`Invalid status transition from ${current} to ${next}`)
+		throw new InvalidStatusTransitionError(current, next)
 	}
 }
 

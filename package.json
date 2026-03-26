@@ -64,7 +64,7 @@
 		"types": "tsc"
 	},
 	"dependencies": {
-		"@comapeo/map-server": "1.0.1",
+		"@comapeo/map-server": "^1.1.0",
 		"ensure-error": "5.0.0",
 		"eventsource-client": "1.2.0",
 		"type-fest": "5.4.4"
