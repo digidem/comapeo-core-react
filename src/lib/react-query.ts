@@ -1,4 +1,4 @@
-import { DEFAULT_MAP_ID } from '@comapeo/map-server'
+import { DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
 import type {
 	QueryClient,
 	QueryOptions,
