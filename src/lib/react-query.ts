@@ -156,13 +156,15 @@ export function getMembersQueryKey({
 	projectId: string
 	includeLeft?: boolean
 }) {
-	return [
-		ROOT_QUERY_KEY,
-		'projects',
-		projectId,
-		'members',
-		{ includeLeft },
-	] as const
+	return includeLeft === undefined
+		? ([ROOT_QUERY_KEY, 'projects', projectId, 'members'] as const)
+		: ([
+				ROOT_QUERY_KEY,
+				'projects',
+				projectId,
+				'members',
+				{ includeLeft },
+			] as const)
 }
 
 export function getMemberByIdQueryKey({
