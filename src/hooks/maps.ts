@@ -29,6 +29,7 @@ import {
 	baseMutationOptions,
 	baseQueryOptions,
 	filterMutationResult,
+	filterQueryResult,
 	getMapInfoQueryKey,
 	getStyleJsonUrlQueryKey,
 	invalidateMapQueries,
@@ -138,13 +139,43 @@ export function useRemoveCustomMapFile() {
 	)
 }
 
+/**
+ * Get the map info for the custom map.
+ *
+ * Note that this is _not_ a suspenseful hook. The different read states should be explicitly handled at usage.
+ *
+ * @example
+ * ```tsx
+ * import { getErrorCode } from '@comapeo/core-react'
+ *
+ * function Example() {
+ *   const mapInfo = useGetCustomMapInfo()
+ *
+ *   if (mapInfo.status === 'pending') {
+ *     // handle pending...
+ *   }
+ *
+ *   if (mapInfo.status === 'error') {
+ *     if (getErrorCode(mapInfo.error) === 'MAP_NOT_FOUND') {
+ *       // handle not found error...
+ *     } else {
+ *       // handle all other errors...
+ *     }
+ *   }
+ *
+ *   // Handle success state...
+ *   console.log(mapInfo.data)
+ * }
+ * ```
+ *
+ */
 export function useGetCustomMapInfo() {
 	const mapServerApi = useMapServerApi()
 
 	// TODO: Support custom maps
 	const mapId = CUSTOM_MAP_ID
 
-	const { data, error, isRefetching } = useQuery({
+	const result = useQuery({
 		...baseQueryOptions(),
 		queryKey: getMapInfoQueryKey({ mapId }),
 		queryFn: async () => {
@@ -155,7 +186,7 @@ export function useGetCustomMapInfo() {
 		gcTime: Infinity,
 	})
 
-	return { data, error, isRefetching }
+	return filterQueryResult(result)
 }
 
 // ============================================

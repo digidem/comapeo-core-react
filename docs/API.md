@@ -1153,9 +1153,39 @@ function MapImportExample() {
 
 ### useGetCustomMapInfo
 
+Get the map info for the custom map.
+
+Note that this is _not_ a suspenseful hook. The different read states should be explicitly handled at usage.
+
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<MapInfoResponse, Error>, "data" or "error" or "status" or "isRefetching"> or Pick<QueryObserverSuccessResult<MapInfoResponse, Error>, "data" or ... 2 more ... or "isRefetching"> or Pick<...> or Pick<...> or Pick<...> or Pick<...>` |
+
+Examples:
+
+```tsx
+import { getErrorCode } from '@comapeo/core-react'
+
+function Example() {
+  const mapInfo = useGetCustomMapInfo()
+
+  if (mapInfo.status === 'pending') {
+    // handle pending...
+  }
+
+  if (mapInfo.status === 'error') {
+    if (getErrorCode(mapInfo.error) === 'MAP_NOT_FOUND') {
+      // handle not found error...
+    } else {
+      // handle all other errors...
+    }
+  }
+
+  // Handle success state...
+  console.log(mapInfo.data)
+}
+```
+
 
 ### useManyReceivedMapShares
 
