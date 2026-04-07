@@ -4,6 +4,7 @@ import type {
 	QueryOptions,
 	UseMutationOptions,
 	UseMutationResult,
+	UseQueryResult,
 } from '@tanstack/react-query'
 import { DistributedPick } from 'type-fest'
 
@@ -57,6 +58,29 @@ export function filterMutationResult<
 	const filteredResult = {} as FilteredMutationResult<TResult>
 	for (const key of PICKED_MUTATION_RESULT_KEYS) {
 		filteredResult[key] = mutationResult[key]
+	}
+	return filteredResult
+}
+
+const PICKED_QUERY_RESULT_KEYS = [
+	'data',
+	'error',
+	'isRefetching',
+	'status',
+] as const satisfies ReadonlyArray<keyof UseQueryResult>
+
+export type FilteredQueryResult<
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	TResult extends UseQueryResult<any, any>,
+> = DistributedPick<TResult, (typeof PICKED_QUERY_RESULT_KEYS)[number]>
+
+export function filterQueryResult<
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	TResult extends UseQueryResult<any, any>,
+>(queryResult: TResult) {
+	const filteredResult = {} as FilteredQueryResult<TResult>
+	for (const key of PICKED_QUERY_RESULT_KEYS) {
+		filteredResult[key] = queryResult[key]
 	}
 	return filteredResult
 }
