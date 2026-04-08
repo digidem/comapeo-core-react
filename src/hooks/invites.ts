@@ -116,14 +116,11 @@ export function useRejectInvite() {
 		useMutation({
 			...baseMutationOptions(),
 			mutationFn: async ({ inviteId }: { inviteId: string }) => {
-				return clientApi.invite.accept({ inviteId })
+				return clientApi.invite.reject({ inviteId })
 			},
 			onSuccess: () => {
 				queryClient.invalidateQueries({
 					queryKey: getInvitesQueryKey(),
-				})
-				queryClient.invalidateQueries({
-					queryKey: getProjectsQueryKey(),
 				})
 			},
 		}),
