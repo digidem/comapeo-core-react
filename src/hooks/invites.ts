@@ -122,9 +122,6 @@ export function useRejectInvite() {
 				queryClient.invalidateQueries({
 					queryKey: getInvitesQueryKey(),
 				})
-				queryClient.invalidateQueries({
-					queryKey: getProjectsQueryKey(),
-				})
 			},
 		}),
 	)
