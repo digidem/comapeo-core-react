@@ -1,12 +1,11 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
 import pluginVitest from '@vitest/eslint-plugin'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginTestingLibrary from 'eslint-plugin-testing-library'
-import { defineConfig } from 'eslint/config'
+import { defineConfig, includeIgnoreFile } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
