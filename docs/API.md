@@ -94,7 +94,7 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => any` |
+| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>` |
 
 Returns:
 
@@ -126,7 +126,7 @@ Retrieve info about the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnDeviceInfo` | `() => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useOwnDeviceInfo` | `() => Pick<UseSuspenseQueryResult<{ deviceId: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; } and Partial<DeviceInfoParam>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Examples:
 
@@ -143,7 +143,7 @@ Retrieve whether the current device is an archive device or not.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useIsArchiveDevice` | `() => { data: any; error: Error or null; isRefetching: boolean; }` |
+| `useIsArchiveDevice` | `() => { data: boolean; error: Error or null; isRefetching: boolean; }` |
 
 Examples:
 
@@ -160,7 +160,7 @@ Update the device info for the current device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetOwnDeviceInfo` | `() => Pick<Override<MutationObserverIdleResult<any, Error, { name: string; deviceType: DeviceInfo; }, unknown>, { mutate: UseMutateFunction<any, Error, { name: string; deviceType: DeviceInfo; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useSetOwnDeviceInfo` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { name: string; deviceType: "device_type_unspecified" or "mobile" or "tablet" or "desktop" or "selfHostedServer" or "UNRECOGNIZED"; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useSetIsArchiveDevice
 
@@ -168,13 +168,13 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetIsArchiveDevice` | `() => Pick<Override<MutationObserverIdleResult<any, Error, { isArchiveDevice: boolean; }, unknown>, { mutate: UseMutateFunction<any, Error, { isArchiveDevice: boolean; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useSetIsArchiveDevice` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { isArchiveDevice: boolean; }, unknown>, { mutate: UseMutateFunction<void, Error, { isArchiveDevice: boolean; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### ReceivedMapSharesProvider
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: any; mapServerApi: MapServerApi; } and { children?: ReactNode; } and { queryClient: QueryClient; }) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -192,31 +192,31 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+| `useReceivedMapSharesState` | `{ (): ReceivedMapShareState[]; <T>(selector: (state: ReceivedMapShareState[]) => T): T; }` |
 
 ### useReceivedMapSharesState
 
 | Function | Type |
 | ---------- | ---------- |
-| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+| `useReceivedMapSharesState` | `{ (): ReceivedMapShareState[]; <T>(selector: (state: ReceivedMapShareState[]) => T): T; }` |
 
 ### useReceivedMapSharesState
 
 | Function | Type |
 | ---------- | ---------- |
-| `useReceivedMapSharesState` | `{ (): any[]; <T>(selector: (state: any[]) => T): T; }` |
+| `useReceivedMapSharesState` | `{ (): ReceivedMapShareState[]; <T>(selector: (state: ReceivedMapShareState[]) => T): T; }` |
 
 ### useSentMapSharesActions
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSentMapSharesActions` | `() => { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }` |
+| `useSentMapSharesActions` | `() => { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<MapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }` |
 
 ### useSentMapSharesState
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSentMapSharesState` | `<T>(selector?: ((state: ServerMapShareState[]) => T) or undefined) => T` |
+| `useSentMapSharesState` | `<T>(selector?: ((state: MapShareState[]) => T) or undefined) => T` |
 
 ### createMapServerApi
 
@@ -295,7 +295,7 @@ Retrieve the project settings for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useProjectSettings` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useProjectSettings` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<EditableProjectSettings>, "data" or "error" or "isRefetching">` |
 
 Parameters:
 
@@ -321,7 +321,7 @@ This is mostly used internally by the other hooks and should only be used if cer
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useSingleProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<ClientApi<MapeoProject>>, "data" or "error" or "isRefetching">` |
 
 Parameters:
 
@@ -343,7 +343,7 @@ Retrieve project information for each project that exists.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyProjects` | `() => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useManyProjects` | `() => Pick<UseSuspenseQueryResult<ListedProject[]>, "data" or "error" or "isRefetching">` |
 
 Examples:
 
@@ -362,7 +362,7 @@ Retrieve a single member of a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useSingleMember` | `({ projectId, deviceId, }: { projectId: string; deviceId: string; }) => Pick<UseSuspenseQueryResult<MemberInfo>, "data" or "error" or "isRefetching">` |
 
 Parameters:
 
@@ -518,7 +518,7 @@ Retrieve the device ID that created a document.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: any; error: Error or null; isRefetching: boolean; }` |
+| `useDocumentCreatedBy` | `({ projectId, originalVersionId, }: { projectId: string; originalVersionId: string; }) => { data: string; error: Error or null; isRefetching: boolean; }` |
 
 Parameters:
 
@@ -545,7 +545,7 @@ This is a more convenient alternative to using the `useOwnDeviceInfo` and `useMa
 
 | Function | Type |
 | ---------- | ---------- |
-| `useOwnRoleInProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useOwnRoleInProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<Role and { reason: string or undefined; }>, "data" or "error" or "isRefetching">` |
 
 Parameters:
 
@@ -567,13 +567,13 @@ function BasicExample() {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useAddServerPeer` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { baseUrl: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useRemoveServerPeer
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRemoveServerPeer` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useRemoveServerPeer` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { serverDeviceId: string; dangerouslyAllowInsecureConnections?: boolean or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useCreateProject
 
@@ -581,7 +581,7 @@ Create a new project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateProject` | `() => Pick<Override<MutationObserverIdleResult<any, Error, any, unknown>, { mutate: UseMutateFunction<any, Error, any, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useCreateProject` | `() => Pick<Override<MutationObserverIdleResult<string, Error, { name?: string or undefined; configPath?: string or undefined; projectColor?: string or undefined; projectDescription?: string or undefined; } or undefined, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pi...` |
 
 ### useLeaveProject
 
@@ -589,7 +589,7 @@ Leave an existing project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useLeaveProject` | `() => Pick<Override<MutationObserverIdleResult<any, Error, { projectId: string; }, unknown>, { mutate: UseMutateFunction<any, Error, { projectId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useLeaveProject` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; }, unknown>, { mutate: UseMutateFunction<void, Error, { projectId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useImportProjectCategories
 
@@ -597,7 +597,7 @@ Update the categories of a project using an external file.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useImportProjectCategories` | `({ projectId, }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<unknown, Error, { filePath: string; }, unknown>, { mutate: UseMutateFunction<unknown, Error, { filePath: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useImportProjectCategories` | `({ projectId, }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { filePath: string; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -610,7 +610,7 @@ Update the configuration of a project using an external file.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<unknown, Error, { configPath: string; }, unknown>, { mutate: UseMutateFunction<unknown, Error, { configPath: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useImportProjectConfig` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<Error[], Error, { configPath: string; }, unknown>, { mutate: UseMutateFunction<Error[], Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -636,7 +636,7 @@ Change a project member's role.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useChangeMemberRole` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { deviceId: string; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useChangeMemberRole` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { deviceId: string; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -662,7 +662,7 @@ Do NOT use this for removing your own device from a project. Use `useLeaveProjec
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRemoveMember` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { deviceId: string; reason?: string or undefined; }, unknown>, { mutate: UseMutateFunction<...>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useRemoveMember` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { deviceId: string; reason?: string or undefined; }, unknown>, { mutate: UseMutateFunction<...>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -726,7 +726,7 @@ Create a blob for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateBlob` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useCreateBlob` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<{ driveId: string; name: string; type: "photo" or "audio" or "video"; hash: string; }, Error, { original: string; preview?: string or undefined; thumbnail?: string or undefined; metadata: Metadata; }, unknown>, { ...; }> and { ...; }, "err...` |
 
 Parameters:
 
@@ -743,7 +743,7 @@ additional listeners across the IPC channel.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSyncState` | `({ projectId, }: { projectId: string; }) => any` |
+| `useSyncState` | `({ projectId, }: { projectId: string; }) => State or null` |
 
 Parameters:
 
@@ -781,31 +781,31 @@ Returns:
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStartSync` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useStartSync` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { autostopDataSyncAfter: number or null; } or undefined, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useStopSync
 
 | Function | Type |
 | ---------- | ---------- |
-| `useStopSync` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, void, unknown>, { mutate: UseMutateFunction<any, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useStopSync` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, void, unknown>, { mutate: UseMutateFunction<void, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useConnectSyncServers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useConnectSyncServers` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, void, unknown>, { mutate: UseMutateFunction<any, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useConnectSyncServers` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, void, unknown>, { mutate: UseMutateFunction<void, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useDisconnectSyncServers
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDisconnectSyncServers` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, void, unknown>, { mutate: UseMutateFunction<any, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useDisconnectSyncServers` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, void, unknown>, { mutate: UseMutateFunction<void, Error, void, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useSetAutostopDataSyncTimeout
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { after: number or null; }, unknown>, { mutate: UseMutateFunction<any, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useSetAutostopDataSyncTimeout` | `({ projectId, }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { after: number or null; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useExportGeoJSON
 
@@ -813,7 +813,7 @@ Creates a GeoJson file with all the observations and/or tracks in the project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useExportGeoJSON` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; }; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or P...` |
+| `useExportGeoJSON` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; }; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> ...` |
 
 Parameters:
 
@@ -826,7 +826,7 @@ Creates a zip file containing a GeoJson file with all the observations and/or tr
 
 | Function | Type |
 | ---------- | ---------- |
-| `useExportZipFile` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; attachments?: boolean or undefined; }; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ....` |
+| `useExportZipFile` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<string, Error, { path: string; exportOptions: { observations?: boolean or undefined; tracks?: boolean or undefined; lang?: string or undefined; attachments?: boolean or undefined; }; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 mor...` |
 
 Parameters:
 
@@ -841,7 +841,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByDocId"]>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -874,7 +874,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<any>, "data" or "error" or "isRefetching">` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByVersionId"]>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -907,7 +907,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<any>, "data" or ... 1 more ... or "isRefetching">` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getMany"]>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -951,7 +951,7 @@ Create a document for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<any, Error, { value: Omit<any, "schemaName">; }>>` |
+| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["create"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -965,7 +965,7 @@ Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<any, Error, { value: Omit<any, "schemaName">; versionId: string; }>>` |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["update"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -979,7 +979,7 @@ Delete a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<any, Error, { docId: string; }>>` |
+| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["delete"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -996,7 +996,7 @@ specified data type. Falls back to alphabetical order (by preset name) if no def
 
 | Function | Type |
 | ---------- | ---------- |
-| `usePresetsSelection` | `({ projectId, dataType, lang, }: { projectId: string; dataType: "observation" or "track"; lang?: string or undefined; }) => Preset[]` |
+| `usePresetsSelection` | `({ projectId, dataType, lang, }: { projectId: string; dataType: "track" or "observation"; lang?: string or undefined; }) => { schemaName: "preset"; name: string; geometry: ("point" or "line" or "vertex" or "area" or "relation")[]; ... 13 more ...; deleted: boolean; }[]` |
 
 Parameters:
 
@@ -1071,7 +1071,7 @@ Accept an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useAcceptInvite` | `() => Pick<Override<MutationObserverIdleResult<any, Error, { inviteId: string; }, unknown>, { mutate: UseMutateFunction<any, Error, { inviteId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useAcceptInvite` | `() => Pick<Override<MutationObserverIdleResult<string, Error, { inviteId: string; }, unknown>, { mutate: UseMutateFunction<string, Error, { inviteId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useRejectInvite
 
@@ -1079,7 +1079,7 @@ Reject an invite that has been received.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRejectInvite` | `() => Pick<Override<MutationObserverIdleResult<any, Error, { inviteId: string; }, unknown>, { mutate: UseMutateFunction<any, Error, { inviteId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useRejectInvite` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { inviteId: string; }, unknown>, { mutate: UseMutateFunction<void, Error, { inviteId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useSendInvite
 
@@ -1087,7 +1087,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or ...` |
+| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; },...` |
 
 Parameters:
 
@@ -1100,7 +1100,7 @@ Request a cancellation of an invite sent to another device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<any, Error, { deviceId: string; }, unknown>, { mutate: UseMutateFunction<any, Error, { deviceId: string; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useRequestCancelInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<void, Error, { deviceId: string; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Parameters:
 
@@ -1159,7 +1159,7 @@ Note that this is _not_ a suspenseful hook. The different read states should be 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<MapInfoResponse, Error>, "data" or "error" or "status" or "isRefetching"> or Pick<QueryObserverSuccessResult<MapInfoResponse, Error>, "data" or ... 2 more ... or "isRefetching"> or Pick<...> or Pick<...> or Pick<...> or Pick<...>` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<{ name: string; size: number; created: number; }, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
 
 Examples:
 
@@ -1199,7 +1199,7 @@ a specific share, including download progress.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyReceivedMapShares` | `() => any[]` |
+| `useManyReceivedMapShares` | `() => ReceivedMapShareState[]` |
 
 Examples:
 
@@ -1222,7 +1222,7 @@ Get a single received map share based on its shareId.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleReceivedMapShare` | `({ shareId }: { shareId: string; }) => any` |
+| `useSingleReceivedMapShare` | `({ shareId }: { shareId: string; }) => ReceivedMapShareState` |
 
 Parameters:
 
@@ -1326,7 +1326,7 @@ can be used to track the share status with `useSingleSentMapShare`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendMapShare` | `() => Pick<Override<MutationObserverIdleResult<ServerMapShareState, Error, CreateAndSendMapShareOptions, unknown>, { mutate: UseMutateFunction<ServerMapShareState, Error, CreateAndSendMapShareOptions, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useSendMapShare` | `() => Pick<Override<MutationObserverIdleResult<MapShareState, Error, CreateAndSendMapShareOptions, unknown>, { ...; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 Examples:
 
@@ -1387,7 +1387,7 @@ if they decline the share, then the returned share will update.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleSentMapShare` | `({ shareId, }: { shareId: string; }) => ServerMapShareState` |
+| `useSingleSentMapShare` | `({ shareId, }: { shareId: string; }) => MapShareState` |
 
 Parameters:
 
@@ -1423,19 +1423,19 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<any>` |
+| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }> or null>` |
 
 ### ReceivedMapSharesContext
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => any[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<void>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; } or null>` |
+| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ReceivedMapShareState[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<...>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; } or null>` |
 
 ### SentMapSharesContext
 
 | Constant | Type |
 | ---------- | ---------- |
-| `SentMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ServerMapShareState[]; actions: { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<ServerMapShareState>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }; } or null>` |
+| `SentMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => MapShareState[]; actions: { createAndSend({ receiverDeviceId, mapId, }: CreateAndSendMapShareOptions): Promise<...>; cancel({ shareId }: CancelMapShareOptions): Promise<...>; }; } or null>` |
 
 ### MapServerContext
 
