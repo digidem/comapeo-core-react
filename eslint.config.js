@@ -34,6 +34,20 @@ export default defineConfig(
 			pluginReactHooks.configs.flat.recommended,
 		],
 		rules: {
+			'@tanstack/query/exhaustive-deps': [
+				'error',
+				{
+					allowlist: {
+						variables: [
+							'clientApi',
+							'mapServerApi',
+							'projectApi',
+							'projectApi[docType]',
+						],
+						types: ['MapeoClientApi', 'MapServerApi', 'MapeoProjectApi'],
+					},
+				},
+			],
 			'@typescript-eslint/array-type': ['warn', { default: 'generic' }],
 			// Allow unused vars if prefixed with `_` (https://typescript-eslint.io/rules/no-unused-vars/)
 			'@typescript-eslint/no-unused-vars': [
