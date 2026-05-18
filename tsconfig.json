@@ -18,6 +18,7 @@
 		"paths": {
 			"*": ["./node_modules/@digidem/types/vendor/*/index.d.ts"]
 		},
+		"types": ["node"],
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
