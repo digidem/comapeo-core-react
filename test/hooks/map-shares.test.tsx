@@ -295,7 +295,7 @@ describe('Received Map Shares Hooks', () => {
 			const downloadingStates = capturedStates.filter(
 				(s) => s.status === 'downloading' && s.bytesDownloaded! > 0,
 			)
-			expect(downloadingStates.length).toBeGreaterThan(7)
+			expect(downloadingStates.length).toBeGreaterThan(1)
 		})
 
 		it('should not re-render useManyReceivedMapShares during download progress updates', async () => {

@@ -1,12 +1,11 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { includeIgnoreFile } from '@eslint/compat'
 import js from '@eslint/js'
 import pluginQuery from '@tanstack/eslint-plugin-query'
 import pluginVitest from '@vitest/eslint-plugin'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginTestingLibrary from 'eslint-plugin-testing-library'
-import { defineConfig } from 'eslint/config'
+import { defineConfig, includeIgnoreFile } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -34,6 +33,20 @@ export default defineConfig(
 			pluginReactHooks.configs.flat.recommended,
 		],
 		rules: {
+			'@tanstack/query/exhaustive-deps': [
+				'error',
+				{
+					allowlist: {
+						variables: [
+							'clientApi',
+							'mapServerApi',
+							'projectApi',
+							'projectApi[docType]',
+						],
+						types: ['MapeoClientApi', 'MapServerApi', 'MapeoProjectApi'],
+					},
+				},
+			],
 			'@typescript-eslint/array-type': ['warn', { default: 'generic' }],
 			// Allow unused vars if prefixed with `_` (https://typescript-eslint.io/rules/no-unused-vars/)
 			'@typescript-eslint/no-unused-vars': [
