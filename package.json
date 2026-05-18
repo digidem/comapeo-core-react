@@ -103,7 +103,7 @@
 		"ky": "1.14.3",
 		"lint-staged": "16.4.0",
 		"npm-run-all2": "8.0.4",
-		"prettier": "3.8.1",
+		"prettier": "3.8.3",
 		"random-access-memory": "6.2.1",
 		"react": "19.2.4",
 		"react-dom": "19.2.4",
