@@ -81,7 +81,7 @@
 		"@eslint/compat": "2.1.0",
 		"@eslint/js": "10.0.1",
 		"@ianvs/prettier-plugin-sort-imports": "4.7.1",
-		"@mapeo/crypto": "1.0.0-alpha.10",
+		"@mapeo/crypto": "1.1.0",
 		"@mapeo/default-config": "6.0.0",
 		"@mapeo/mock-data": "5.0.0",
 		"@tanstack/eslint-plugin-query": "5.100.11",
