@@ -10,9 +10,16 @@ import {
 } from '../../src/hooks/projects.js'
 import {
 	useCreateProject,
+	useLeaveProject,
+	useManyMembers,
+	useManyProjects,
 	useSingleProject,
 	useSyncState,
 } from '../../src/index.js'
+import {
+	getMembersQueryKey,
+	getProjectsQueryKey,
+} from '../../src/lib/react-query.js'
 import { setupCoreIpc } from '../helpers/ipc.js'
 import { createWrapper } from '../helpers/react.js'
 
@@ -180,5 +187,108 @@ describe('sync', () => {
 		// 2. TODO: After project enables sync
 
 		// 3. TODO: After disables sync
+	})
+})
+
+describe('useLeaveProject()', () => {
+	// Regression test: leaving a project closes its non-auth data stores, so
+	// refetching the left project's queries errors with 'Cannot await idle
+	// after closing'. Queries for the left project must not be refetched.
+	test('does not refetch queries for the left project', async (t) => {
+		const { client, cleanup } = setupCoreIpc()
+
+		t.onTestFinished(() => {
+			return cleanup()
+		})
+
+		const queryClient = new QueryClient()
+
+		const wrapper = createWrapper({ clientApi: client, queryClient })
+
+		const projectId = await client.createProject({ name: 'project_1' })
+		const otherProjectId = await client.createProject({ name: 'project_2' })
+
+		// Simulates a screen that stays mounted during the leave flow
+		// (e.g. a project members list)
+		const membersHook = renderHook(
+			() => useManyMembers({ projectId, includeLeft: true }),
+			{ wrapper },
+		)
+
+		// A query for a different project, which should still be refetched
+		const otherMembersHook = renderHook(
+			() => useManyMembers({ projectId: otherProjectId, includeLeft: true }),
+			{ wrapper },
+		)
+
+		await waitFor(() => {
+			assert.isNotNull(membersHook.result.current.data)
+			assert.isNotNull(otherMembersHook.result.current.data)
+		})
+
+		const otherMembersUpdatedAt = queryClient.getQueryState(
+			getMembersQueryKey({ projectId: otherProjectId, includeLeft: true }),
+		)?.dataUpdatedAt
+
+		assert(otherMembersUpdatedAt)
+
+		const projectsListHook = renderHook(() => useManyProjects(), { wrapper })
+
+		await waitFor(() => {
+			assert.isNotNull(projectsListHook.result.current.data)
+		})
+
+		const projectsListUpdatedAt = queryClient.getQueryState(
+			getProjectsQueryKey(),
+		)?.dataUpdatedAt
+
+		assert(projectsListUpdatedAt)
+
+		const leaveHook = renderHook(() => useLeaveProject(), { wrapper })
+
+		act(() => {
+			leaveHook.result.current.mutate({ projectId })
+		})
+
+		await waitFor(() => {
+			assert.strictEqual(leaveHook.result.current.status, 'success')
+		})
+
+		// Wait for invalidation-triggered refetches to settle
+		await waitFor(() => {
+			assert.strictEqual(queryClient.isFetching(), 0)
+		})
+
+		assert.isNull(
+			membersHook.result.current.error,
+			'members query for the left project was not refetched',
+		)
+
+		// The left project's queries should be marked stale, so that they are
+		// refetched if ever observed again (e.g. after re-joining the project)
+		assert.isTrue(
+			queryClient.getQueryState(
+				getMembersQueryKey({ projectId, includeLeft: true }),
+			)?.isInvalidated,
+			'members query for the left project is marked stale',
+		)
+
+		// The projects list itself should still be refreshed
+		await waitFor(() => {
+			const updatedAt = queryClient.getQueryState(
+				getProjectsQueryKey(),
+			)?.dataUpdatedAt
+			assert(updatedAt)
+			assert.isAbove(updatedAt, projectsListUpdatedAt)
+		})
+
+		// Queries for other projects should still be refetched
+		await waitFor(() => {
+			const updatedAt = queryClient.getQueryState(
+				getMembersQueryKey({ projectId: otherProjectId, includeLeft: true }),
+			)?.dataUpdatedAt
+			assert(updatedAt)
+			assert.isAbove(updatedAt, otherMembersUpdatedAt)
+		})
 	})
 })

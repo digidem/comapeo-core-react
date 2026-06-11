@@ -6,6 +6,7 @@ import type {
 } from '@comapeo/core'
 import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
 import {
+	matchQuery,
 	useMutation,
 	UseMutationResult,
 	useQueryClient,
@@ -563,9 +564,18 @@ export function useLeaveProject() {
 			mutationFn: async ({ projectId }: { projectId: string }) => {
 				return clientApi.leaveProject(projectId)
 			},
-			onSuccess: () => {
+			onSuccess: (_data, { projectId }) => {
+				const queryKey = getProjectByIdQueryKey({ projectId })
+				// Leaving closes the project's non-auth data stores, so refetching its
+				// queries would error. Mark them stale without refetching.
+				queryClient.invalidateQueries({
+					queryKey,
+					refetchType: 'none',
+				})
 				queryClient.invalidateQueries({
 					queryKey: getProjectsQueryKey(),
+					// The inverse of above - refetch all projects queries except the one for the left project
+					predicate: (query) => !matchQuery({ queryKey }, query),
 				})
 			},
 		}),
