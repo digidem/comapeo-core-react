@@ -565,18 +565,17 @@ export function useLeaveProject() {
 				return clientApi.leaveProject(projectId)
 			},
 			onSuccess: (_data, { projectId }) => {
-				const leftProjectFilter = {
-					queryKey: getProjectByIdQueryKey({ projectId }),
-				}
+				const queryKey = getProjectByIdQueryKey({ projectId })
 				// Leaving closes the project's non-auth data stores, so refetching its
 				// queries would error. Mark them stale without refetching.
 				queryClient.invalidateQueries({
-					...leftProjectFilter,
+					queryKey,
 					refetchType: 'none',
 				})
 				queryClient.invalidateQueries({
 					queryKey: getProjectsQueryKey(),
-					predicate: (query) => !matchQuery(leftProjectFilter, query),
+					// The inverse of above - refetch all projects queries except the one for the left project
+					predicate: (query) => !matchQuery({ queryKey }, query),
 				})
 			},
 		}),
