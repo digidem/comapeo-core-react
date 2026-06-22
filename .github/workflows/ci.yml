@@ -50,7 +50,7 @@ jobs:
         run: npm run test
 
   build:
-    needs: test
+    needs: [check, test]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
