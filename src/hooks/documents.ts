@@ -57,7 +57,10 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
 	lang?: string
 }): // NOTE: Needs explicit return type due to TS struggles with inference
 Pick<
-	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getByDocId']>>>,
+	UseSuspenseQueryResult<
+		// NOTE: Using NonNullable here to get the return type associated with the overload that uses `mustBeFound: true`
+		NonNullable<Awaited<ReturnType<MapeoProjectApi[D]['getByDocId']>>>
+	>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const { data: projectApi } = useSingleProject({ projectId })
