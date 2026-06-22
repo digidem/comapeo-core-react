@@ -55,10 +55,10 @@
 	},
 	"scripts": {
 		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/* --dest=docs/API.md --noemoji --types",
-		"check:eslint": "eslint --cache .",
-		"check:format": "prettier --cache --check .",
-		"check:types": "tsc",
-		"check": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output check:*",
+		"checks:eslint": "eslint --cache .",
+		"checks:format": "prettier --cache --check .",
+		"checks:types": "tsc",
+		"checks": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output checks:*",
 		"prepack": "tshy",
 		"prepare": "husky",
 		"test": "vitest run"
