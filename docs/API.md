@@ -1159,7 +1159,7 @@ Note that this is _not_ a suspenseful hook. The different read states should be 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<{ name: string; size: number; created: number; }, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<NoInfer<{ name: string; size: number; created: number; }>, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
 
 Examples:
 
