@@ -841,7 +841,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByDocId"]>>>, "data" or ... 1 more ... or "isRefetching">` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<NonNullable<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByDocId"]>>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
