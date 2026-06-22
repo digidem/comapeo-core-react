@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  checks:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -24,7 +24,7 @@ jobs:
           node-version-file: 'package.json'
       - run: npm ci
       - name: Run checks
-        run: npm run check
+        run: npm run checks
 
   test:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
         run: npm run test
 
   build:
-    needs: [check, test]
+    needs: [checks, test]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
