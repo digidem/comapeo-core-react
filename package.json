@@ -55,13 +55,13 @@
 	},
 	"scripts": {
 		"docs:generate": "tsdoc --src=src/contexts/*,src/hooks/* --dest=docs/API.md --noemoji --types",
-		"lint:eslint": "eslint --cache .",
-		"lint:format": "prettier --cache --check .",
-		"lint": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output lint:*",
+		"check:eslint": "eslint --cache .",
+		"check:format": "prettier --cache --check .",
+		"check:types": "tsc",
+		"check": "npm-run-all --parallel --continue-on-error --print-label --aggregate-output check:*",
 		"prepack": "tshy",
 		"prepare": "husky",
-		"test": "vitest run",
-		"types": "tsc"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@comapeo/map-server": "^1.1.4",
