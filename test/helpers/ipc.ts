@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
-import { MessageChannel } from 'node:worker_threads'
 import { FastifyController, MapeoManager } from '@comapeo/core'
-import { closeMapeoClient, createMapeoClient } from '@comapeo/ipc/client.js'
-import { createMapeoServer } from '@comapeo/ipc/server.js'
+import {
+	closeComapeoCoreClient,
+	createComapeoCoreClient,
+} from '@comapeo/ipc/client.js'
+import { createComapeoCoreServer } from '@comapeo/ipc/server.js'
 import { KeyManager } from '@mapeo/crypto'
 import Fastify from 'fastify'
 import RAM from 'random-access-memory'
@@ -36,8 +38,8 @@ export function setupCoreIpc() {
 		fastify,
 	})
 
-	const server = createMapeoServer(manager, port1)
-	const client = createMapeoClient(port2)
+	const server = createComapeoCoreServer(manager, port1)
+	const client = createComapeoCoreClient(port2)
 
 	port1.start()
 	port2.start()
@@ -53,7 +55,7 @@ export function setupCoreIpc() {
 		cleanup: async () => {
 			server.close()
 			fastifyController.stop()
-			await closeMapeoClient(client)
+			await closeComapeoCoreClient(client)
 			port1.close()
 			port2.close()
 		},

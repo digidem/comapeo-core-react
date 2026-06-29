@@ -1,4 +1,4 @@
-import type { MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import type { QueryClient } from '@tanstack/react-query'
 import {
 	createContext,
@@ -35,7 +35,7 @@ export const SentMapSharesContext: Context<SentMapSharesStore | null> =
 	createContext<SentMapSharesStore | null>(null)
 
 type MapSharesProviderProps = PropsWithChildren<{
-	clientApi: MapeoClientApi
+	clientApi: ComapeoCoreClientApi
 	mapServerApi: MapServerApi
 }>
 

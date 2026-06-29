@@ -1,4 +1,4 @@
-import { type MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type PropsWithChildren } from 'react'
 
@@ -6,11 +6,11 @@ import { ComapeoCoreProvider } from '../../src/index.js'
 import { createMockClientApi } from './client-api-mock.js'
 
 export function createWrapper({
-	clientApi = createMockClientApi() as unknown as MapeoClientApi,
+	clientApi = createMockClientApi() as unknown as ComapeoCoreClientApi,
 	queryClient = new QueryClient(),
 	getMapServerBaseUrl = async () => new URL('http://localhost:3000'),
 }: {
-	clientApi?: MapeoClientApi
+	clientApi?: ComapeoCoreClientApi
 	queryClient?: QueryClient
 	getMapServerBaseUrl?: () => Promise<URL>
 } = {}) {

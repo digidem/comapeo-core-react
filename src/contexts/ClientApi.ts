@@ -1,4 +1,4 @@
-import type { MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import { useQueryClient } from '@tanstack/react-query'
 import {
 	createContext,
@@ -11,11 +11,11 @@ import {
 
 import { getInvitesQueryKey } from '../lib/react-query.js'
 
-export const ClientApiContext: Context<MapeoClientApi | null> =
-	createContext<MapeoClientApi | null>(null)
+export const ClientApiContext: Context<ComapeoCoreClientApi | null> =
+	createContext<ComapeoCoreClientApi | null>(null)
 
 export type ClientApiProviderProps = PropsWithChildren<{
-	clientApi: MapeoClientApi
+	clientApi: ComapeoCoreClientApi
 }>
 
 /**

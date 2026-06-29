@@ -1,7 +1,7 @@
-import type { MapeoProjectApi } from '@comapeo/ipc'
+import type { ComapeoProjectClientApi } from '@comapeo/ipc'
 
 export type SyncState = Awaited<
-	ReturnType<MapeoProjectApi['$sync']['getState']>
+	ReturnType<ComapeoProjectClientApi['$sync']['getState']>
 >
 
 function getDataSyncCountForDevice(
@@ -12,7 +12,7 @@ function getDataSyncCountForDevice(
 }
 
 export class SyncStore {
-	#project: MapeoProjectApi
+	#project: ComapeoProjectClientApi
 
 	#listeners = new Set<() => void>()
 	#isSubscribedInternal = false
@@ -22,7 +22,7 @@ export class SyncStore {
 	// Used for calculating sync progress
 	#perDeviceMaxSyncCount = new Map<string, number>()
 
-	constructor(project: MapeoProjectApi) {
+	constructor(project: ComapeoProjectClientApi) {
 		this.#project = project
 	}
 

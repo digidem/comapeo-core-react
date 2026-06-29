@@ -1,5 +1,5 @@
 import type { DeviceInfo } from '@comapeo/core/schema.js'
-import type { MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import {
 	useMutation,
 	useQueryClient,
@@ -43,7 +43,7 @@ import {
  * ```
  *
  */
-export function useClientApi(): MapeoClientApi {
+export function useClientApi(): ComapeoCoreClientApi {
 	const clientApi = useContext(ClientApiContext)
 
 	if (!clientApi) {
@@ -67,7 +67,9 @@ export function useClientApi(): MapeoClientApi {
  */
 export function useOwnDeviceInfo(): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['getDeviceInfo']>>>,
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<ComapeoCoreClientApi['getDeviceInfo']>>
+	>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const clientApi = useClientApi()

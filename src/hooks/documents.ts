@@ -1,4 +1,4 @@
-import type { MapeoProjectApi } from '@comapeo/ipc'
+import type { ComapeoProjectClientApi } from '@comapeo/ipc'
 import {
 	useMutation,
 	useQueryClient,
@@ -59,7 +59,7 @@ export function useSingleDocByDocId<D extends WriteableDocumentType>({
 Pick<
 	UseSuspenseQueryResult<
 		// NOTE: Using NonNullable here to get the return type associated with the overload that uses `mustBeFound: true`
-		NonNullable<Awaited<ReturnType<MapeoProjectApi[D]['getByDocId']>>>
+		NonNullable<Awaited<ReturnType<ComapeoProjectClientApi[D]['getByDocId']>>>
 	>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -126,7 +126,7 @@ export function useSingleDocByVersionId<D extends WriteableDocumentType>({
 }): // NOTE: Needs explicit return type due to TS struggles with inference
 Pick<
 	UseSuspenseQueryResult<
-		Awaited<ReturnType<MapeoProjectApi[D]['getByVersionId']>>
+		Awaited<ReturnType<ComapeoProjectClientApi[D]['getByVersionId']>>
 	>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -199,7 +199,9 @@ export function useManyDocs<D extends WriteableDocumentType>({
 	lang?: string
 }): // NOTE: Needs explicit return type due to TS struggles with inference
 Pick<
-	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi[D]['getMany']>>>,
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<ComapeoProjectClientApi[D]['getMany']>>
+	>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -243,7 +245,7 @@ export function useCreateDocument<D extends WriteableDocumentType>({
 }): // NOTE: Needs explicit return type due to TS struggles with inference
 FilteredMutationResult<
 	UseMutationResult<
-		Awaited<ReturnType<MapeoProjectApi[D]['create']>>,
+		Awaited<ReturnType<ComapeoProjectClientApi[D]['create']>>,
 		Error,
 		{ value: Omit<WriteableValue<D>, 'schemaName'> }
 	>
@@ -293,7 +295,7 @@ export function useUpdateDocument<D extends WriteableDocumentType>({
 }): // NOTE: Needs explicit return type due to TS struggles with inference
 FilteredMutationResult<
 	UseMutationResult<
-		Awaited<ReturnType<MapeoProjectApi[D]['update']>>,
+		Awaited<ReturnType<ComapeoProjectClientApi[D]['update']>>,
 		Error,
 		{ value: Omit<WriteableValue<D>, 'schemaName'>; versionId: string }
 	>
@@ -345,7 +347,7 @@ export function useDeleteDocument<D extends WriteableDocumentType>({
 }): // NOTE: Needs explicit return type due to TS2742
 FilteredMutationResult<
 	UseMutationResult<
-		Awaited<ReturnType<MapeoProjectApi[D]['delete']>>,
+		Awaited<ReturnType<ComapeoProjectClientApi[D]['delete']>>,
 		Error,
 		{ docId: string }
 	>
