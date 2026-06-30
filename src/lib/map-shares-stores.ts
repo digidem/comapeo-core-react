@@ -1,5 +1,5 @@
 import type { MapShare } from '@comapeo/core'
-import type { MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import { type MapShareState as ServerMapShareState } from '@comapeo/map-server'
 import { CUSTOM_MAP_ID } from '@comapeo/map-server/constants.js'
 import { errors } from '@comapeo/map-server/errors.js'
@@ -359,7 +359,7 @@ export function createReceivedMapSharesStore({
 	mapServerApi,
 	queryClient,
 }: {
-	clientApi: MapeoClientApi
+	clientApi: ComapeoCoreClientApi
 	mapServerApi: MapServerApi
 	queryClient: QueryClient
 }) {
@@ -487,7 +487,7 @@ export function createSentMapSharesStore({
 	clientApi,
 	mapServerApi,
 }: {
-	clientApi: MapeoClientApi
+	clientApi: ComapeoCoreClientApi
 	mapServerApi: MapServerApi
 }) {
 	const { subscribe, getSnapshot, update, add, handleError, monitor } =

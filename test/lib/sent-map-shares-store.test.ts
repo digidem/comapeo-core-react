@@ -1,7 +1,7 @@
 /**
  * @vitest-environment node
  */
-import type { MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import type { MapShareState as ServerMapShareState } from '@comapeo/map-server'
 import ky from 'ky'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -36,7 +36,7 @@ describe('SentMapSharesStore', () => {
 		receiver = await startMapServer(t)
 
 		sentStore = createSentMapSharesStore({
-			clientApi: mockClientApi as unknown as MapeoClientApi,
+			clientApi: mockClientApi as unknown as ComapeoCoreClientApi,
 			mapServerApi: createMapServerApi({
 				getBaseUrl: async () => new URL(sender.localBaseUrl),
 			}),

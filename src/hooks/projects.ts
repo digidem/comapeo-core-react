@@ -4,7 +4,10 @@ import type {
 	IconApi,
 	MemberApi,
 } from '@comapeo/core'
-import type { MapeoClientApi, MapeoProjectApi } from '@comapeo/ipc'
+import type {
+	ComapeoCoreClientApi,
+	ComapeoProjectClientApi,
+} from '@comapeo/ipc'
 import {
 	matchQuery,
 	useMutation,
@@ -54,7 +57,7 @@ export function useProjectSettings({
 }): // NOTE: Needs explicit return type due to TS2742
 Pick<
 	UseSuspenseQueryResult<
-		Awaited<ReturnType<MapeoProjectApi['$getProjectSettings']>>
+		Awaited<ReturnType<ComapeoProjectClientApi['$getProjectSettings']>>
 	>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -91,7 +94,7 @@ export function useSingleProject({
 	projectId: string
 }): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<MapeoProjectApi>,
+	UseSuspenseQueryResult<ComapeoProjectClientApi>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const clientApi = useClientApi()
@@ -127,7 +130,9 @@ Pick<
  */
 export function useManyProjects(): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<Awaited<ReturnType<MapeoClientApi['listProjects']>>>,
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<ComapeoCoreClientApi['listProjects']>>
+	>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const clientApi = useClientApi()
@@ -167,7 +172,7 @@ export function useSingleMember({
 }): // NOTE: Needs explicit return type due to TS2742
 Pick<
 	UseSuspenseQueryResult<
-		Awaited<ReturnType<MapeoProjectApi['$member']['getById']>>
+		Awaited<ReturnType<ComapeoProjectClientApi['$member']['getById']>>
 	>,
 	'data' | 'error' | 'isRefetching'
 > {
@@ -371,7 +376,11 @@ const FAKE_BLOB_ID: BlobApi.BlobId = {
  * @internal
  * Hack to retrieve the media server origin (protocol + host).
  */
-function useMediaServerOrigin({ projectApi }: { projectApi: MapeoProjectApi }) {
+function useMediaServerOrigin({
+	projectApi,
+}: {
+	projectApi: ComapeoProjectClientApi
+}) {
 	const { data, error, isRefetching } = useSuspenseQuery({
 		...baseQueryOptions(),
 		// HACK: The server doesn't yet expose a method to get its origin, so we use
@@ -455,7 +464,9 @@ export function useOwnRoleInProject({
 	projectId: string
 }): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<Awaited<ReturnType<MapeoProjectApi['$getOwnRole']>>>,
+	UseSuspenseQueryResult<
+		Awaited<ReturnType<ComapeoProjectClientApi['$getOwnRole']>>
+	>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -536,7 +547,7 @@ export function useCreateProject() {
 		useMutation({
 			...baseMutationOptions(),
 			mutationFn: async (
-				opts?: Parameters<MapeoClientApi['createProject']>[0],
+				opts?: Parameters<ComapeoCoreClientApi['createProject']>[0],
 			) => {
 				// Have to avoid passing `undefined` explicitly
 				// See https://github.com/digidem/rpc-reflector/issues/21
@@ -849,7 +860,7 @@ export function useCreateBlob({ projectId }: { projectId: string }) {
 	)
 }
 
-const PROJECT_SYNC_STORE_MAP = new WeakMap<MapeoProjectApi, SyncStore>()
+const PROJECT_SYNC_STORE_MAP = new WeakMap<ComapeoProjectClientApi, SyncStore>()
 
 function useSyncStore({ projectId }: { projectId: string }) {
 	const { data: projectApi } = useSingleProject({ projectId })

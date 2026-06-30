@@ -11,7 +11,7 @@
 // Set up minimal DOM globals needed for React rendering in this test file
 import '../helpers/jsdom-setup.js'
 
-import { type MapeoClientApi } from '@comapeo/ipc'
+import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import {
 	Suspense,
@@ -104,7 +104,7 @@ describe('Received Map Shares Hooks', () => {
 
 		// Receiver wrapper - for testing received hooks
 		receiverWrapper = createWrapper({
-			clientApi: mockClientApi as unknown as MapeoClientApi,
+			clientApi: mockClientApi as unknown as ComapeoCoreClientApi,
 			getMapServerBaseUrl: async () => new URL(receiver.localBaseUrl),
 		})
 
@@ -1023,7 +1023,7 @@ describe('Sent Map Shares Hooks', () => {
 
 		// For sent hooks, we use the sender's map server
 		wrapper = createWrapper({
-			clientApi: mockClientApi as unknown as MapeoClientApi,
+			clientApi: mockClientApi as unknown as ComapeoCoreClientApi,
 			getMapServerBaseUrl: async () => new URL(sender.localBaseUrl),
 		})
 	})

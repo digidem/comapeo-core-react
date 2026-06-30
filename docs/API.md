@@ -1456,7 +1456,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Type | Type |
 | ---------- | ---------- |
-| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: MapeoClientApi }>` |
+| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi }>` |
 
 ### MapServerApiOptions
 
