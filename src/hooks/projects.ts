@@ -22,7 +22,6 @@ import {
 	baseMutationOptions,
 	baseQueryOptions,
 	filterMutationResult,
-	getDocumentCreatedByQueryKey,
 	getMediaServerOriginQueryKey,
 	getMemberByIdQueryKey,
 	getMembersQueryKey,
@@ -391,50 +390,6 @@ function useMediaServerOrigin({
 		queryFn: async () => {
 			const url = await projectApi.$blobs.getUrl(FAKE_BLOB_ID)
 			return new URL(url).origin
-		},
-		staleTime: 'static',
-		gcTime: Infinity,
-	})
-
-	return { data, error, isRefetching }
-}
-
-// TODO: Eventually remove in favor of this information being provided by the backend when retrieving documents
-/**
- * Retrieve the device ID that created a document.
- *
- * @param opts.projectId Project public ID
- * @param opts.originalVersionId Version ID of document
- *
- * @example
- * ```tsx
- * function BasicExample() {
- *   const { data } = useDocumentCreatedBy({
- *     projectId: '...',
- *     originalVersionId: '...',
- *   })
- * }
- * ```
- *
- * @deprecated Use `createdBy` field from document read hooks.
- */
-export function useDocumentCreatedBy({
-	projectId,
-	originalVersionId,
-}: {
-	projectId: string
-	originalVersionId: string
-}) {
-	const { data: projectApi } = useSingleProject({ projectId })
-
-	const { data, error, isRefetching } = useSuspenseQuery({
-		...baseQueryOptions(),
-		queryKey: getDocumentCreatedByQueryKey({
-			projectId,
-			originalVersionId,
-		}),
-		queryFn: async () => {
-			return projectApi.$originalVersionIdToDeviceId(originalVersionId)
 		},
 		staleTime: 'static',
 		gcTime: Infinity,
