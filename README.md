@@ -55,17 +55,13 @@ const queryClient = new QueryClient()
 
 const servicesClient = createComapeoServicesClient(port)
 
-const getMapServerBaseUrl = async () => {
-	return new URL(await servicesClient.mapServer.getBaseUrl())
-}
-
 function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ComapeoCoreProvider
 				clientApi={clientApi}
 				queryClient={queryClient}
-				getMapServerBaseUrl={getMapServerBaseUrl}
+				getMapServerBaseUrl={servicesClient.mapServer.getBaseUrl}
 			>
 				<MyApp />
 			</ComapeoCoreProvider>

@@ -22,7 +22,7 @@ import {
 } from './MapShares.js'
 
 export type MapServerApiOptions = {
-	getBaseUrl(): Promise<URL>
+	getBaseUrl(): Promise<URL | string>
 	/**
 	 * We assume the passed fetch implementation will only accept a `string` as
 	 * input, not a `URL` or `Request`, because right now the expo/fetch
