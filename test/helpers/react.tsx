@@ -12,7 +12,7 @@ export function createWrapper({
 }: {
 	clientApi?: ComapeoCoreClientApi
 	queryClient?: QueryClient
-	getMapServerBaseUrl?: () => Promise<URL>
+	getMapServerBaseUrl?: () => Promise<URL | string>
 } = {}) {
 	return ({ children }: PropsWithChildren<unknown>) => {
 		return (

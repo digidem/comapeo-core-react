@@ -5,7 +5,7 @@ import { MapServerProvider, type MapServerProviderProps } from './MapServer.js'
 
 type ComapeoCoreProviderProps = ClientApiProviderProps &
 	Omit<MapServerProviderProps, 'getBaseUrl'> & {
-		getMapServerBaseUrl(): Promise<URL>
+		getMapServerBaseUrl(): Promise<URL | string>
 	}
 
 export function ComapeoCoreProvider({

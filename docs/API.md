@@ -1462,7 +1462,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapServerApiOptions` | `{ getBaseUrl(): Promise<URL> /** * We assume the passed fetch implementation will only accept a `string` as * input, not a `URL` or `Request`, because right now the expo/fetch * implementation will only accept a `string`. Adding this restriction will * catch potential issues if we try to pass a URL in our code. Can be relaxed * when https://github.com/expo/expo/issues/43193 is fixed upstream. */ fetch?(input: string, options?: RequestInit): Promise<Response> }` |
+| `MapServerApiOptions` | `{ getBaseUrl(): Promise<URL or string> /** * We assume the passed fetch implementation will only accept a `string` as * input, not a `URL` or `Request`, because right now the expo/fetch * implementation will only accept a `string`. Adding this restriction will * catch potential issues if we try to pass a URL in our code. Can be relaxed * when https://github.com/expo/expo/issues/43193 is fixed upstream. */ fetch?(input: string, options?: RequestInit): Promise<Response> }` |
 
 ### MapServerApi
 
