@@ -67,7 +67,7 @@
 		"@comapeo/map-server": "^1.1.4",
 		"ensure-error": "^5.0.0",
 		"eventsource-client": "^1.2.0",
-		"type-fest": "^5.7.0"
+		"type-fest": "^5.8.0"
 	},
 	"peerDependencies": {
 		"@comapeo/core": "^7.2.0",
