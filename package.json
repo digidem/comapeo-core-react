@@ -100,7 +100,7 @@
 		"husky": "9.1.7",
 		"jsdom": "29.1.1",
 		"ky": "2.0.2",
-		"lint-staged": "17.0.8",
+		"lint-staged": "17.1.1",
 		"npm-run-all2": "9.0.2",
 		"prettier": "3.9.6",
 		"random-access-memory": "6.2.1",
