@@ -9,7 +9,10 @@ import {
 } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
-import { useMapServerApi } from '../contexts/MapServer.js'
+import {
+	useMapServerApi,
+	type ExpoFileDuckType,
+} from '../contexts/MapServer.js'
 import {
 	useReceivedMapSharesActions,
 	useReceivedMapSharesState,
@@ -71,18 +74,12 @@ export function useMapStyleUrl() {
 	return { data, error, isRefetching }
 }
 
-// Expo's file-system File type is close to the standard File type, so for our
-// import function we accept an object with the compatible properties and
-// methods, and for the expo File, which can represent a file that does not yet
-// exists, we type the `exists` property so that we can check that.
-type CompatFile = Omit<File, 'lastModified' | 'webkitRelativePath'>
-type ExpoFileDuckType = CompatFile & {
-	exists: boolean
-}
-
 /**
  * Import a custom SMP map file, replacing any existing custom map. The mutation
  * resolves once the file is successfully uploaded and processed by the server.
+ * If the file has an `upload` method (e.g. an expo-file-system `File`), it is
+ * used for the upload so that the file is streamed from disk rather than read
+ * into memory.
  *
  * @example
  * ```tsx
@@ -106,8 +103,7 @@ export function useImportCustomMapFile() {
 				if ('exists' in file && !file.exists) {
 					throw new Error('File does not exist or is not accessible')
 				}
-				return mapServerApi.put(`maps/${mapId}`, {
-					body: file,
+				return mapServerApi.uploadFile(`maps/${mapId}`, file, {
 					headers: {
 						'Content-Type': 'application/octet-stream',
 					},
