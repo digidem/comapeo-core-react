@@ -15,11 +15,43 @@ import {
 } from 'react'
 
 import { useClientApi } from '../hooks/client.js'
-import { createHttp } from '../lib/http.js'
+import { createHttp, HTTPError } from '../lib/http.js'
 import {
 	ReceivedMapSharesProvider,
 	SentMapSharesProvider,
 } from './MapShares.js'
+
+// Expo's file-system File type is close to the standard File type, so for our
+// import function we accept an object with the compatible properties and
+// methods, and for the expo File, which can represent a file that does not yet
+// exists, we type the `exists` property so that we can check that.
+export type CompatFile = Omit<File, 'lastModified' | 'webkitRelativePath'>
+export type ExpoFileDuckType = CompatFile & {
+	exists: boolean
+}
+
+type ExpoFileUploadResult = {
+	status: number
+	headers: Record<string, string>
+	body: string
+}
+
+type ExpoFileWithUpload = ExpoFileDuckType & {
+	upload(
+		url: string,
+		options?: {
+			headers?: Record<string, string>
+			httpMethod?: string
+			sessionType?: 'background' | 'foreground'
+		},
+	): Promise<ExpoFileUploadResult>
+}
+
+function isExpoFileWithUpload(
+	file: CompatFile | ExpoFileDuckType,
+): file is ExpoFileWithUpload {
+	return 'upload' in file && typeof file.upload === 'function'
+}
 
 export type MapServerApiOptions = {
 	getBaseUrl(): Promise<URL | string>
@@ -36,6 +68,11 @@ export type MapServerApiOptions = {
 export type MapServerApi = ReturnType<typeof createHttp> & {
 	createEventSource(options: EventSourceOptions): EventSourceClient
 	getMapStyleJsonUrl(mapId: string): Promise<string>
+	uploadFile(
+		path: string,
+		file: CompatFile | ExpoFileDuckType,
+		options?: { headers?: Record<string, string> },
+	): Promise<Response>
 }
 
 /**
@@ -70,6 +107,46 @@ export function createMapServerApi({
 		value: async (mapId: string) => {
 			const baseUrl = await getBaseUrl()
 			return new URL(`/maps/${mapId}/style.json`, baseUrl).href
+		},
+	})
+	Object.defineProperty(api, 'uploadFile', {
+		value: async (
+			path: string,
+			file: CompatFile | ExpoFileDuckType,
+			options: { headers?: Record<string, string> } = {},
+		): Promise<Response> => {
+			if (!isExpoFileWithUpload(file)) {
+				return api.put(path, { body: file, headers: options.headers })
+			}
+			// expo-file-system's File.upload() streams the file from disk, unlike
+			// expo/fetch, which reads the whole request body into memory.
+			const baseUrl = await getBaseUrl()
+			const url = new URL(path, baseUrl).href
+			const result = await file.upload(url, {
+				httpMethod: 'PUT',
+				headers: options.headers,
+				// The map server runs in-process: an iOS background session (the
+				// default), which outlives app suspension, cannot reach it.
+				sessionType: 'foreground',
+			})
+			const canHaveBody = ![204, 205, 304].includes(result.status)
+			const response = new Response(canHaveBody ? result.body : null, {
+				status: result.status,
+				headers: result.headers,
+			})
+			if (!response.ok) {
+				let errorBody: Record<string, unknown> = {}
+				try {
+					const parsed: unknown = JSON.parse(result.body)
+					if (typeof parsed === 'object' && parsed !== null) {
+						errorBody = parsed as Record<string, unknown>
+					}
+				} catch {
+					// Non-JSON error body: fall back to the default HTTPError message
+				}
+				throw new HTTPError(response, { method: 'PUT', url, ...errorBody })
+			}
+			return response
 		},
 	})
 	return api as MapServerApi
