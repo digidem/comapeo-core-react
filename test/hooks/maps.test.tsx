@@ -135,6 +135,99 @@ describe('Map Hooks', () => {
 			expect(result.current.styleUrl.data).not.toBe(urlBefore)
 		})
 
+		it('uses the file `upload` method when available (e.g. expo File)', async (t) => {
+			const server = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
+			const Wrapper = createWrapper({
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const { result } = renderHook(
+				() => ({
+					styleUrl: useMapStyleUrl(),
+					importMap: useImportCustomMapFile(),
+				}),
+				{ wrapper: Wrapper },
+			)
+
+			await waitFor(() => {
+				expect(result.current.styleUrl.data).toBeDefined()
+			})
+
+			const urlBefore = result.current.styleUrl.data
+
+			const buffer = fs.readFileSync(DEMOTILES_Z2)
+			const upload = vi.fn(
+				async (url: string, options?: { headers?: Record<string, string> }) => {
+					const response = await fetch(url, {
+						method: 'PUT',
+						headers: options?.headers,
+						body: buffer,
+					})
+					return {
+						status: response.status,
+						headers: Object.fromEntries(response.headers.entries()),
+						body: await response.text(),
+					}
+				},
+			)
+			const file = Object.assign(
+				readFixtureAsFile(DEMOTILES_Z2, 'demotiles-z2.smp'),
+				{ exists: true, upload },
+			)
+
+			await act(async () => {
+				await result.current.importMap.mutateAsync({ file })
+			})
+
+			expect(upload).toHaveBeenCalledOnce()
+			const [url, options] = upload.mock.calls[0]!
+			expect(new URL(url).pathname).toBe('/maps/custom')
+			expect(options).toMatchObject({
+				httpMethod: 'PUT',
+				headers: { 'Content-Type': 'application/octet-stream' },
+				sessionType: 'foreground',
+			})
+
+			await waitFor(() =>
+				expect(result.current.styleUrl.data).not.toBe(urlBefore),
+			)
+		})
+
+		it('rejects with an HTTPError when the `upload` method returns an error response', async (t) => {
+			const server = await startMapServer(t)
+			const Wrapper = createWrapper({
+				getMapServerBaseUrl: async () => new URL(server.localBaseUrl),
+			})
+
+			const { result } = renderHook(() => useImportCustomMapFile(), {
+				wrapper: Wrapper,
+			})
+
+			const upload = vi.fn(async () => ({
+				status: 400,
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					message: 'Invalid SMP file',
+					code: 'INVALID_MAP_FILE',
+				}),
+			}))
+			const file = Object.assign(
+				readFixtureAsFile(DEMOTILES_Z2, 'demotiles-z2.smp'),
+				{ exists: true, upload },
+			)
+
+			await expect(
+				act(async () => {
+					await result.current.mutateAsync({ file })
+				}),
+			).rejects.toMatchObject({
+				name: 'HTTPError',
+				status: 400,
+				code: 'INVALID_MAP_FILE',
+				message: 'Invalid SMP file',
+			})
+		})
+
 		it('style json content changes after map import', async (t) => {
 			const server = await startMapServer(t, { customMapPath: OSM_BRIGHT_Z6 })
 			const Wrapper = createWrapper({

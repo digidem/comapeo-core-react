@@ -1130,6 +1130,9 @@ function ExampleWithoutRefreshToken() {
 
 Import a custom SMP map file, replacing any existing custom map. The mutation
 resolves once the file is successfully uploaded and processed by the server.
+If the file has an `upload` method (e.g. an expo-file-system `File`), it is
+used for the upload so that the file is streamed from disk rather than read
+into memory.
 
 | Function | Type |
 | ---------- | ---------- |
@@ -1448,6 +1451,8 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 ## Types
 
 - [ClientApiProviderProps](#clientapiproviderprops)
+- [CompatFile](#compatfile)
+- [ExpoFileDuckType](#expofileducktype)
 - [MapServerApiOptions](#mapserverapioptions)
 - [MapServerApi](#mapserverapi)
 - [MapServerProviderProps](#mapserverproviderprops)
@@ -1457,6 +1462,18 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 | Type | Type |
 | ---------- | ---------- |
 | `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi }>` |
+
+### CompatFile
+
+| Type | Type |
+| ---------- | ---------- |
+| `CompatFile` | `Omit<File, 'lastModified' or 'webkitRelativePath'>` |
+
+### ExpoFileDuckType
+
+| Type | Type |
+| ---------- | ---------- |
+| `ExpoFileDuckType` | `CompatFile and { exists: boolean }` |
 
 ### MapServerApiOptions
 
@@ -1468,7 +1485,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Type | Type |
 | ---------- | ---------- |
-| `MapServerApi` | `ReturnType<typeof createHttp> and { createEventSource(options: EventSourceOptions): EventSourceClient getMapStyleJsonUrl(mapId: string): Promise<string> }` |
+| `MapServerApi` | `ReturnType<typeof createHttp> and { createEventSource(options: EventSourceOptions): EventSourceClient getMapStyleJsonUrl(mapId: string): Promise<string> uploadFile( path: string, file: CompatFile or ExpoFileDuckType, options?: { headers?: Record<string, string> }, ): Promise<Response> }` |
 
 ### MapServerProviderProps
 
