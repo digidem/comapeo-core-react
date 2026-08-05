@@ -166,20 +166,22 @@ test(
 		// the manager closes the stale project instance and opens a fresh one.
 		await inviteAndAccept()
 
-		// Simulates the app navigating (back) into the project after re-joining
+		// Simulates the app navigating (back) into the project after re-joining:
+		// the project provider and its dependent screens mount together, so a
+		// stale cached project client would be handed to the dependent queries
+		// synchronously (digidem/comapeo-mobile#2041's fatal ProjectClosed).
 		const rejoinedProjectHook = renderHook(
 			({ projectId }) => useSingleProject({ projectId }),
+			{ wrapper, initialProps: { projectId } },
+		)
+		const settingsHook = renderHook(
+			({ projectId }) => useProjectSettings({ projectId }),
 			{ wrapper, initialProps: { projectId } },
 		)
 		await waitFor(() => {
 			assert.isNotNull(rejoinedProjectHook.result.current)
 			assert.ok(rejoinedProjectHook.result.current.data)
 		})
-
-		const settingsHook = renderHook(
-			({ projectId }) => useProjectSettings({ projectId }),
-			{ wrapper, initialProps: { projectId } },
-		)
 		await waitFor(
 			() => {
 				assert.isNotNull(settingsHook.result.current)
