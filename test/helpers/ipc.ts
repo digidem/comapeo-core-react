@@ -51,6 +51,7 @@ export function setupCoreIpc() {
 		port2,
 		server,
 		client,
+		manager,
 		fastifyController,
 		cleanup: async () => {
 			server.close()
