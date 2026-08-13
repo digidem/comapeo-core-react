@@ -5,12 +5,13 @@ import {
 	useQuery,
 } from '@tanstack/react-query'
 import { act, render, waitFor, within } from '@testing-library/react'
-import { Suspense, type ReactNode } from 'react'
+import { Component, Suspense, type ReactNode } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
 	ComapeoCoreProvider,
 	useAttachmentUrl,
+	useOwnDeviceInfo,
 	useProjectSettings,
 	useSingleProject,
 	type SubscribeToBackendRestart,
@@ -388,5 +389,106 @@ describe('recovery after a restart', () => {
 		expect(queryClient.getQueryData(projectQueryKey)).toBe(
 			'from the previous backend',
 		)
+	})
+})
+
+class TestErrorBoundary extends Component<
+	{ children: ReactNode },
+	{ error: Error | null }
+> {
+	override state: { error: Error | null } = { error: null }
+	static getDerivedStateFromError(error: Error) {
+		return { error }
+	}
+	override render() {
+		if (this.state.error) {
+			return (
+				<span data-testid="boundary-error">{this.state.error.message}</span>
+			)
+		}
+		return this.props.children
+	}
+}
+
+function DeviceInfoScreen() {
+	const { data } = useOwnDeviceInfo()
+	return (
+		<span data-testid="device-name">
+			{(data as unknown as { name: string }).name}
+		</span>
+	)
+}
+
+describe('transport-closed retry', () => {
+	// A query in flight when the backend's RPC transport drops rejects with
+	// code RPC_TRANSPORT_CLOSED (a read whose response will never arrive).
+	// `baseQueryOptions` retries only that code, so the query keeps loading
+	// through the restart instead of latching into an error state.
+	test('a transport-closed rejection is retried and resolves', async () => {
+		const queryClient = new QueryClient()
+		const clientApi =
+			createMockClientApi() as unknown as ComapeoCoreClientApi & {
+				getDeviceInfo: ReturnType<typeof vi.fn>
+			}
+		let failuresLeft = 1
+		clientApi.getDeviceInfo = vi.fn(async () => {
+			if (failuresLeft > 0) {
+				failuresLeft -= 1
+				throw Object.assign(new Error('Transport closed'), {
+					code: 'RPC_TRANSPORT_CLOSED',
+				})
+			}
+			return {
+				deviceId: 'device-id',
+				name: 'gecko',
+				deviceType: 'mobile' as const,
+			}
+		})
+
+		const { screen } = renderProvider({
+			queryClient,
+			clientApi,
+			children: (
+				<TestErrorBoundary>
+					<DeviceInfoScreen />
+				</TestErrorBoundary>
+			),
+		})
+
+		await waitFor(
+			() => {
+				expect(screen.getByTestId('device-name').textContent).toBe('gecko')
+			},
+			{ timeout: 5_000 },
+		)
+		expect(screen.queryByTestId('boundary-error')).toBeNull()
+		expect(clientApi.getDeviceInfo.mock.calls.length).toBeGreaterThanOrEqual(2)
+	}, 10_000)
+
+	test('other errors are not retried', async () => {
+		const queryClient = new QueryClient()
+		const clientApi =
+			createMockClientApi() as unknown as ComapeoCoreClientApi & {
+				getDeviceInfo: ReturnType<typeof vi.fn>
+			}
+		clientApi.getDeviceInfo = vi.fn(async () => {
+			throw new Error('genuinely broken')
+		})
+
+		const { screen } = renderProvider({
+			queryClient,
+			clientApi,
+			children: (
+				<TestErrorBoundary>
+					<DeviceInfoScreen />
+				</TestErrorBoundary>
+			),
+		})
+
+		await waitFor(() => {
+			expect(screen.getByTestId('boundary-error').textContent).toBe(
+				'genuinely broken',
+			)
+		})
 	})
 })
