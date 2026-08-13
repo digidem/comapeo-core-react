@@ -1,9 +1,10 @@
 // @vitest-environment node
 import '../helpers/jsdom-setup.js'
 
+import type { InviteApi } from '@comapeo/core'
 import { QueryClient } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { pEvent } from 'p-event'
+import { pEvent, type TypedEventEmitter } from 'p-event'
 import { assert, test } from 'vitest'
 
 import {
@@ -97,7 +98,12 @@ test(
 		const wrapper = createWrapper({ clientApi: invitee.client, queryClient })
 
 		async function inviteAndAccept() {
-			const invitePromise = pEvent(invitee.manager.invite, 'invite-received')
+			const invitePromise = pEvent(
+				invitee.manager.invite as TypedEventEmitter<{
+					'invite-received': [invite: InviteApi.Invite]
+				}>,
+				'invite-received',
+			)
 			const inviteSettled = invitorProject.$member.invite(
 				invitee.manager.deviceId,
 				{ roleId: MEMBER_ROLE_ID },
