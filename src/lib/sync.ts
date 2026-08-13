@@ -1,4 +1,5 @@
 import type { ComapeoProjectClientApi } from '@comapeo/ipc'
+import ensureError from 'ensure-error'
 
 export type SyncState = Awaited<
 	ReturnType<ComapeoProjectClientApi['$sync']['getState']>
@@ -122,8 +123,16 @@ export class SyncStore {
 	}
 
 	#startSubscription = () => {
-		this.#project.$sync.on('sync-state', this.#onSyncState)
 		this.#isSubscribedInternal = true
+		try {
+			this.#project.$sync.on('sync-state', this.#onSyncState)
+		} catch (e) {
+			// A backend restart closes the project wrapper, and @comapeo/ipc
+			// versions before the close became a no-op throw from `on`/`off`.
+			this.#error = ensureError(e)
+			this.#notifyListeners()
+			return
+		}
 		this.#project.$sync
 			.getState()
 			.then(this.#onSyncState)
@@ -135,7 +144,12 @@ export class SyncStore {
 
 	#stopSubscription = () => {
 		this.#isSubscribedInternal = false
-		this.#project.$sync.off('sync-state', this.#onSyncState)
+		try {
+			this.#project.$sync.off('sync-state', this.#onSyncState)
+		} catch {
+			// Runs in React effect cleanup, where a throw from a closed project
+			// wrapper (older @comapeo/ipc) would take down the tree.
+		}
 	}
 }
 
