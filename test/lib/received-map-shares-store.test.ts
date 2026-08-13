@@ -40,6 +40,54 @@ describe('ReceivedMapSharesStore', () => {
 				getBaseUrl: async () => new URL(receiver.localBaseUrl),
 			}),
 		})
+		t.onTestFinished(store.listen())
+	})
+
+	describe('client api listener', () => {
+		function createStore() {
+			return createReceivedMapSharesStore({
+				// @ts-expect-error - We're only mocking what we need
+				clientApi: mockClientApi,
+				mapServerApi: createMapServerApi({
+					getBaseUrl: async () => new URL(receiver.localBaseUrl),
+				}),
+			})
+		}
+
+		it('should not attach a listener until listen() is called', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const teardown = createStore().listen()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+
+			teardown()
+		})
+
+		it('should remove its listener on teardown', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const teardown = createStore().listen()
+			teardown()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
+		it('should ignore map-share events after teardown', async () => {
+			const serverShare = await createShare(sender, receiver)
+			const mapShare = createMapShareFromServerShare(
+				sender.deviceId,
+				serverShare,
+			)
+
+			const torndownStore = createStore()
+			const teardown = torndownStore.listen()
+			teardown()
+
+			mockClientApi.emit('map-share', mapShare)
+
+			expect(torndownStore.getSnapshot()).toHaveLength(0)
+		})
 	})
 
 	describe('subscription', () => {

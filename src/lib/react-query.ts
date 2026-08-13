@@ -14,6 +14,15 @@ import type { WriteableDocumentType } from './types.js'
 
 const ROOT_QUERY_KEY = '@comapeo/core-react'
 
+/**
+ * Prefix shared by every query key owned by this package. Matching on it
+ * targets all of our caches without touching queries owned by the consuming
+ * app, which may share the same `QueryClient`.
+ */
+export function getRootQueryKey() {
+	return [ROOT_QUERY_KEY] as const
+}
+
 // Since the API is running locally, queries should run regardless of network
 // status, and should not be retried. In React Native the API consumer would
 // have to manually set the network mode, but we still should keep these options

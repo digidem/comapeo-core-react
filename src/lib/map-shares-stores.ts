@@ -369,9 +369,9 @@ export function createReceivedMapSharesStore({
 	// cleanup, but this is unlikely to be an issue in practice.
 	const downloads = new Map<string, Promise<string | void>>()
 
-	clientApi.on('map-share', (mapShare: MapShare) => {
+	function handleMapShare(mapShare: MapShare) {
 		add({ ...mapShare, status: 'pending' })
-	})
+	}
 
 	const actions = {
 		async download({ shareId }: DownloadMapShareOptions) {
@@ -477,6 +477,19 @@ export function createReceivedMapSharesStore({
 		subscribe,
 		getSnapshot,
 		actions,
+		/**
+		 * Start receiving `map-share` events from the client API. Attaching from
+		 * an effect rather than at creation keeps store creation free of side
+		 * effects, so a render that React discards cannot orphan a listener.
+		 *
+		 * @returns A teardown function that removes the listener
+		 */
+		listen() {
+			clientApi.on('map-share', handleMapShare)
+			return () => {
+				clientApi.off('map-share', handleMapShare)
+			}
+		},
 	}
 }
 

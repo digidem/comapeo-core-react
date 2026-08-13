@@ -79,12 +79,13 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: ClientApiProviderProps) => Element` |
+| `ClientApiProvider` | `({ children, clientApi, subscribeToBackendRestart, }: ClientApiProviderProps) => Element` |
 
 Parameters:
 
 * `opts.children`: React children node
 * `opts.clientApi`: Client API instance
+* `opts.subscribeToBackendRestart`: Optional subscribe function for backend-restart notifications
 
 
 ### useClientApi
@@ -287,7 +288,7 @@ Throws if used outside of MapServerProvider.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ComapeoCoreProvider` | `({ children, clientApi, getMapServerBaseUrl, fetch, queryClient, }: ComapeoCoreProviderProps) => Element` |
+| `ComapeoCoreProvider` | `({ children, clientApi, getMapServerBaseUrl, fetch, queryClient, subscribeToBackendRestart, }: ComapeoCoreProviderProps) => Element` |
 
 ### useProjectSettings
 
@@ -1432,7 +1433,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ReceivedMapShareState[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<...>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; } or null>` |
+| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ReceivedMapShareState[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<...>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; listen(): (...` |
 
 ### SentMapSharesContext
 
@@ -1461,7 +1462,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Type | Type |
 | ---------- | ---------- |
-| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi }>` |
+| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi /** * Subscribe to notifications that the CoMapeo backend restarted, so that * cached data pointing at the previous backend instance can be discarded. * * A "restart" means the backend lost all of its in-memory state and came * back as a fresh instance — for example on Android, where the backend runs * in its own OS process that the system can kill under memory pressure and * later restart while the app keeps running. It does *not* mean a dropped * and re-established transport connection to a backend that is still alive. * * The listener should be called after the RPC transport has reconnected to * the new backend, i.e. once requests made on it will reach the new * instance. * * Platforms whose backend cannot outlive the app (desktop, where the backend * dying exits the app) should omit this prop. * * @param listener Called each time the backend has restarted * @returns A function that removes the listener * * @example * ```tsx * import { state } from '@comapeo/core-react-native' * * function subscribeToBackendRestart(listener: () => void) { *   return state.addRestartListener(listener) * } * * <ComapeoCoreProvider subscribeToBackendRestart={subscribeToBackendRestart} /> * ``` */ subscribeToBackendRestart?: (listener: () => void) => () => void }>` |
 
 ### CompatFile
 

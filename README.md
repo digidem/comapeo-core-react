@@ -72,6 +72,26 @@ function App() {
 
 Hooks that communicate with the map server will wait for `getMapServerBaseUrl()` to resolve before making requests, so the provider can be mounted before the server is ready. You can also provide an optional `fetch` prop to use a custom fetch implementation.
 
+### Recovering from a backend restart
+
+On platforms where the backend can restart underneath a running app — Android, where it lives in a separate OS process that the system may kill under memory pressure — pass a `subscribeToBackendRestart` function. It receives a listener and returns a function that removes it:
+
+```tsx
+<ComapeoCoreProvider
+	clientApi={clientApi}
+	queryClient={queryClient}
+	getMapServerBaseUrl={servicesClient.mapServer.getBaseUrl}
+	subscribeToBackendRestart={(listener) => {
+		// Call `listener` once the transport has reconnected to the new backend
+		return subscribeToRestarts(listener)
+	}}
+>
+	<MyApp />
+</ComapeoCoreProvider>
+```
+
+Each notification clears this package's cached data, including the per-project API instances, which otherwise keep pointing at the backend that went away. Platforms whose backend cannot outlive the app, such as desktop, should omit the prop.
+
 ## API Documentation
 
 Still a work in progress. Currently lives in [`docs/API.md`](./docs/API.md).
