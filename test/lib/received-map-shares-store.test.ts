@@ -73,6 +73,40 @@ describe('ReceivedMapSharesStore', () => {
 			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
 		})
 
+		it('should not register a second listener when listen() is called twice', async () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const doubleListeningStore = createStore()
+			const teardown = doubleListeningStore.listen()
+			const secondTeardown = doubleListeningStore.listen()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+			expect(secondTeardown).toBe(teardown)
+
+			const serverShare = await createShare(sender, receiver)
+			mockClientApi.emit(
+				'map-share',
+				createMapShareFromServerShare(sender.deviceId, serverShare),
+			)
+			expect(doubleListeningStore.getSnapshot()).toHaveLength(1)
+
+			teardown()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
+		it('should re-attach when listen() is called again after teardown', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const relisteningStore = createStore()
+			relisteningStore.listen()()
+
+			const teardown = relisteningStore.listen()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+
+			teardown()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
 		it('should ignore map-share events after teardown', async () => {
 			const serverShare = await createShare(sender, receiver)
 			const mapShare = createMapShareFromServerShare(

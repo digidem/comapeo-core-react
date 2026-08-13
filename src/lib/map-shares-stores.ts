@@ -306,6 +306,9 @@ function createMapSharesStore<
 
 	async function monitor(mapShareId: string, path: string) {
 		// TODO: add a timeout in case the download stalls and never completes
+		// TODO: the event source has no error path either, so a transport failure
+		// (e.g. the map server going away with a backend restart) leaves this
+		// promise pending forever and the share stuck in `downloading`
 		return new Promise<MapShareStateUpdate>((resolve, reject) => {
 			const es = mapServerApi.createEventSource({
 				url: path,
@@ -372,6 +375,8 @@ export function createReceivedMapSharesStore({
 	function handleMapShare(mapShare: MapShare) {
 		add({ ...mapShare, status: 'pending' })
 	}
+
+	let stopListening: (() => void) | undefined
 
 	const actions = {
 		async download({ shareId }: DownloadMapShareOptions) {
@@ -482,13 +487,20 @@ export function createReceivedMapSharesStore({
 		 * an effect rather than at creation keeps store creation free of side
 		 * effects, so a render that React discards cannot orphan a listener.
 		 *
+		 * Calling this while already listening is a no-op that returns the
+		 * existing teardown, so a double-invoked effect cannot register the
+		 * listener twice and have every share added to the store twice.
+		 *
 		 * @returns A teardown function that removes the listener
 		 */
 		listen() {
+			if (stopListening) return stopListening
 			clientApi.on('map-share', handleMapShare)
-			return () => {
+			stopListening = () => {
+				stopListening = undefined
 				clientApi.off('map-share', handleMapShare)
 			}
+			return stopListening
 		},
 	}
 }
