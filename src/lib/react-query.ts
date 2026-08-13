@@ -314,3 +314,84 @@ export function getDocumentByVersionIdQueryKey<
 }
 
 // #endregion
+
+// #region Backend restart
+
+const PROJECT_INSTANCE_QUERY_KEY_LENGTH = getProjectByIdQueryKey({
+	projectId: '',
+}).length
+
+function hasPrefix(
+	queryKey: ReadonlyArray<unknown>,
+	prefix: ReadonlyArray<unknown>,
+) {
+	return prefix.every((segment, index) => queryKey[index] === segment)
+}
+
+function isProjectScopedQueryKey(queryKey: ReadonlyArray<unknown>) {
+	return hasPrefix(queryKey, getProjectsQueryKey())
+}
+
+/**
+ * Queries fetched through a `ComapeoProjectClientApi` instance, which a restart
+ * leaves closed: everything nested below `projects/<projectId>`, plus the media
+ * server origin, which is keyed outside the project namespace but is read from
+ * a project instance.
+ *
+ * `document_created_by` is content-addressed, so its data survives a restart,
+ * but it is dropped with the rest rather than carved out — re-reading an
+ * immutable mapping is cheaper than the exception.
+ */
+function isBoundToProjectInstance(queryKey: ReadonlyArray<unknown>) {
+	return (
+		hasPrefix(queryKey, getMediaServerOriginQueryKey()) ||
+		(isProjectScopedQueryKey(queryKey) &&
+			queryKey.length > PROJECT_INSTANCE_QUERY_KEY_LENGTH)
+	)
+}
+
+function isProjectInstanceQueryKey(queryKey: ReadonlyArray<unknown>) {
+	return (
+		isProjectScopedQueryKey(queryKey) &&
+		queryKey.length === PROJECT_INSTANCE_QUERY_KEY_LENGTH
+	)
+}
+
+/**
+ * Drop the cached data that a backend restart made unusable and get mounted
+ * components fetching against the new backend.
+ *
+ * Each of the three steps does something the others cannot:
+ *
+ * 1. `removeQueries` for everything read through a project instance. Their
+ *    `queryFn`s close over a project client from the dead backend, so
+ *    invalidating them refetches with that closure — and a `useSuspenseQuery`
+ *    with `retry: false` then latches into `status: 'error'`, which
+ *    `shouldFetchOptionally` in query-core never retries. Removing is the only
+ *    way to get a fresh closure (same reasoning as the rejoin fix in #199).
+ *    It also covers `staleTime: 'static'` keys, which invalidation skips
+ *    structurally.
+ * 2. `resetQueries` for the project instances themselves. Removal is invisible
+ *    to a mounted observer — it keeps rendering its last result indefinitely
+ *    because nothing dispatches a state change — whereas resetting does
+ *    dispatch, so components suspend on `useSingleProject`, rebuild the queries
+ *    removed in step 1 and refetch them with closures over the new project
+ *    client. The `queryFn` here calls `clientApi.getProject()`, and the client
+ *    API outlives the restart, so refetching it is safe.
+ * 3. `invalidateQueries` for the remainder: manager-level data such as device
+ *    info, invites and the project list, all fetched through the surviving
+ *    client API. A background refetch is enough, and avoids a loading state.
+ */
+export function resetQueriesAfterBackendRestart(queryClient: QueryClient) {
+	queryClient.removeQueries({
+		queryKey: getRootQueryKey(),
+		predicate: (query) => isBoundToProjectInstance(query.queryKey),
+	})
+	queryClient.resetQueries({
+		queryKey: getRootQueryKey(),
+		predicate: (query) => isProjectInstanceQueryKey(query.queryKey),
+	})
+	queryClient.invalidateQueries({ queryKey: getRootQueryKey() })
+}
+
+// #endregion

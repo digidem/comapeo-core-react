@@ -1,4 +1,5 @@
 export { ComapeoCoreProvider } from './contexts/ComapeoCore.js'
+export type { SubscribeToBackendRestart } from './contexts/ClientApi.js'
 export {
 	useClientApi,
 	useIsArchiveDevice,
