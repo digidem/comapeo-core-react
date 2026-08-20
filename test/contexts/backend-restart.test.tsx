@@ -11,6 +11,7 @@ import { describe, expect, test, vi } from 'vitest'
 import {
 	ComapeoCoreProvider,
 	useAttachmentUrl,
+	useManyInvites,
 	useOwnDeviceInfo,
 	useProjectSettings,
 	useSingleProject,
@@ -353,6 +354,43 @@ describe('recovery after a restart', () => {
 		expect(screen.getByTestId('device-info').textContent).toBe('device-info')
 	})
 
+	// Invites are in-memory actors on the backend: a restart drops every one of
+	// them, and `invite.getMany()` is the only way to find out what the new
+	// backend has. Nothing invalidates the invites query on its own - the
+	// `invite-received` / `invite-updated` events that normally do were raised
+	// (if at all) while the app was disconnected - so the root invalidation is
+	// what has to reach it.
+	test('the invites query is refetched', async () => {
+		const queryClient = new QueryClient()
+		const restarts = createBackendRestartSource()
+		const clientApi = createMockClientApi()
+		const getMany = vi.fn(async () => [])
+		Object.assign(clientApi.invite, { getMany })
+
+		function InvitesProbe() {
+			const { data } = useManyInvites()
+			return <span data-testid="invite-count">{data.length}</span>
+		}
+
+		const { screen } = renderProvider({
+			queryClient,
+			clientApi: clientApi as unknown as ComapeoCoreClientApi,
+			subscribeToBackendRestart: restarts.subscribe,
+			children: <InvitesProbe />,
+		})
+
+		await waitFor(() => {
+			expect(screen.getByTestId('invite-count').textContent).toBe('0')
+		})
+		const callsBeforeRestart = getMany.mock.calls.length
+
+		restarts.restart()
+
+		await waitFor(() => {
+			expect(getMany.mock.calls.length).toBeGreaterThan(callsBeforeRestart)
+		})
+	})
+
 	test('queries owned by the consuming app are left alone', () => {
 		const queryClient = new QueryClient()
 		const appQueryKey = ['app-owned-query']
@@ -403,7 +441,14 @@ class TestErrorBoundary extends Component<
 	override render() {
 		if (this.state.error) {
 			return (
-				<span data-testid="boundary-error">{this.state.error.message}</span>
+				<span
+					data-testid="boundary-error"
+					data-code={String(
+						(this.state.error as Error & { code?: unknown }).code,
+					)}
+				>
+					{this.state.error.message}
+				</span>
 			)
 		}
 		return this.props.children
@@ -491,4 +536,89 @@ describe('channel-closed retry', () => {
 			)
 		})
 	})
+})
+
+// @comapeo/ipc v10 hands out permanent project references. Leaving a project
+// does not invalidate the reference the app is holding: every call on it -
+// and `getProject()` itself, for a project left before it was ever acquired -
+// rejects with `ProjectLeftError` until the project is re-joined via an
+// invite. There is nothing to recover from, so the error has to reach the
+// consuming app's error boundary with its code intact and without being
+// retried first.
+describe('a project this device has left', () => {
+	function createLeftProjectError() {
+		return Object.assign(new Error('This device has left the project'), {
+			code: 'PROJECT_LEFT',
+		})
+	}
+
+	function createLeftProjectClientApi({ leftBefore }: { leftBefore: boolean }) {
+		const getProject = vi.fn(async () => {
+			if (leftBefore) throw createLeftProjectError()
+			return {
+				$getProjectSettings: async () => {
+					throw createLeftProjectError()
+				},
+			}
+		})
+		const clientApi = Object.assign(createMockClientApi(), { getProject })
+		return {
+			clientApi: clientApi as unknown as ComapeoCoreClientApi,
+			getProject,
+		}
+	}
+
+	function LeftProjectScreen() {
+		const { data } = useProjectSettings({ projectId: PROJECT_ID })
+		return <span data-testid="settings-name">{data.name}</span>
+	}
+
+	test('a call on a held reference reaches the error boundary', async () => {
+		const { clientApi } = createLeftProjectClientApi({ leftBefore: false })
+
+		const { screen } = renderProvider({
+			queryClient: new QueryClient(),
+			clientApi,
+			children: (
+				<TestErrorBoundary>
+					<LeftProjectScreen />
+				</TestErrorBoundary>
+			),
+		})
+
+		await waitFor(() => {
+			expect(screen.getByTestId('boundary-error').textContent).toBe(
+				'This device has left the project',
+			)
+		})
+		expect(screen.getByTestId('boundary-error').dataset.code).toBe(
+			'PROJECT_LEFT',
+		)
+	})
+
+	test('a first acquisition reaches the error boundary', async () => {
+		const { clientApi, getProject } = createLeftProjectClientApi({
+			leftBefore: true,
+		})
+
+		const { screen } = renderProvider({
+			queryClient: new QueryClient(),
+			clientApi,
+			children: (
+				<TestErrorBoundary>
+					<LeftProjectScreen />
+				</TestErrorBoundary>
+			),
+		})
+
+		await waitFor(() => {
+			expect(screen.getByTestId('boundary-error').dataset.code).toBe(
+				'PROJECT_LEFT',
+			)
+		})
+		// Not retried: a retry would push the failure past the 1s retry delay
+		const callsWhenSettled = getProject.mock.calls.length
+		await new Promise((resolve) => setTimeout(resolve, 1_200))
+		expect(getProject.mock.calls.length).toBe(callsWhenSettled)
+	}, 10_000)
 })
