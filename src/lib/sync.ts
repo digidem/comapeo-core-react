@@ -14,19 +14,28 @@ function getDataSyncCountForDevice(
 
 /**
  * Every store that currently has at least one listener. `useSyncStore` caches
- * one store per project client in a `WeakMap`, and under `@comapeo/ipc` v10 a
- * project client reference is permanent — so a backend restart never produces a
- * fresh store, and there is no way to iterate a `WeakMap` to find the existing
- * ones. Stores join on their first listener and leave on their last, which
- * keeps this from retaining a store the app has stopped using.
+ * one store per project client in a `WeakMap`, and with a permanent project
+ * client reference (`@comapeo/ipc` v10) a backend restart never produces a
+ * fresh store — so the existing ones have to be reachable, and a `WeakMap`
+ * cannot be iterated. Stores join on their first listener and leave on their
+ * last, so nothing the app has stopped using is retained.
  */
 const ACTIVE_SYNC_STORES = new Set<SyncStore>()
 
 /**
  * @internal
- * Re-read sync state on every store that is currently being listened to, and
- * clear any error left over from the previous backend. Called as part of the
- * backend-restart recovery.
+ * Re-read sync state on every store that is currently being listened to,
+ * discarding the state, the progress baselines and any error left over from the
+ * previous backend.
+ *
+ * Only subscribed stores need this. A store whose last listener has gone drops
+ * its error as it unsubscribes and reads from scratch when something subscribes
+ * again, so it recovers without being tracked here.
+ *
+ * Caller contract: the transport owner must have re-sent its event
+ * subscriptions to the restarted backend before calling this. Each store
+ * re-reads state over the wire, but it does not re-send its own `sync-state`
+ * subscription unless attaching the listener failed in the first place.
  */
 export function refreshActiveSyncStores() {
 	for (const store of ACTIVE_SYNC_STORES) {
@@ -151,6 +160,8 @@ export class SyncStore {
 	}
 
 	#connect = () => {
+		// A fresh read attempt supersedes whatever the last one failed with
+		this.#error = null
 		try {
 			if (!this.#isListening) {
 				this.#project.$sync.on('sync-state', this.#onSyncState)
@@ -161,8 +172,9 @@ export class SyncStore {
 				.then(this.#onSyncState)
 				.catch(this.#onError)
 		} catch (e) {
-			// A backend restart closes the project wrapper, and @comapeo/ipc
-			// versions before the close became a no-op throw from `on`/`off`.
+			// `on`/`off` throw on a closed project wrapper in @comapeo/ipc v9;
+			// v10 references are permanent, so there this only fires if the whole
+			// client has been closed.
 			this.#onError(e)
 		}
 	}
@@ -177,28 +189,36 @@ export class SyncStore {
 		this.#isSubscribedInternal = false
 		this.#isListening = false
 		ACTIVE_SYNC_STORES.delete(this)
+		// The error belongs to the subscription that produced it. Holding it
+		// past the last listener wedges the store permanently: `getStateSnapshot`
+		// throws during render, so an error boundary that remounts the subtree
+		// hits the same stale error before `subscribe` can run — and with a
+		// permanent project reference the remount is handed back this very store.
+		this.#error = null
 		try {
 			this.#project.$sync.off('sync-state', this.#onSyncState)
 		} catch {
 			// Runs in React effect cleanup, where a throw from a closed project
-			// wrapper (older @comapeo/ipc) would take down the tree.
+			// wrapper (@comapeo/ipc v9) would take down the tree.
 		}
 	}
 
 	/**
 	 * @internal
-	 * Drop the state and the sticky error left over from the previous backend
-	 * and read the current state again. The event subscription is re-sent by the
-	 * transport owner before the restart is announced, so it is only re-attached
-	 * here if attaching it failed in the first place.
+	 * Discard everything held from the previous backend and read the current
+	 * state again. See {@link refreshActiveSyncStores} for the caller contract.
 	 */
 	refreshAfterBackendRestart = () => {
-		this.#error = null
-		// Progress is measured against the largest sync count seen so far, which
-		// the new backend knows nothing about.
+		// The state goes too, not just the baselines it is measured against:
+		// `getDataProgressSnapshot` divides by the largest sync count seen so
+		// far, so old state over cleared baselines reads as 1 — "sync complete" —
+		// on every restart. With no state it reports `null`, i.e. not known yet.
+		this.#state = null
 		this.#perDeviceMaxSyncCount.clear()
-		this.#notifyListeners()
+		// Connect first: it clears the error, so the notification below cannot
+		// hand a listener a snapshot that still throws the previous backend's.
 		this.#connect()
+		this.#notifyListeners()
 	}
 }
 
