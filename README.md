@@ -102,11 +102,16 @@ Platforms whose backend cannot outlive the app, such as desktop, should omit the
 
 #### What a notification does
 
-A restart closes every per-project API instance, so anything read through one is unusable, and the media server comes back on a different port. On each notification the provider resets its own queries (never the consuming app's) in three steps:
+The client API and every project reference survive a restart: under `@comapeo/ipc` v10 a project reference is permanent, and its channel re-opens transparently against the new backend. What does not survive is the data read through them — the media server comes back on a different port, and everything the backend held in memory (invites, sync state) is gone. On each notification the provider resets its own queries (never the consuming app's) in four steps:
 
-1. **Removes** every query read through a project instance — project settings, members, documents, and the cached media server origin. These are removed rather than invalidated because their fetchers hold a closure over the closed project instance: refetching with it fails, and a suspense query that fails with retries disabled stays failed for the life of the app. Removal also reaches the media server origin, which is cached permanently and so cannot be invalidated at all.
-2. **Resets** the cached per-project API instances themselves. This is what makes mounted screens react: removal on its own is invisible to a mounted component, which keeps rendering its last result, whereas a reset suspends it. On resume it fetches a fresh project instance and re-runs the queries removed in step 1 against it.
-3. **Invalidates** what is left — device info, invites, the project list. These are read through the client API, which survives the restart, so a background refetch is enough and screens showing them do not flash a loading state.
+1. **Removes** every query read through a project instance — project settings, members, documents, and the cached media server origin. Removal, rather than invalidation, is what reaches the media server origin, which is cached with `staleTime: 'static'` and so cannot be invalidated at all. It also guarantees that a fetcher which failed as the old backend went away cannot stay latched in `status: 'error'`, which a suspense query with retries disabled never recovers from.
+2. **Resets** the cached per-project API instances. This is what makes mounted screens react: removal on its own is invisible to a mounted component, which keeps rendering its last result, whereas a reset suspends it. On resume it re-runs the queries removed in step 1.
+3. **Invalidates** what is left — device info, invites, the project list. These are read through the client API, so a background refetch is enough and screens showing them do not flash a loading state.
+4. **Refreshes** the sync state, which is an external store rather than a query. Because the project reference is permanent, step 2 hands back the same store, so the error it latched when the backend went away has to be cleared and its state re-read explicitly.
+
+#### Projects this device has left
+
+A restart is recoverable; leaving a project is not. Every call on a project this device has left rejects with an error carrying `code: 'PROJECT_LEFT'`, as does `useSingleProject` for a project left before it was ever fetched. That error is deliberately neither retried nor reset — it surfaces at the nearest error boundary, and the project only becomes usable again by re-joining through an invite.
 
 #### What it does not cover
 

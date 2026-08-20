@@ -79,6 +79,15 @@ Pick<
  *
  * This is mostly used internally by the other hooks and should only be used if certain project APIs are not exposed via the hooks.
  *
+ * Project instances are permanent references (`@comapeo/ipc` v10): the same
+ * instance is handed back for the lifetime of the client, and it keeps working
+ * across a backend restart. The one case where it stops working is a project
+ * this device has left — every call on it, and this hook itself for a project
+ * left before it was ever fetched, then rejects with an error carrying
+ * `code: 'PROJECT_LEFT'`. That error is not retried and is not recovered from:
+ * it surfaces at the nearest error boundary, and the project only becomes
+ * usable again by re-joining through an invite.
+ *
  * @param opts.projectId Project public ID
  *
  * @example
@@ -375,6 +384,10 @@ const FAKE_BLOB_ID: BlobApi.BlobId = {
 /**
  * @internal
  * Hack to retrieve the media server origin (protocol + host).
+ *
+ * TODO: replace the FAKE_BLOB_ID probe with a direct origin API, which would
+ * also let the origin be re-read without going through a project instance
+ * after a backend restart. See digidem/comapeo-core-react#96.
  */
 function useMediaServerOrigin({
 	projectApi,

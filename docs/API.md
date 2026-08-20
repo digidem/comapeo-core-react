@@ -95,7 +95,7 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>` |
+| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ComapeoProjectClientApi>; }>` |
 
 Returns:
 
@@ -175,7 +175,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ComapeoProjectClientApi>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -320,9 +320,18 @@ Retrieve a project API instance for a project.
 
 This is mostly used internally by the other hooks and should only be used if certain project APIs are not exposed via the hooks.
 
+Project instances are permanent references (`@comapeo/ipc` v10): the same
+instance is handed back for the lifetime of the client, and it keeps working
+across a backend restart. The one case where it stops working is a project
+this device has left — every call on it, and this hook itself for a project
+left before it was ever fetched, then rejects with an error carrying
+`code: 'PROJECT_LEFT'`. That error is not retried and is not recovered from:
+it surfaces at the nearest error boundary, and the project only becomes
+usable again by re-joining through an invite.
+
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<ClientApi<MapeoProject>>, "data" or "error" or "isRefetching">` |
+| `useSingleProject` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<ComapeoProjectClientApi>, "data" or "error" or "isRefetching">` |
 
 Parameters:
 
@@ -842,7 +851,7 @@ Triggers the closest error boundary if the document cannot be found
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<NonNullable<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByDocId"]>>>>, "data" or ... 1 more ... or "isRefetching">` |
+| `useSingleDocByDocId` | `<D extends WriteableDocumentType>({ projectId, docType, docId, lang, }: { projectId: string; docType: D; docId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<NonNullable<Awaited<ReturnType<ComapeoProjectClientApi[D]["getByDocId"]>>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -875,7 +884,7 @@ Triggers the closest error boundary if the document cannot be found.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getByVersionId"]>>>, "data" or ... 1 more ... or "isRefetching">` |
+| `useSingleDocByVersionId` | `<D extends WriteableDocumentType>({ projectId, docType, versionId, lang, }: { projectId: string; docType: D; versionId: string; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ComapeoProjectClientApi[D]["getByVersionId"]>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -908,7 +917,7 @@ Retrieve all documents of a specific `docType`.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["getMany"]>>>, "data" or ... 1 more ... or "isRefetching">` |
+| `useManyDocs` | `<D extends WriteableDocumentType>({ projectId, docType, includeDeleted, lang, }: { projectId: string; docType: D; includeDeleted?: boolean or undefined; lang?: string or undefined; }) => Pick<UseSuspenseQueryResult<Awaited<ReturnType<ComapeoProjectClientApi[D]["getMany"]>>>, "data" or ... 1 more ... or "isRefetching">` |
 
 Parameters:
 
@@ -952,7 +961,7 @@ Create a document for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["create"]>>, Error, { ...; }>>` |
+| `useCreateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ComapeoProjectClientApi[D]["create"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -966,7 +975,7 @@ Update a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["update"]>>, Error, { ...; }>>` |
+| `useUpdateDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ComapeoProjectClientApi[D]["update"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -980,7 +989,7 @@ Delete a document within a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ClientApi<MapeoProject>[D]["delete"]>>, Error, { ...; }>>` |
+| `useDeleteDocument` | `<D extends WriteableDocumentType>({ docType, projectId, }: { docType: D; projectId: string; }) => FilteredMutationResult<UseMutationResult<Awaited<ReturnType<ComapeoProjectClientApi[D]["delete"]>>, Error, { ...; }>>` |
 
 Parameters:
 
@@ -997,7 +1006,7 @@ specified data type. Falls back to alphabetical order (by preset name) if no def
 
 | Function | Type |
 | ---------- | ---------- |
-| `usePresetsSelection` | `({ projectId, dataType, lang, }: { projectId: string; dataType: "track" or "observation"; lang?: string or undefined; }) => { schemaName: "preset"; name: string; geometry: ("point" or "line" or "vertex" or "area" or "relation")[]; ... 13 more ...; deleted: boolean; }[]` |
+| `usePresetsSelection` | `({ projectId, dataType, lang, }: { projectId: string; dataType: "observation" or "track"; lang?: string or undefined; }) => { schemaName: "preset"; name: string; geometry: ("point" or "line" or "vertex" or "area" or "relation")[]; ... 13 more ...; deleted: boolean; }[]` |
 
 Parameters:
 
@@ -1427,7 +1436,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }> or null>` |
+| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ComapeoProjectClientApi>; }> or null>` |
 
 ### ReceivedMapSharesContext
 
