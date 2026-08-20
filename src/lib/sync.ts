@@ -12,11 +12,34 @@ function getDataSyncCountForDevice(
 	return data.want + data.wanted
 }
 
+/**
+ * Every store that currently has at least one listener. `useSyncStore` caches
+ * one store per project client in a `WeakMap`, and under `@comapeo/ipc` v10 a
+ * project client reference is permanent — so a backend restart never produces a
+ * fresh store, and there is no way to iterate a `WeakMap` to find the existing
+ * ones. Stores join on their first listener and leave on their last, which
+ * keeps this from retaining a store the app has stopped using.
+ */
+const ACTIVE_SYNC_STORES = new Set<SyncStore>()
+
+/**
+ * @internal
+ * Re-read sync state on every store that is currently being listened to, and
+ * clear any error left over from the previous backend. Called as part of the
+ * backend-restart recovery.
+ */
+export function refreshActiveSyncStores() {
+	for (const store of ACTIVE_SYNC_STORES) {
+		store.refreshAfterBackendRestart()
+	}
+}
+
 export class SyncStore {
 	#project: ComapeoProjectClientApi
 
 	#listeners = new Set<() => void>()
 	#isSubscribedInternal = false
+	#isListening = false
 	#error: Error | null = null
 	#state: SyncState | null = null
 
@@ -122,34 +145,60 @@ export class SyncStore {
 		this.#notifyListeners()
 	}
 
-	#startSubscription = () => {
-		this.#isSubscribedInternal = true
+	#onError = (e: unknown) => {
+		this.#error = ensureError(e)
+		this.#notifyListeners()
+	}
+
+	#connect = () => {
 		try {
-			this.#project.$sync.on('sync-state', this.#onSyncState)
+			if (!this.#isListening) {
+				this.#project.$sync.on('sync-state', this.#onSyncState)
+				this.#isListening = true
+			}
+			this.#project.$sync
+				.getState()
+				.then(this.#onSyncState)
+				.catch(this.#onError)
 		} catch (e) {
 			// A backend restart closes the project wrapper, and @comapeo/ipc
 			// versions before the close became a no-op throw from `on`/`off`.
-			this.#error = ensureError(e)
-			this.#notifyListeners()
-			return
+			this.#onError(e)
 		}
-		this.#project.$sync
-			.getState()
-			.then(this.#onSyncState)
-			.catch((e) => {
-				this.#error = e
-				this.#notifyListeners()
-			})
+	}
+
+	#startSubscription = () => {
+		this.#isSubscribedInternal = true
+		ACTIVE_SYNC_STORES.add(this)
+		this.#connect()
 	}
 
 	#stopSubscription = () => {
 		this.#isSubscribedInternal = false
+		this.#isListening = false
+		ACTIVE_SYNC_STORES.delete(this)
 		try {
 			this.#project.$sync.off('sync-state', this.#onSyncState)
 		} catch {
 			// Runs in React effect cleanup, where a throw from a closed project
 			// wrapper (older @comapeo/ipc) would take down the tree.
 		}
+	}
+
+	/**
+	 * @internal
+	 * Drop the state and the sticky error left over from the previous backend
+	 * and read the current state again. The event subscription is re-sent by the
+	 * transport owner before the restart is announced, so it is only re-attached
+	 * here if attaching it failed in the first place.
+	 */
+	refreshAfterBackendRestart = () => {
+		this.#error = null
+		// Progress is measured against the largest sync count seen so far, which
+		// the new backend knows nothing about.
+		this.#perDeviceMaxSyncCount.clear()
+		this.#notifyListeners()
+		this.#connect()
 	}
 }
 

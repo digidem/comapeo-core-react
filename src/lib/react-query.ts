@@ -8,6 +8,7 @@ import type {
 } from '@tanstack/react-query'
 import { DistributedPick } from 'type-fest'
 
+import { refreshActiveSyncStores } from './sync.js'
 import type { WriteableDocumentType } from './types.js'
 
 // #region Shared
@@ -426,6 +427,10 @@ function isProjectInstanceQueryKey(queryKey: ReadonlyArray<unknown>) {
  * 3. `invalidateQueries` for the remainder: manager-level data such as device
  *    info, invites and the project list, all fetched through the surviving
  *    client API. A background refetch is enough, and avoids a loading state.
+ * 4. `refreshActiveSyncStores` for the sync state, which is not a query at all
+ *    but an external store keyed on the project client. Under `@comapeo/ipc`
+ *    v10 that reference is permanent, so step 2 hands back the same store and
+ *    nothing else would clear the error it latched when the backend went away.
  */
 export function resetQueriesAfterBackendRestart(queryClient: QueryClient) {
 	queryClient.removeQueries({
@@ -437,6 +442,7 @@ export function resetQueriesAfterBackendRestart(queryClient: QueryClient) {
 		predicate: (query) => isProjectInstanceQueryKey(query.queryKey),
 	})
 	queryClient.invalidateQueries({ queryKey: getRootQueryKey() })
+	refreshActiveSyncStores()
 }
 
 // #endregion
