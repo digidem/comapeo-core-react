@@ -72,6 +72,9 @@ export type SentMapSharesStore = ReturnType<typeof createSentMapSharesStore>
  *
  * ## Common
  *
+ * - `EVENT_STREAM_ERROR` — the server-sent event stream reporting the share's
+ *   progress could not be re-established, so its final status will never
+ *   arrive. Appears as a share state error for either sender or receiver.
  * - `UNKNOWN_ERROR` — fallback when the original error has no specific code.
  *   Can appear as both a mutation error and a share state error for either
  *   sender or receiver.
@@ -125,6 +128,8 @@ export const MapShareErrorCode = {
 
 	// --- Common ---
 
+	/** Receiver/Sender: the progress event stream could not be re-established */
+	EVENT_STREAM_ERROR: 'EVENT_STREAM_ERROR',
 	/** Receiver/Sender: fallback code when the original error has no specific code */
 	UNKNOWN_ERROR: 'UNKNOWN_ERROR',
 } as const
@@ -227,6 +232,21 @@ export class InvalidStatusTransitionError extends Error {
 }
 
 /**
+ * Thrown when the server-sent event stream that reports a map share's progress
+ * cannot be re-established, so the share's final status will never arrive. Has
+ * `code: 'EVENT_STREAM_ERROR'`.
+ */
+export class MapShareStreamError extends Error {
+	code = 'EVENT_STREAM_ERROR' as const
+	constructor(shareId: string) {
+		super(`Lost the event stream for map share ${shareId}`)
+		this.name = 'MapShareStreamError'
+	}
+}
+
+const MAX_EVENT_STREAM_RECONNECTS = 3
+
+/**
  * This is like a mini zustand store. Keeping the map shares in an external
  * store avoids unnecessary re-renders of the entire app when map shares are
  * updated (e.g. if we kept the state in the context), and it avoids potential
@@ -306,13 +326,25 @@ function createMapSharesStore<
 
 	async function monitor(mapShareId: string, path: string) {
 		// TODO: add a timeout in case the download stalls and never completes
-		// TODO: the event source has no error path either, so a transport failure
-		// (e.g. the map server going away with a backend restart) leaves this
-		// promise pending forever and the share stuck in `downloading`
 		return new Promise<MapShareStateUpdate>((resolve, reject) => {
+			// The event source reconnects on its own, so a single dropped
+			// connection is not a failure. Give up only after it has failed to
+			// re-establish the stream this many times without delivering an event
+			// in between, otherwise a map server that is gone for good (killed with
+			// the backend on Android) leaves the share stuck in `downloading`.
+			let failedReconnects = 0
 			const es = mapServerApi.createEventSource({
 				url: path,
+				onScheduleReconnect() {
+					failedReconnects += 1
+					if (failedReconnects <= MAX_EVENT_STREAM_RECONNECTS) return
+					es.close()
+					const error = new MapShareStreamError(mapShareId)
+					handleError(mapShareId, error)
+					reject(error)
+				},
 				onMessage({ data }) {
+					failedReconnects = 0
 					try {
 						const stateUpdate = JSON.parse(data)
 						update(mapShareId, stateUpdate)

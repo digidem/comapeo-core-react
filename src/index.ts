@@ -52,6 +52,7 @@ export {
 	MapShareErrorCode,
 	getErrorCode,
 	MapShareCanceledError,
+	MapShareStreamError,
 	InvalidStatusTransitionError,
 } from './lib/map-shares-stores.js'
 export {

@@ -1,6 +1,7 @@
 /**
  * @vitest-environment node
  */
+import { QueryClient } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createMapServerApi } from '../../src/contexts/MapServer.js'
@@ -218,6 +219,103 @@ describe('ReceivedMapSharesStore', () => {
 
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]).toHaveProperty('status', 'canceled')
+		})
+	})
+})
+
+// The event stream is the only thing that ever moves a share out of
+// `downloading`. If the map server goes away for good — it dies with the
+// backend on Android — the stream never re-establishes, and without an error
+// path the share would sit in `downloading` for the life of the app.
+describe('map share event stream failures', () => {
+	const MAP_SHARE = {
+		shareId: 'share-id',
+		senderDeviceId: 'sender-device-id',
+		senderDeviceName: 'Sender',
+		mapShareReceivedAt: Date.now(),
+		mapId: 'custom',
+		estimatedSizeBytes: 100,
+		mapShareUrls: ['http://127.0.0.1:1/'],
+	}
+
+	function createStoreWithFakeEventSource() {
+		const close = vi.fn()
+		let onScheduleReconnect: ((info: { delay: number }) => void) | undefined
+		let onMessage: ((event: { data: string }) => void) | undefined
+
+		const mapServerApi = {
+			post: () => ({ json: async () => ({ downloadId: 'download-id' }) }),
+			createEventSource: (options: {
+				onScheduleReconnect?: (info: { delay: number }) => void
+				onMessage?: (event: { data: string }) => void
+			}) => {
+				onScheduleReconnect = options.onScheduleReconnect
+				onMessage = options.onMessage
+				return { close }
+			},
+		}
+
+		const mockClientApi = createMockClientApi()
+		const store = createReceivedMapSharesStore({
+			// @ts-expect-error - We're only mocking what we need
+			clientApi: mockClientApi,
+			// @ts-expect-error - We're only mocking what we need
+			mapServerApi,
+			queryClient: new QueryClient(),
+		})
+
+		return {
+			store,
+			close,
+			async startDownload() {
+				mockClientApi.emit('map-share', MAP_SHARE)
+				await store.actions.download({ shareId: MAP_SHARE.shareId })
+			},
+			dropStream: () => onScheduleReconnect?.({ delay: 0 }),
+			emitProgress: (bytesDownloaded: number) =>
+				onMessage?.({
+					data: JSON.stringify({ status: 'downloading', bytesDownloaded }),
+				}),
+		}
+	}
+
+	it('moves the share to error when the stream cannot be re-established', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+
+		await fake.startDownload()
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+
+		// A single dropped connection is not a failure: the client reconnects
+		fake.dropStream()
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+
+		fake.dropStream()
+		fake.dropStream()
+		fake.dropStream()
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'error',
+			error: { code: 'EVENT_STREAM_ERROR' },
+		})
+		expect(fake.close).toHaveBeenCalled()
+	})
+
+	it('keeps monitoring a stream that recovers between drops', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+
+		await fake.startDownload()
+
+		for (let i = 1; i <= 10; i++) {
+			fake.dropStream()
+			fake.dropStream()
+			fake.emitProgress(i)
+		}
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 10,
 		})
 	})
 })
