@@ -14,10 +14,11 @@ export function ComapeoCoreProvider({
 	getMapServerBaseUrl,
 	fetch,
 	queryClient,
+	subscribeToBackendRestart,
 }: ComapeoCoreProviderProps): JSX.Element {
 	return createElement(
 		ClientApiProvider,
-		{ clientApi },
+		{ clientApi, subscribeToBackendRestart },
 		createElement(
 			MapServerProvider,
 			{ getBaseUrl: getMapServerBaseUrl, fetch, queryClient },

@@ -79,12 +79,13 @@ Create a context provider that holds a CoMapeo API client instance.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ClientApiProvider` | `({ children, clientApi, }: ClientApiProviderProps) => Element` |
+| `ClientApiProvider` | `({ children, clientApi, subscribeToBackendRestart, }: ClientApiProviderProps) => Element` |
 
 Parameters:
 
 * `opts.children`: React children node
 * `opts.clientApi`: Client API instance
+* `opts.subscribeToBackendRestart`: Optional, referentially stable subscribe function for backend-restart notifications
 
 
 ### useClientApi
@@ -287,7 +288,7 @@ Throws if used outside of MapServerProvider.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ComapeoCoreProvider` | `({ children, clientApi, getMapServerBaseUrl, fetch, queryClient, }: ComapeoCoreProviderProps) => Element` |
+| `ComapeoCoreProvider` | `({ children, clientApi, getMapServerBaseUrl, fetch, queryClient, subscribeToBackendRestart, }: ComapeoCoreProviderProps) => Element` |
 
 ### useProjectSettings
 
@@ -318,6 +319,15 @@ function BasicExample() {
 Retrieve a project API instance for a project.
 
 This is mostly used internally by the other hooks and should only be used if certain project APIs are not exposed via the hooks.
+
+Project instances are permanent references (`@comapeo/ipc` v10): the same
+instance is handed back for the lifetime of the client, and it keeps working
+across a backend restart. The one case where it stops working is a project
+this device has left — every call on it, and this hook itself for a project
+left before it was ever fetched, then rejects with an error carrying
+`code: 'PROJECT_LEFT'`. That error is not retried and is not recovered from:
+it surfaces at the nearest error boundary, and the project only becomes
+usable again by re-joining through an invite.
 
 | Function | Type |
 | ---------- | ---------- |
@@ -1432,7 +1442,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ReceivedMapShareState[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<...>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; } or null>` |
+| `ReceivedMapSharesContext` | `Context<{ subscribe: (listener: () => void) => () => boolean; getSnapshot: () => ReceivedMapShareState[]; actions: { download({ shareId }: DownloadMapShareOptions): Promise<...>; decline({ shareId, reason }: DeclineMapShareOptions): Promise<...>; abort({ shareId }: AbortMapShareOptions): Promise<...>; }; listen(): (...` |
 
 ### SentMapSharesContext
 
@@ -1450,6 +1460,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 ## Types
 
+- [SubscribeToBackendRestart](#subscribetobackendrestart)
 - [ClientApiProviderProps](#clientapiproviderprops)
 - [CompatFile](#compatfile)
 - [ExpoFileDuckType](#expofileducktype)
@@ -1457,11 +1468,45 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 - [MapServerApi](#mapserverapi)
 - [MapServerProviderProps](#mapserverproviderprops)
 
+### SubscribeToBackendRestart
+
+Subscribe to notifications that the CoMapeo backend restarted, so that cached
+data pointing at the previous backend instance can be discarded.
+
+A "restart" means the backend lost all of its in-memory state and came back
+as a fresh instance — for example on Android, where the backend runs in its
+own OS process that the system can kill under memory pressure and later
+restart while the app keeps running. It does *not* mean a dropped and
+re-established transport connection to a backend that is still alive.
+
+The listener should be called after the RPC transport has reconnected to the
+new backend, i.e. once requests made on it will reach the new instance.
+
+Pass a referentially stable function — a module-scope function, or one
+wrapped in `useCallback` — because a new identity on every render makes the
+provider unsubscribe and resubscribe on every render.
+
+Platforms whose backend cannot outlive the app (desktop, where the backend
+dying exits the app) should omit this prop.
+
+| Type | Type |
+| ---------- | ---------- |
+| `SubscribeToBackendRestart` | `(listener: () => void) => () => void` |
+
+Parameters:
+
+* `listener`: Called each time the backend has restarted
+
+
+Returns:
+
+A function that removes the listener
+
 ### ClientApiProviderProps
 
 | Type | Type |
 | ---------- | ---------- |
-| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi }>` |
+| `ClientApiProviderProps` | `PropsWithChildren<{ clientApi: ComapeoCoreClientApi /** * Subscribe function for backend-restart notifications. See * {@link SubscribeToBackendRestart}. */ subscribeToBackendRestart?: SubscribeToBackendRestart }>` |
 
 ### CompatFile
 

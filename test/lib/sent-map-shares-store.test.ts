@@ -95,7 +95,7 @@ describe('SentMapSharesStore', () => {
 		let receiverMockClientApi: MockClientApi
 		let receivedStore: ReceivedMapSharesStore
 
-		beforeEach(() => {
+		beforeEach((t) => {
 			receiverMockClientApi = createMockClientApi()
 			receivedStore = createReceivedMapSharesStore({
 				// @ts-expect-error - We're only mocking what we need
@@ -104,6 +104,7 @@ describe('SentMapSharesStore', () => {
 					getBaseUrl: async () => new URL(receiver.localBaseUrl),
 				}),
 			})
+			t.onTestFinished(receivedStore.listen())
 		})
 
 		it('should update status when receiver declines the share', async () => {
@@ -348,7 +349,7 @@ describe('SentMapSharesStore', () => {
 		let receiverMockClientApi: MockClientApi
 		let receivedStore: ReceivedMapSharesStore
 
-		beforeEach(() => {
+		beforeEach((t) => {
 			receiverMockClientApi = createMockClientApi()
 			receivedStore = createReceivedMapSharesStore({
 				// @ts-expect-error - We're only mocking what we need
@@ -357,6 +358,7 @@ describe('SentMapSharesStore', () => {
 					getBaseUrl: async () => new URL(receiver.localBaseUrl),
 				}),
 			})
+			t.onTestFinished(receivedStore.listen())
 		})
 
 		it('should not allow cancel after decline', async () => {

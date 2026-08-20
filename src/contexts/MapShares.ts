@@ -5,6 +5,7 @@ import {
 	createElement,
 	useCallback,
 	useContext,
+	useEffect,
 	useMemo,
 	useSyncExternalStore,
 	type Context,
@@ -55,6 +56,9 @@ export function ReceivedMapSharesProvider({
 			createReceivedMapSharesStore({ clientApi, mapServerApi, queryClient }),
 		[clientApi, mapServerApi, queryClient],
 	)
+
+	useEffect(() => mapSharesStore.listen(), [mapSharesStore])
+
 	return createElement(
 		ReceivedMapSharesContext.Provider,
 		{ value: mapSharesStore },

@@ -1,6 +1,7 @@
 /**
  * @vitest-environment node
  */
+import { QueryClient } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createMapServerApi } from '../../src/contexts/MapServer.js'
@@ -39,6 +40,88 @@ describe('ReceivedMapSharesStore', () => {
 			mapServerApi: createMapServerApi({
 				getBaseUrl: async () => new URL(receiver.localBaseUrl),
 			}),
+		})
+		t.onTestFinished(store.listen())
+	})
+
+	describe('client api listener', () => {
+		function createStore() {
+			return createReceivedMapSharesStore({
+				// @ts-expect-error - We're only mocking what we need
+				clientApi: mockClientApi,
+				mapServerApi: createMapServerApi({
+					getBaseUrl: async () => new URL(receiver.localBaseUrl),
+				}),
+			})
+		}
+
+		it('should not attach a listener until listen() is called', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const teardown = createStore().listen()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+
+			teardown()
+		})
+
+		it('should remove its listener on teardown', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const teardown = createStore().listen()
+			teardown()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
+		it('should not register a second listener when listen() is called twice', async () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const doubleListeningStore = createStore()
+			const teardown = doubleListeningStore.listen()
+			const secondTeardown = doubleListeningStore.listen()
+
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+			expect(secondTeardown).toBe(teardown)
+
+			const serverShare = await createShare(sender, receiver)
+			mockClientApi.emit(
+				'map-share',
+				createMapShareFromServerShare(sender.deviceId, serverShare),
+			)
+			expect(doubleListeningStore.getSnapshot()).toHaveLength(1)
+
+			teardown()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
+		it('should re-attach when listen() is called again after teardown', () => {
+			const before = mockClientApi.listeners.get('map-share')?.length ?? 0
+
+			const relisteningStore = createStore()
+			relisteningStore.listen()()
+
+			const teardown = relisteningStore.listen()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before + 1)
+
+			teardown()
+			expect(mockClientApi.listeners.get('map-share')).toHaveLength(before)
+		})
+
+		it('should ignore map-share events after teardown', async () => {
+			const serverShare = await createShare(sender, receiver)
+			const mapShare = createMapShareFromServerShare(
+				sender.deviceId,
+				serverShare,
+			)
+
+			const torndownStore = createStore()
+			const teardown = torndownStore.listen()
+			teardown()
+
+			mockClientApi.emit('map-share', mapShare)
+
+			expect(torndownStore.getSnapshot()).toHaveLength(0)
 		})
 	})
 
@@ -136,6 +219,159 @@ describe('ReceivedMapSharesStore', () => {
 
 			const snapshot = store.getSnapshot()
 			expect(snapshot[0]).toHaveProperty('status', 'canceled')
+		})
+	})
+})
+
+// The event stream is the only thing that ever moves a share out of
+// `downloading`. If the map server goes away for good — it dies with the
+// backend on Android — the stream never re-establishes, and without an error
+// path the share would sit in `downloading` for the life of the app.
+describe('map share event stream failures', () => {
+	const MAP_SHARE = {
+		shareId: 'share-id',
+		senderDeviceId: 'sender-device-id',
+		senderDeviceName: 'Sender',
+		mapShareReceivedAt: Date.now(),
+		mapId: 'custom',
+		estimatedSizeBytes: 100,
+		mapShareUrls: ['http://127.0.0.1:1/'],
+	}
+
+	// eventsource-client's own default, and what the map server gets unless it
+	// sends a `retry:` field
+	const DEFAULT_RECONNECT_DELAY_MS = 2_000
+
+	function createStoreWithFakeEventSource() {
+		const close = vi.fn()
+		const createEventSource = vi.fn()
+		let onScheduleReconnect: ((info: { delay: number }) => void) | undefined
+		let onMessage: ((event: { data: string }) => void) | undefined
+
+		const mapServerApi = {
+			post: () => ({ json: async () => ({ downloadId: 'download-id' }) }),
+			createEventSource: (options: {
+				onScheduleReconnect?: (info: { delay: number }) => void
+				onMessage?: (event: { data: string }) => void
+			}) => {
+				createEventSource(options)
+				onScheduleReconnect = options.onScheduleReconnect
+				onMessage = options.onMessage
+				return { close }
+			},
+		}
+
+		const mockClientApi = createMockClientApi()
+		const store = createReceivedMapSharesStore({
+			// @ts-expect-error - We're only mocking what we need
+			clientApi: mockClientApi,
+			// @ts-expect-error - We're only mocking what we need
+			mapServerApi,
+			queryClient: new QueryClient(),
+		})
+
+		return {
+			store,
+			close,
+			createEventSource,
+			async startDownload() {
+				await store.actions.download({ shareId: MAP_SHARE.shareId })
+			},
+			receiveShare() {
+				mockClientApi.emit('map-share', MAP_SHARE)
+			},
+			dropStream: (delay = DEFAULT_RECONNECT_DELAY_MS) =>
+				onScheduleReconnect?.({ delay }),
+			emitProgress: (bytesDownloaded: number) =>
+				onMessage?.({
+					data: JSON.stringify({ status: 'downloading', bytesDownloaded }),
+				}),
+		}
+	}
+
+	// The budget is measured in seconds of outage rather than reconnect
+	// attempts: at the 2s default with no backoff, a handful of attempts is only
+	// a few seconds, which an Android backend restart routinely exceeds.
+	it('tolerates a stream outage far longer than a few reconnects', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+
+		for (let i = 0; i < 15; i++) fake.dropStream()
+
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+	})
+
+	it('moves the share to error once the outage budget is spent', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+
+		// 30s and 60s of accumulated downtime are both still within budget
+		fake.dropStream(30_000)
+		fake.dropStream(30_000)
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+
+		fake.dropStream(30_000)
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'error',
+			error: { code: 'EVENT_STREAM_ERROR' },
+		})
+		expect(fake.close).toHaveBeenCalled()
+	})
+
+	it('keeps monitoring a stream that recovers between drops', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+
+		// The map server sends the current state as the first message on a new
+		// stream, so a delivered event means the outage is over
+		for (let i = 1; i <= 10; i++) {
+			fake.dropStream(30_000)
+			fake.dropStream(30_000)
+			fake.emitProgress(i)
+		}
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 10,
+		})
+	})
+
+	// The stores are plain in-memory state and are never reset, so a share left
+	// in `error` would be a dead row for the life of the app
+	it('lets a share that lost its stream be downloaded again', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+		fake.dropStream(90_000)
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'error')
+
+		await fake.startDownload()
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 0,
+		})
+		// A second monitor, so the retry is watching a live stream rather than
+		// riding on the closed one
+		expect(fake.createEventSource).toHaveBeenCalledTimes(2)
+
+		fake.emitProgress(42)
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 42,
 		})
 	})
 })
