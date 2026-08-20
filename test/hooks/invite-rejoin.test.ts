@@ -197,10 +197,18 @@ test(
 		)
 		assert.strictEqual(settingsHook.result.current.data.name, 'mapeo')
 
-		// Deliberately no assertion about the identity of the re-joined wrapper:
-		// @comapeo/ipc v9 hands out a fresh one (the old instance is closed) and
-		// v10 hands back the same permanent reference. What has to hold on both
-		// is that the hooks reach a live instance, which the settings query above
-		// already proves.
+		// The regression itself: a call made directly through the reference the
+		// hooks hand out has to reach a live instance, not the closed one that
+		// was cached before the leave. Asserted through the reference rather
+		// than only through the settings query, because it is the cached
+		// reference that #199 was about.
+		//
+		// What the reference *is* differs by major and is deliberately not
+		// asserted: @comapeo/ipc v9 hands out a fresh wrapper and leaves the
+		// pre-leave one permanently closed, while v10 hands back the same
+		// permanent reference, re-routed to a re-opened instance.
+		const rejoinedProjectApi = rejoinedProjectHook.result.current.data
+		const settingsFromReference = await rejoinedProjectApi.$getProjectSettings()
+		assert.strictEqual(settingsFromReference.name, 'mapeo')
 	},
 )
