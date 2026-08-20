@@ -385,9 +385,16 @@ const FAKE_BLOB_ID: BlobApi.BlobId = {
  * @internal
  * Hack to retrieve the media server origin (protocol + host).
  *
+ * The probe is why `resetQueriesAfterBackendRestart` has to special-case this
+ * key: it is read from a project instance but lives outside the
+ * `projects/<projectId>` namespace, and `staleTime: 'static'` makes
+ * invalidation a structural no-op, so removal is the only thing that reaches
+ * it. The port changes on every restart, so missing it means every image URL
+ * points at a dead port for the life of the app.
+ *
  * TODO: replace the FAKE_BLOB_ID probe with a direct origin API, which would
- * also let the origin be re-read without going through a project instance
- * after a backend restart. See digidem/comapeo-core-react#96.
+ * make both the odd query key and that special case unnecessary. See
+ * digidem/comapeo-core-react#96.
  */
 function useMediaServerOrigin({
 	projectApi,

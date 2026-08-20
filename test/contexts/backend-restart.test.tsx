@@ -52,9 +52,11 @@ function createBackendRestartSource() {
 
 /**
  * A client API whose `getProject()` hands out generation-tagged project
- * instances. Bumping the generation stands in for a backend restart: every
- * instance handed out before the bump starts rejecting, the way a project
- * wrapper bound to a backend that went away does.
+ * instances. Bumping the generation stands in for a backend restart, and is
+ * deliberately the harshest shape the reset has to cope with: every instance
+ * handed out before the bump starts rejecting, as a project wrapper does under
+ * `@comapeo/ipc` v9. A v10 reference stays usable instead, which only makes the
+ * same reset easier — so passing here covers both.
  */
 function createGenerationalClientApi() {
 	let generation = 0

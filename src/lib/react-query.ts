@@ -379,10 +379,10 @@ function isProjectScopedQueryKey(queryKey: ReadonlyArray<unknown>) {
 }
 
 /**
- * Queries fetched through a `ComapeoProjectClientApi` instance, which a restart
- * leaves closed: everything nested below `projects/<projectId>`, plus the media
- * server origin, which is keyed outside the project namespace but is read from
- * a project instance.
+ * Queries whose data was read through a `ComapeoProjectClientApi` instance, and
+ * so describes the backend that has gone: everything nested below
+ * `projects/<projectId>`, plus the media server origin, which is keyed outside
+ * the project namespace but is read from a project instance.
  *
  * `document_created_by` is content-addressed, so its data survives a restart,
  * but it is dropped with the rest rather than carved out — re-reading an
@@ -404,33 +404,38 @@ function isProjectInstanceQueryKey(queryKey: ReadonlyArray<unknown>) {
 }
 
 /**
- * Drop the cached data that a backend restart made unusable and get mounted
- * components fetching against the new backend.
+ * Drop what a backend restart made stale and get mounted components reading
+ * from the new backend.
  *
- * Each of the three steps does something the others cannot:
+ * The references themselves survive: the client API is unaffected, and a
+ * project reference is permanent (`@comapeo/ipc` v10) — its channel re-opens
+ * against the restarted backend on the next call. What does not survive is what
+ * was read through them. The media server comes back on a different port, and
+ * everything the backend held in memory is gone.
  *
- * 1. `removeQueries` for everything read through a project instance. Their
- *    `queryFn`s close over a project client from the dead backend, so
- *    invalidating them refetches with that closure — and a `useSuspenseQuery`
- *    with `retry: false` then latches into `status: 'error'`, which
- *    `shouldFetchOptionally` in query-core never retries. Removing is the only
- *    way to get a fresh closure (same reasoning as the rejoin fix in #199).
- *    It also covers `staleTime: 'static'` keys, which invalidation skips
- *    structurally.
- * 2. `resetQueries` for the project instances themselves. Removal is invisible
- *    to a mounted observer — it keeps rendering its last result indefinitely
- *    because nothing dispatches a state change — whereas resetting does
- *    dispatch, so components suspend on `useSingleProject`, rebuild the queries
- *    removed in step 1 and refetch them with closures over the new project
- *    client. The `queryFn` here calls `clientApi.getProject()`, and the client
- *    API outlives the restart, so refetching it is safe.
+ * Each of the four steps does something the others cannot:
+ *
+ * 1. `removeQueries` for everything read through a project instance. Removal
+ *    rather than invalidation, because the media server origin is cached with
+ *    `staleTime: 'static'`, which invalidation skips structurally — so it would
+ *    otherwise hand out URLs for the dead port for the life of the app. Removal
+ *    also guarantees that a query which failed as the old backend went away
+ *    cannot stay latched in `status: 'error'`, which `shouldFetchOptionally` in
+ *    query-core never retries for a `useSuspenseQuery`.
+ * 2. `resetQueries` for the project instance queries. Removal is invisible to a
+ *    mounted observer — it keeps rendering its last result indefinitely because
+ *    nothing dispatches a state change — whereas resetting does dispatch, so
+ *    components suspend on `useSingleProject` and rebuild and refetch the
+ *    queries removed in step 1. The `queryFn` here calls
+ *    `clientApi.getProject()`, which is safe to re-run: it resolves the same
+ *    permanent reference without a wire round trip.
  * 3. `invalidateQueries` for the remainder: manager-level data such as device
- *    info, invites and the project list, all fetched through the surviving
- *    client API. A background refetch is enough, and avoids a loading state.
- * 4. `refreshActiveSyncStores` for the sync state, which is not a query at all
- *    but an external store keyed on the project client. Under `@comapeo/ipc`
- *    v10 that reference is permanent, so step 2 hands back the same store and
- *    nothing else would clear the error it latched when the backend went away.
+ *    info, invites and the project list, all read through the client API. A
+ *    background refetch is enough, and avoids a loading state.
+ * 4. `refreshActiveSyncStores` for the sync state, which is an external store
+ *    rather than a query, keyed on the project reference. Because that
+ *    reference is permanent, step 2 hands back the same store, so nothing else
+ *    would drop the state and error it holds from the previous backend.
  */
 export function resetQueriesAfterBackendRestart(queryClient: QueryClient) {
 	queryClient.removeQueries({
