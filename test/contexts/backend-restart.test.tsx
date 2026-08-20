@@ -419,12 +419,12 @@ function DeviceInfoScreen() {
 	)
 }
 
-describe('transport-closed retry', () => {
+describe('channel-closed retry', () => {
 	// A query in flight when the backend's RPC transport drops rejects with
-	// code RPC_TRANSPORT_CLOSED (a read whose response will never arrive).
+	// code RPC_CHANNEL_CLOSED (a read whose response will never arrive).
 	// `baseQueryOptions` retries only that code, so the query keeps loading
 	// through the restart instead of latching into an error state.
-	test('a transport-closed rejection is retried and resolves', async () => {
+	test('a channel-closed rejection is retried and resolves', async () => {
 		const queryClient = new QueryClient()
 		const clientApi =
 			createMockClientApi() as unknown as ComapeoCoreClientApi & {
@@ -434,8 +434,8 @@ describe('transport-closed retry', () => {
 		clientApi.getDeviceInfo = vi.fn(async () => {
 			if (failuresLeft > 0) {
 				failuresLeft -= 1
-				throw Object.assign(new Error('Transport closed'), {
-					code: 'RPC_TRANSPORT_CLOSED',
+				throw Object.assign(new Error('Channel closed'), {
+					code: 'RPC_CHANNEL_CLOSED',
 				})
 			}
 			return {

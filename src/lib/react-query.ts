@@ -25,34 +25,45 @@ export function getRootQueryKey() {
 
 /**
  * A call that was in flight when the RPC transport to the backend dropped
- * rejects with this code (`TransportClosedError` in `@comapeo/ipc`). The
- * response will never arrive, but the call was a read, so re-issuing it is
- * safe — and on platforms where the backend restarts in place (Android), the
- * retried call waits in the transport's send queue until the new backend is
- * up, turning an error flash into continued loading. Matched by `code` rather
- * than `instanceof` so a duplicated copy of `@comapeo/ipc` in the dependency
- * tree cannot break the check.
+ * rejects with this code — rpc-reflector's `ChannelClosedError`, re-exported by
+ * `@comapeo/ipc` as `RpcChannelClosedError` and used both when the client is
+ * closed and when the transport owner reports a reset. The response will never
+ * arrive, but the call was a read, so re-issuing it is safe — and on platforms
+ * where the backend restarts in place (Android), the retried call waits in the
+ * transport's send queue until the new backend is up, turning an error flash
+ * into continued loading. Matched by `code` rather than `instanceof` so a
+ * duplicated copy of `@comapeo/ipc` in the dependency tree cannot break the
+ * check.
  */
-const TRANSPORT_CLOSED_CODE = 'RPC_TRANSPORT_CLOSED'
+const CHANNEL_CLOSED_CODE = 'RPC_CHANNEL_CLOSED'
 
-const TRANSPORT_CLOSED_RETRY_LIMIT = 3
-const TRANSPORT_CLOSED_RETRY_DELAY_MS = 1_000
+/**
+ * A project this device has left rejects every call with this code until it is
+ * re-joined via an invite, so retrying only re-rejects.
+ */
+const PROJECT_LEFT_CODE = 'PROJECT_LEFT'
 
-function isTransportClosedError(error: unknown): boolean {
-	return (
-		typeof error === 'object' &&
-		error !== null &&
-		'code' in error &&
-		error.code === TRANSPORT_CLOSED_CODE
-	)
+const CHANNEL_CLOSED_RETRY_LIMIT = 3
+const CHANNEL_CLOSED_RETRY_DELAY_MS = 1_000
+
+function getErrorCode(error: unknown): unknown {
+	return typeof error === 'object' && error !== null && 'code' in error
+		? error.code
+		: undefined
+}
+
+function shouldRetryQuery(failureCount: number, error: unknown): boolean {
+	if (failureCount >= CHANNEL_CLOSED_RETRY_LIMIT) return false
+	const code = getErrorCode(error)
+	if (code === PROJECT_LEFT_CODE) return false
+	return code === CHANNEL_CLOSED_CODE
 }
 
 // Since the API is running locally, queries should run regardless of network
-// status, and should not be retried — with one exception: a transport-closed
-// rejection (backend restarted under the call) is retried a bounded number of
-// times, see `isTransportClosedError`. Project-scoped queries whose instance
-// died reject with a different code on the retry and stop retrying; those are
-// recovered by `resetQueriesAfterBackendRestart` instead. In React Native the
+// status, and should not be retried — with one exception: a channel-closed
+// rejection (the transport to the backend dropped under the call) is retried a
+// bounded number of times, see `shouldRetryQuery`. Mutations are never retried:
+// re-issuing a write whose response was lost is not safe. In React Native the
 // API consumer would have to manually set the network mode, but we still
 // should keep these options to avoid surprises. Not using the queryClient
 // `defaultOptions` because the API consumer might also use the same
@@ -64,9 +75,8 @@ export function baseQueryOptions() {
 		// Param typed as the registered `Error` default so TError inference in
 		// the hooks is unaffected; the guard itself narrows from unknown.
 		retry: (failureCount: number, error: Error) =>
-			failureCount < TRANSPORT_CLOSED_RETRY_LIMIT &&
-			isTransportClosedError(error),
-		retryDelay: TRANSPORT_CLOSED_RETRY_DELAY_MS,
+			shouldRetryQuery(failureCount, error),
+		retryDelay: CHANNEL_CLOSED_RETRY_DELAY_MS,
 	} satisfies QueryOptions
 }
 
