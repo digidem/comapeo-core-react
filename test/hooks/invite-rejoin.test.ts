@@ -62,11 +62,10 @@ async function waitForPeers(managers: Managers) {
 
 // Regression test for digidem/comapeo-mobile#2042 and #2041: a member is
 // removed from a project, leaves it, and is re-invited. Accepting the new
-// invite closes the old project instance on the manager
-// (`MapeoManager.addProject`) and opens a fresh one. The project client
-// wrapper is cached with `staleTime: Infinity`, so without invalidation the
-// hooks keep using the closed instance and every project call rejects with
-// ProjectClosed until app restart.
+// invite re-adds the project on the manager (`MapeoManager.addProject`),
+// which closes the instance left behind by leaving and opens a fresh one.
+// The project must be usable again from the hooks straight afterwards,
+// rather than every call rejecting until the app restarts.
 test(
 	're-joining a project after leaving yields a working project instance',
 	{ timeout: 60_000 },
@@ -198,11 +197,10 @@ test(
 		)
 		assert.strictEqual(settingsHook.result.current.data.name, 'mapeo')
 
-		// The re-joined project must be a fresh instance — calls on the wrapper
-		// cached before the re-join reject because that instance is closed.
-		assert.notStrictEqual(
-			rejoinedProjectHook.result.current.data,
-			originalWrapper,
-		)
+		// Deliberately no assertion about the identity of the re-joined wrapper:
+		// @comapeo/ipc v9 hands out a fresh one (the old instance is closed) and
+		// v10 hands back the same permanent reference. What has to hold on both
+		// is that the hooks reach a live instance, which the settings query above
+		// already proves.
 	},
 )
