@@ -115,7 +115,7 @@ A restart is recoverable; leaving a project is not. Every call on a project this
 
 #### What it does not cover
 
-- **In-memory map share state.** The received and sent map share stores are plain in-memory stores, not queries, and are not reset, so a share that was pending when the backend restarted stays pending. A share that was _downloading_ does end up in `error` with code `EVENT_STREAM_ERROR`, because its progress stream cannot be re-established against the new map server. Resuming an interrupted download is a separate piece of work.
+- **In-memory map share state.** The received and sent map share stores are plain in-memory stores, not queries, and are not reset, so a share that was pending when the backend restarted stays pending. A share that was _downloading_ keeps waiting while its progress stream reconnects, and ends up in `error` with code `EVENT_STREAM_ERROR` only once the stream has been down for a minute; downloading it again starts a fresh download. Resuming an interrupted download where it left off is a separate piece of work.
 - **Events emitted during the disconnect window.** Invites, sync state and `map-share` events raised while the app was disconnected from the backend are lost. Refetching the queries above is the compensation for this: the state they carry is re-read from the new backend, but one-off notifications are not replayed.
 
 ## API Documentation

@@ -238,8 +238,13 @@ describe('map share event stream failures', () => {
 		mapShareUrls: ['http://127.0.0.1:1/'],
 	}
 
+	// eventsource-client's own default, and what the map server gets unless it
+	// sends a `retry:` field
+	const DEFAULT_RECONNECT_DELAY_MS = 2_000
+
 	function createStoreWithFakeEventSource() {
 		const close = vi.fn()
+		const createEventSource = vi.fn()
 		let onScheduleReconnect: ((info: { delay: number }) => void) | undefined
 		let onMessage: ((event: { data: string }) => void) | undefined
 
@@ -249,6 +254,7 @@ describe('map share event stream failures', () => {
 				onScheduleReconnect?: (info: { delay: number }) => void
 				onMessage?: (event: { data: string }) => void
 			}) => {
+				createEventSource(options)
 				onScheduleReconnect = options.onScheduleReconnect
 				onMessage = options.onMessage
 				return { close }
@@ -267,11 +273,15 @@ describe('map share event stream failures', () => {
 		return {
 			store,
 			close,
+			createEventSource,
 			async startDownload() {
-				mockClientApi.emit('map-share', MAP_SHARE)
 				await store.actions.download({ shareId: MAP_SHARE.shareId })
 			},
-			dropStream: () => onScheduleReconnect?.({ delay: 0 }),
+			receiveShare() {
+				mockClientApi.emit('map-share', MAP_SHARE)
+			},
+			dropStream: (delay = DEFAULT_RECONNECT_DELAY_MS) =>
+				onScheduleReconnect?.({ delay }),
 			emitProgress: (bytesDownloaded: number) =>
 				onMessage?.({
 					data: JSON.stringify({ status: 'downloading', bytesDownloaded }),
@@ -279,20 +289,35 @@ describe('map share event stream failures', () => {
 		}
 	}
 
-	it('moves the share to error when the stream cannot be re-established', async (t) => {
+	// The budget is measured in seconds of outage rather than reconnect
+	// attempts: at the 2s default with no backoff, a handful of attempts is only
+	// a few seconds, which an Android backend restart routinely exceeds.
+	it('tolerates a stream outage far longer than a few reconnects', async (t) => {
 		const fake = createStoreWithFakeEventSource()
 		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+
+		for (let i = 0; i < 15; i++) fake.dropStream()
+
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
+	})
+
+	it('moves the share to error once the outage budget is spent', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
 
 		await fake.startDownload()
 		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
 
-		// A single dropped connection is not a failure: the client reconnects
-		fake.dropStream()
+		// 30s and 60s of accumulated downtime are both still within budget
+		fake.dropStream(30_000)
+		fake.dropStream(30_000)
 		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'downloading')
 
-		fake.dropStream()
-		fake.dropStream()
-		fake.dropStream()
+		fake.dropStream(30_000)
 
 		expect(fake.store.getSnapshot()[0]).toMatchObject({
 			status: 'error',
@@ -304,18 +329,49 @@ describe('map share event stream failures', () => {
 	it('keeps monitoring a stream that recovers between drops', async (t) => {
 		const fake = createStoreWithFakeEventSource()
 		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
 
 		await fake.startDownload()
 
+		// The map server sends the current state as the first message on a new
+		// stream, so a delivered event means the outage is over
 		for (let i = 1; i <= 10; i++) {
-			fake.dropStream()
-			fake.dropStream()
+			fake.dropStream(30_000)
+			fake.dropStream(30_000)
 			fake.emitProgress(i)
 		}
 
 		expect(fake.store.getSnapshot()[0]).toMatchObject({
 			status: 'downloading',
 			bytesDownloaded: 10,
+		})
+	})
+
+	// The stores are plain in-memory state and are never reset, so a share left
+	// in `error` would be a dead row for the life of the app
+	it('lets a share that lost its stream be downloaded again', async (t) => {
+		const fake = createStoreWithFakeEventSource()
+		t.onTestFinished(fake.store.listen())
+		fake.receiveShare()
+
+		await fake.startDownload()
+		fake.dropStream(90_000)
+		expect(fake.store.getSnapshot()[0]).toHaveProperty('status', 'error')
+
+		await fake.startDownload()
+
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 0,
+		})
+		// A second monitor, so the retry is watching a live stream rather than
+		// riding on the closed one
+		expect(fake.createEventSource).toHaveBeenCalledTimes(2)
+
+		fake.emitProgress(42)
+		expect(fake.store.getSnapshot()[0]).toMatchObject({
+			status: 'downloading',
+			bytesDownloaded: 42,
 		})
 	})
 })

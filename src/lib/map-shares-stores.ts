@@ -73,8 +73,9 @@ export type SentMapSharesStore = ReturnType<typeof createSentMapSharesStore>
  * ## Common
  *
  * - `EVENT_STREAM_ERROR` — the server-sent event stream reporting the share's
- *   progress could not be re-established, so its final status will never
- *   arrive. Appears as a share state error for either sender or receiver.
+ *   progress stayed down long enough that its final status will never arrive.
+ *   Appears as a share state error for either sender or receiver. A received
+ *   share in this state can be downloaded again.
  * - `UNKNOWN_ERROR` — fallback when the original error has no specific code.
  *   Can appear as both a mutation error and a share state error for either
  *   sender or receiver.
@@ -233,8 +234,8 @@ export class InvalidStatusTransitionError extends Error {
 
 /**
  * Thrown when the server-sent event stream that reports a map share's progress
- * cannot be re-established, so the share's final status will never arrive. Has
- * `code: 'EVENT_STREAM_ERROR'`.
+ * stays down long enough that its final status will never arrive. Has
+ * `code: 'EVENT_STREAM_ERROR'`. The share can be downloaded again.
  */
 export class MapShareStreamError extends Error {
 	code = 'EVENT_STREAM_ERROR' as const
@@ -244,7 +245,18 @@ export class MapShareStreamError extends Error {
 	}
 }
 
-const MAX_EVENT_STREAM_RECONNECTS = 3
+/**
+ * How long the progress stream may stay down before the share is failed.
+ *
+ * The event source reconnects on its own and reports the delay it will wait
+ * before each attempt, so summing those delays measures the outage. There is no
+ * option to set the delay: eventsource-client uses 2s with no backoff unless the
+ * server sends a `retry:` field, which it honours — either way the budget below
+ * follows it rather than assuming a value. Sized for an Android backend restart,
+ * which routinely takes tens of seconds; a threshold measured in attempts (3
+ * attempts is ~6s) would fail exactly the shares this recovery path exists for.
+ */
+const MAX_EVENT_STREAM_OUTAGE_MS = 60_000
 
 /**
  * This is like a mini zustand store. Keeping the map shares in an external
@@ -327,24 +339,26 @@ function createMapSharesStore<
 	async function monitor(mapShareId: string, path: string) {
 		// TODO: add a timeout in case the download stalls and never completes
 		return new Promise<MapShareStateUpdate>((resolve, reject) => {
-			// The event source reconnects on its own, so a single dropped
-			// connection is not a failure. Give up only after it has failed to
-			// re-establish the stream this many times without delivering an event
-			// in between, otherwise a map server that is gone for good (killed with
-			// the backend on Android) leaves the share stuck in `downloading`.
-			let failedReconnects = 0
+			// The event source reconnects on its own, so a dropped connection is
+			// not a failure until the server stays unreachable for the whole
+			// budget. Without this the share sits in `downloading` for the life of
+			// the app when the map server is gone for good, killed with the
+			// backend on Android. Any delivered message resets the budget: the map
+			// server sends the current state as the first message on a stream, so
+			// one event means the stream is genuinely live again.
+			let outageMs = 0
 			const es = mapServerApi.createEventSource({
 				url: path,
-				onScheduleReconnect() {
-					failedReconnects += 1
-					if (failedReconnects <= MAX_EVENT_STREAM_RECONNECTS) return
+				onScheduleReconnect({ delay }) {
+					outageMs += delay
+					if (outageMs <= MAX_EVENT_STREAM_OUTAGE_MS) return
 					es.close()
 					const error = new MapShareStreamError(mapShareId)
 					handleError(mapShareId, error)
 					reject(error)
 				},
 				onMessage({ data }) {
-					failedReconnects = 0
+					outageMs = 0
 					try {
 						const stateUpdate = JSON.parse(data)
 						update(mapShareId, stateUpdate)
@@ -442,8 +456,13 @@ export function createReceivedMapSharesStore({
 				downloads.set(shareId, downloadIdPromise)
 				const downloadId = await downloadIdPromise
 				monitor(shareId, `downloads/${downloadId}/events`)
-					.then((stateUpdate) => {
+					.finally(() => {
+						// However the monitor ends, not just on success: a share that
+						// errored can be downloaded again, and a leftover entry would
+						// point the retry's abort at a download id that is long gone.
 						downloads.delete(shareId)
+					})
+					.then((stateUpdate) => {
 						// Invalidate map queries when download completes to trigger reload of map
 						if (stateUpdate.status === 'completed') {
 							return invalidateMapQueries(queryClient, {
@@ -601,7 +620,11 @@ const allowedStatusTransitions: Record<
 	canceled: ['error'],
 	aborted: ['error'],
 	declined: ['error'],
-	error: ['error'],
+	// The only status the user did not choose, so the only one worth offering a
+	// way out of. `declined` and `aborted` are decisions; `error` is a failure,
+	// and the store is never reset, so without this a share that lost its
+	// progress stream is a dead row for the life of the app.
+	error: ['error', 'downloading'],
 }
 
 /**
