@@ -9,7 +9,10 @@ import {
 	type PropsWithChildren,
 } from 'react'
 
-import { getInvitesQueryKey } from '../lib/react-query.js'
+import {
+	getInvitesQueryKey,
+	getJoinRequestsQueryKey,
+} from '../lib/react-query.js'
 
 export const ClientApiContext: Context<ComapeoCoreClientApi | null> =
 	createContext<ComapeoCoreClientApi | null>(null)
@@ -32,17 +35,30 @@ export function ClientApiProvider({
 	const queryClient = useQueryClient()
 
 	useEffect(() => {
-		function invalidateInviteCache() {
+		function handleInviteEvent() {
 			queryClient.invalidateQueries({ queryKey: getInvitesQueryKey() })
 		}
 
-		// Invite listeners
-		clientApi.invite.addListener('invite-received', invalidateInviteCache)
-		clientApi.invite.addListener('invite-updated', invalidateInviteCache)
+		clientApi.invite.addListener('invite-received', handleInviteEvent)
+		clientApi.invite.addListener('invite-updated', handleInviteEvent)
+
+		function handleJoinRequestUpdateEvent() {
+			queryClient.invalidateQueries({ queryKey: getJoinRequestsQueryKey() })
+		}
+
+		clientApi.inviteLinks.addListener(
+			'join-request-update',
+			handleJoinRequestUpdateEvent,
+		)
 
 		return () => {
-			clientApi.invite.removeListener('invite-received', invalidateInviteCache)
-			clientApi.invite.removeListener('invite-updated', invalidateInviteCache)
+			clientApi.invite.removeListener('invite-received', handleInviteEvent)
+			clientApi.invite.removeListener('invite-updated', handleInviteEvent)
+
+			clientApi.inviteLinks.removeListener(
+				'join-request-update',
+				handleJoinRequestUpdateEvent,
+			)
 		}
 	}, [clientApi, queryClient])
 

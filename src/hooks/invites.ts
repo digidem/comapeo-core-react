@@ -3,6 +3,7 @@ import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
+	type UseMutationResult,
 	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 
@@ -12,10 +13,14 @@ import {
 	filterMutationResult,
 	getInvitesByIdQueryKey,
 	getInvitesQueryKey,
+	getJoinRequestsByIdQueryKey,
+	getJoinRequestsQueryKey,
 	getMembersQueryKey,
 	getProjectByIdQueryKey,
 	getProjectsQueryKey,
+	type FilteredMutationResult,
 } from '../lib/react-query.js'
+import type { JoinRequest } from '../lib/types.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 
@@ -190,6 +195,99 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 			onSuccess: () => {
 				queryClient.invalidateQueries({
 					queryKey: getInvitesQueryKey(),
+				})
+			},
+		}),
+	)
+}
+
+export function useManyJoinRequests(): // NOTE: Needs explicit return type due to TS2742
+Pick<
+	UseSuspenseQueryResult<Array<JoinRequest>>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getJoinRequestsQueryKey(),
+		queryFn: async () => {
+			return clientApi.inviteLinks.getJoinRequests()
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+export function useSingleJoinRequest({
+	inviteId,
+}: {
+	inviteId: string
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<UseSuspenseQueryResult<JoinRequest>, 'data' | 'error' | 'isRefetching'> {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getJoinRequestsByIdQueryKey({ inviteId }),
+		queryFn: async () => {
+			return clientApi.inviteLinks.getJoinRequestById(inviteId)
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+export function useCreateJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<JoinRequest, Error, { url: string; timeout?: number }>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				url,
+				timeout,
+			}: {
+				url: string
+				timeout?: number
+			}) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return timeout === undefined
+					? clientApi.inviteLinks.createJoinRequest(url)
+					: clientApi.inviteLinks.createJoinRequest(url, { timeout })
+			},
+			onSuccess: async (_data, _variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getJoinRequestsQueryKey(),
+				})
+			},
+		}),
+	)
+}
+
+export function useCancelJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<void, Error, { url: string; reason?: Error }>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ url, reason }: { url: string; reason?: Error }) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return reason === undefined
+					? clientApi.inviteLinks.cancelJoinRequest(url, reason)
+					: clientApi.inviteLinks.cancelJoinRequest(url)
+			},
+			onSuccess: async (_data, _variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getJoinRequestsQueryKey(),
 				})
 			},
 		}),

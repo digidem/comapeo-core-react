@@ -10,6 +10,7 @@ import type {
 } from '@comapeo/ipc'
 import {
 	matchQuery,
+	queryOptions,
 	useMutation,
 	UseMutationResult,
 	useQueryClient,
@@ -23,18 +24,43 @@ import {
 	baseQueryOptions,
 	filterMutationResult,
 	getDocumentCreatedByQueryKey,
+	getInviteLinksQueryKey,
 	getMediaServerOriginQueryKey,
 	getMemberByIdQueryKey,
 	getMembersQueryKey,
 	getProjectByIdQueryKey,
+	// getProjectByIdQueryOptions,
 	getProjectRoleQueryKey,
 	getProjectSettingsQueryKey,
 	getProjectsQueryKey,
 	type FilteredMutationResult,
 } from '../lib/react-query.js'
 import { SyncStore, type SyncState } from '../lib/sync.js'
+import type { InviteDecision, InviteLink, InviteOptions } from '../lib/types.js'
 import { getBlobUrl, getIconUrl } from '../lib/urls.js'
 import { useClientApi } from './client.js'
+
+function getProjectByIdQueryOptions({
+	clientApi,
+	projectId,
+}: {
+	clientApi: ComapeoCoreClientApi
+	projectId: string
+}) {
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: getProjectByIdQueryKey({ projectId }),
+		queryFn: async () => {
+			return clientApi.getProject(projectId)
+		},
+		// Keep project instances around indefinitely - shouldn't be a memory
+		// problem because these are only lightweight proxy objects, and project
+		// references are kept indefinitely on the backend anyway once they are
+		// accessed
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
+}
 
 /**
  * Retrieve the project settings for a project.
@@ -99,19 +125,9 @@ Pick<
 > {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery({
-		...baseQueryOptions(),
-		queryKey: getProjectByIdQueryKey({ projectId }),
-		queryFn: async () => {
-			return clientApi.getProject(projectId)
-		},
-		// Keep project instances around indefinitely - shouldn't be a memory
-		// problem because these are only lightweight proxy objects, and project
-		// references are kept indefinitely on the backend anyway once they are
-		// accessed
-		staleTime: Infinity,
-		gcTime: Infinity,
-	})
+	const { data, error, isRefetching } = useSuspenseQuery(
+		getProjectByIdQueryOptions({ clientApi, projectId }),
+	)
 
 	return { data, error, isRefetching }
 }
@@ -1040,6 +1056,176 @@ export function useExportZipFile({ projectId }: { projectId: string }) {
 				}
 			}) => {
 				return projectApi.exportZipFile(opts.path, opts.exportOptions)
+			},
+		}),
+	)
+}
+
+export function useManyInviteLinks({
+	projectId,
+}: {
+	projectId: string
+}): Pick<
+	UseSuspenseQueryResult<Array<InviteLink>>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getInviteLinksQueryKey({ projectId }),
+		queryFn: async () => {
+			return projectApi.$member.listInviteLinks()
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+export function useCreateInviteLink() {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (
+				{
+					projectId,
+					...inviteOptions
+				}: {
+					projectId: string
+				} & InviteOptions,
+				context,
+			) => {
+				const projectApi = await context.client.ensureQueryData(
+					getProjectByIdQueryOptions({ clientApi, projectId }),
+				)
+
+				return projectApi.$member.createInviteLink(inviteOptions)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+export function useCancelInviteLink() {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (
+				{
+					projectId,
+					inviteUrl,
+				}: {
+					projectId: string
+					inviteUrl: string | undefined
+				},
+				context,
+			) => {
+				const projectApi = await context.client.ensureQueryData(
+					getProjectByIdQueryOptions({ clientApi, projectId }),
+				)
+
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return inviteUrl
+					? projectApi.$member.cancelInviteLink(inviteUrl)
+					: projectApi.$member.cancelInviteLink()
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+export function useAcceptInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		InviteDecision,
+		Error,
+		{ projectId: string; inviteId: string; deviceId: string }
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (
+				{
+					projectId,
+					inviteId,
+					deviceId,
+				}: {
+					projectId: string
+					inviteId: string
+					deviceId: string
+				},
+				context,
+			) => {
+				const projectApi = await context.client.ensureQueryData(
+					getProjectByIdQueryOptions({ clientApi, projectId }),
+				)
+
+				return projectApi.$member.acceptInviteLinkRequest(inviteId, deviceId)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+				context.client.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+export function useDenyInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		void,
+		Error,
+		{ projectId: string; inviteId: string; deviceId: string }
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async (
+				{
+					projectId,
+					inviteId,
+					deviceId,
+				}: {
+					projectId: string
+					inviteId: string
+					deviceId: string
+					// TODO: Expose reason?
+				},
+				context,
+			) => {
+				const projectApi = await context.client.ensureQueryData(
+					getProjectByIdQueryOptions({ clientApi, projectId }),
+				)
+
+				return projectApi.$member.denyInviteLinkRequest(inviteId, deviceId)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
 			},
 		}),
 	)

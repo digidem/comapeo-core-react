@@ -47,6 +47,11 @@
 - [useSetAutostopDataSyncTimeout](#usesetautostopdatasynctimeout)
 - [useExportGeoJSON](#useexportgeojson)
 - [useExportZipFile](#useexportzipfile)
+- [useManyInviteLinks](#usemanyinvitelinks)
+- [useCreateInviteLink](#usecreateinvitelink)
+- [useCancelInviteLink](#usecancelinvitelink)
+- [useAcceptInviteLinkRequest](#useacceptinvitelinkrequest)
+- [useDenyInviteLinkRequest](#usedenyinvitelinkrequest)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -60,6 +65,10 @@
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
 - [useRequestCancelInvite](#userequestcancelinvite)
+- [useManyJoinRequests](#usemanyjoinrequests)
+- [useSingleJoinRequest](#usesinglejoinrequest)
+- [useCreateJoinRequest](#usecreatejoinrequest)
+- [useCancelJoinRequest](#usecanceljoinrequest)
 - [useMapStyleUrl](#usemapstyleurl)
 - [useImportCustomMapFile](#useimportcustommapfile)
 - [useRemoveCustomMapFile](#useremovecustommapfile)
@@ -833,6 +842,36 @@ Parameters:
 * `opts.projectId`: Public ID of the project to apply changes to.
 
 
+### useManyInviteLinks
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyInviteLinks` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<Pick<InviteLinkRecord, "createdAt" or "roleId" or "url" or "inviteId" or "expiresAt">[]>, "data" or ... 1 more ... or "isRefetching">` |
+
+### useCreateInviteLink
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateInviteLink` | `() => Pick<Override<MutationObserverIdleResult<string, Error, { projectId: string; } and InviteOptions, unknown>, { mutate: UseMutateFunction<string, Error, { ...; } and InviteOptions, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+
+### useCancelInviteLink
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteUrl: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+
+### useAcceptInviteLinkRequest
+
+| Function | Type |
+| ---------- | ---------- |
+| `useAcceptInviteLinkRequest` | `() => FilteredMutationResult<UseMutationResult<InviteDecision, Error, { projectId: string; inviteId: string; deviceId: string; }>>` |
+
+### useDenyInviteLinkRequest
+
+| Function | Type |
+| ---------- | ---------- |
+| `useDenyInviteLinkRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { projectId: string; inviteId: string; deviceId: string; }>>` |
+
 ### useSingleDocByDocId
 
 Retrieve a single document from the database based on the document's document ID.
@@ -1087,7 +1126,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; },...` |
+| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<InviteDecision, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 ...` |
 
 Parameters:
 
@@ -1106,6 +1145,30 @@ Parameters:
 
 * `opts.projectId`: Public ID of project to request the invite cancellation for.
 
+
+### useManyJoinRequests
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyJoinRequests` | `() => Pick<UseSuspenseQueryResult<JoinRequest[]>, "data" or "error" or "isRefetching">` |
+
+### useSingleJoinRequest
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSingleJoinRequest` | `({ inviteId, }: { inviteId: string; }) => Pick<UseSuspenseQueryResult<JoinRequest>, "data" or "error" or "isRefetching">` |
+
+### useCreateJoinRequest
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateJoinRequest` | `() => FilteredMutationResult<UseMutationResult<JoinRequest, Error, { url: string; timeout?: number or undefined; }>>` |
+
+### useCancelJoinRequest
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { url: string; reason?: Error or undefined; }>>` |
 
 ### useMapStyleUrl
 
@@ -1162,7 +1225,7 @@ Note that this is _not_ a suspenseful hook. The different read states should be 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<NoInfer<{ name: string; size: number; created: number; }>, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<{ name: string; size: number; created: number; }, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
 
 Examples:
 
