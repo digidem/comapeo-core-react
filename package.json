@@ -70,13 +70,13 @@
 		"type-fest": "^5.9.0"
 	},
 	"peerDependencies": {
-		"@comapeo/core": "^7.2.0",
+		"@comapeo/core": "^7.6.0",
 		"@comapeo/ipc": "^9.0.0",
 		"@tanstack/react-query": "^5",
 		"react": "^18 || ^19"
 	},
 	"devDependencies": {
-		"@comapeo/core": "7.5.1",
+		"@comapeo/core": "7.6.0",
 		"@comapeo/ipc": "9.0.1",
 		"@eslint/js": "10.0.1",
 		"@ianvs/prettier-plugin-sort-imports": "4.7.1",
