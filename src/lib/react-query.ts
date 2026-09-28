@@ -1,10 +1,10 @@
 import { DEFAULT_MAP_ID } from '@comapeo/map-server/constants.js'
-import {
-	type QueryClient,
-	type QueryOptions,
-	type UseMutationOptions,
-	type UseMutationResult,
-	type UseQueryResult,
+import type {
+	QueryClient,
+	QueryOptions,
+	UseMutationOptions,
+	UseMutationResult,
+	UseQueryResult,
 } from '@tanstack/react-query'
 import { DistributedPick } from 'type-fest'
 

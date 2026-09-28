@@ -29,7 +29,6 @@ import {
 	getMemberByIdQueryKey,
 	getMembersQueryKey,
 	getProjectByIdQueryKey,
-	// getProjectByIdQueryOptions,
 	getProjectRoleQueryKey,
 	getProjectSettingsQueryKey,
 	getProjectsQueryKey,
