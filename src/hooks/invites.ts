@@ -20,7 +20,7 @@ import {
 	getProjectsQueryKey,
 	type FilteredMutationResult,
 } from '../lib/react-query.js'
-import type { JoinRequest } from '../lib/types.js'
+import type { InviteDecision, JoinRequest } from '../lib/types.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 
@@ -147,7 +147,23 @@ export function useRejectInvite() {
  *
  * @param opts.projectId Public ID of project to send the invite on behalf of.
  */
-export function useSendInvite({ projectId }: { projectId: string }) {
+export function useSendInvite({
+	projectId,
+}: {
+	projectId: string
+}): // NOTE: Needs explicit return type due to TS struggles with inference (TS 2883)
+FilteredMutationResult<
+	UseMutationResult<
+		InviteDecision,
+		Error,
+		{
+			deviceId: string
+			roleDescription?: string
+			roleId: MemberApi.RoleIdForNewInvite
+			roleName?: string
+		}
+	>
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
