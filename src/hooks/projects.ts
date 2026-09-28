@@ -1097,9 +1097,10 @@ export function useCreateInviteLink() {
 				} & InviteOptions,
 				context,
 			) => {
-				const projectApi = await context.client.ensureQueryData(
-					getProjectByIdQueryOptions({ clientApi, projectId }),
-				)
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
 
 				return projectApi.$member.createInviteLink(inviteOptions)
 			},
@@ -1128,9 +1129,10 @@ export function useCancelInviteLink() {
 				},
 				context,
 			) => {
-				const projectApi = await context.client.ensureQueryData(
-					getProjectByIdQueryOptions({ clientApi, projectId }),
-				)
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
 
 				// Have to avoid passing `undefined` explicitly
 				// See https://github.com/digidem/rpc-reflector/issues/21
@@ -1172,9 +1174,10 @@ FilteredMutationResult<
 				},
 				context,
 			) => {
-				const projectApi = await context.client.ensureQueryData(
-					getProjectByIdQueryOptions({ clientApi, projectId }),
-				)
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
 
 				return projectApi.$member.acceptInviteLinkRequest(inviteId, deviceId)
 			},
@@ -1216,9 +1219,10 @@ FilteredMutationResult<
 				},
 				context,
 			) => {
-				const projectApi = await context.client.ensureQueryData(
-					getProjectByIdQueryOptions({ clientApi, projectId }),
-				)
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
 
 				return projectApi.$member.denyInviteLinkRequest(inviteId, deviceId)
 			},
