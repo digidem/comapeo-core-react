@@ -1064,7 +1064,8 @@ export function useManyInviteLinks({
 	projectId,
 }: {
 	projectId: string
-}): Pick<
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
 	UseSuspenseQueryResult<Array<InviteLink>>,
 	'data' | 'error' | 'isRefetching'
 > {
