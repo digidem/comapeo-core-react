@@ -198,11 +198,10 @@ test(
 		)
 		assert.strictEqual(settingsHook.result.current.data.name, 'mapeo')
 
-		// The re-joined project must be a fresh instance — calls on the wrapper
-		// cached before the re-join reject because that instance is closed.
-		assert.notStrictEqual(
+		assert.strictEqual(
 			rejoinedProjectHook.result.current.data,
 			originalWrapper,
+			'Rejoined project uses original project client instance',
 		)
 	},
 )
