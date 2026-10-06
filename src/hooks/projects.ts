@@ -35,7 +35,6 @@ import {
 	type FilteredMutationResult,
 } from '../lib/react-query.js'
 import { SyncStore, type SyncState } from '../lib/sync.js'
-import type { InviteDecision, InviteLink, InviteOptions } from '../lib/types.js'
 import { getBlobUrl, getIconUrl } from '../lib/urls.js'
 import { useClientApi } from './client.js'
 
@@ -1066,7 +1065,7 @@ export function useManyInviteLinks({
 	projectId: string
 }): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<Array<InviteLink>>,
+	UseSuspenseQueryResult<Array<MemberApi.InviteLink>>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const { data: projectApi } = useSingleProject({ projectId })
@@ -1082,21 +1081,20 @@ Pick<
 	return { data, error, isRefetching }
 }
 
-export function useCreateInviteLink() {
+export function useCreateInviteLink(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		string,
+		Error,
+		{ projectId: string } & Omit<MemberApi.InviteOptions, '__testOnlyInviteId'>
+	>
+> {
 	const clientApi = useClientApi()
 
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
-			mutationFn: async (
-				{
-					projectId,
-					...inviteOptions
-				}: {
-					projectId: string
-				} & InviteOptions,
-				context,
-			) => {
+			mutationFn: async ({ projectId, ...inviteOptions }, context) => {
 				const projectApi = await context.client.query({
 					...getProjectByIdQueryOptions({ clientApi, projectId }),
 					staleTime: 'static',
@@ -1120,13 +1118,7 @@ export function useCancelInviteLink() {
 		useMutation({
 			...baseMutationOptions(),
 			mutationFn: async (
-				{
-					projectId,
-					inviteUrl,
-				}: {
-					projectId: string
-					inviteUrl: string | undefined
-				},
+				{ projectId, inviteUrl }: { projectId: string; inviteUrl?: string },
 				context,
 			) => {
 				const projectApi = await context.client.query({
@@ -1152,7 +1144,7 @@ export function useCancelInviteLink() {
 export function useAcceptInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
 	UseMutationResult<
-		InviteDecision,
+		MemberApi.InviteDecision,
 		Error,
 		{ projectId: string; inviteId: string; deviceId: string }
 	>

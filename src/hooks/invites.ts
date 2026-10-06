@@ -1,4 +1,4 @@
-import type { InviteApi, MemberApi } from '@comapeo/core'
+import type { InviteApi, InviteLinkJoiner, MemberApi } from '@comapeo/core'
 import {
 	useMutation,
 	useQueryClient,
@@ -20,7 +20,6 @@ import {
 	getProjectsQueryKey,
 	type FilteredMutationResult,
 } from '../lib/react-query.js'
-import type { InviteDecision, JoinRequest } from '../lib/types.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
 
@@ -154,7 +153,7 @@ export function useSendInvite({
 }): // NOTE: Needs explicit return type due to TS struggles with inference (TS 2883)
 FilteredMutationResult<
 	UseMutationResult<
-		InviteDecision,
+		MemberApi.InviteDecision,
 		Error,
 		{
 			deviceId: string
@@ -219,7 +218,7 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 
 export function useManyJoinRequests(): // NOTE: Needs explicit return type due to TS2742
 Pick<
-	UseSuspenseQueryResult<Array<JoinRequest>>,
+	UseSuspenseQueryResult<Array<InviteLinkJoiner.JoinRequest>>,
 	'data' | 'error' | 'isRefetching'
 > {
 	const clientApi = useClientApi()
@@ -240,7 +239,10 @@ export function useSingleJoinRequest({
 }: {
 	inviteId: string
 }): // NOTE: Needs explicit return type due to TS2742
-Pick<UseSuspenseQueryResult<JoinRequest>, 'data' | 'error' | 'isRefetching'> {
+Pick<
+	UseSuspenseQueryResult<InviteLinkJoiner.JoinRequest>,
+	'data' | 'error' | 'isRefetching'
+> {
 	const clientApi = useClientApi()
 
 	const { data, error, isRefetching } = useSuspenseQuery({
@@ -256,7 +258,11 @@ Pick<UseSuspenseQueryResult<JoinRequest>, 'data' | 'error' | 'isRefetching'> {
 
 export function useCreateJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
-	UseMutationResult<JoinRequest, Error, { url: string; timeout?: number }>
+	UseMutationResult<
+		InviteLinkJoiner.JoinRequest,
+		Error,
+		{ url: string; timeout?: number }
+	>
 > {
 	const clientApi = useClientApi()
 

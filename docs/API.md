@@ -846,19 +846,19 @@ Parameters:
 
 | Function | Type |
 | ---------- | ---------- |
-| `useManyInviteLinks` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<Pick<InviteLinkRecord, "createdAt" or "roleId" or "url" or "inviteId" or "expiresAt">[]>, "data" or ... 1 more ... or "isRefetching">` |
+| `useManyInviteLinks` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<InviteLink[]>, "data" or "error" or "isRefetching">` |
 
 ### useCreateInviteLink
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCreateInviteLink` | `() => Pick<Override<MutationObserverIdleResult<string, Error, { projectId: string; } and InviteOptions, unknown>, { mutate: UseMutateFunction<string, Error, { ...; } and InviteOptions, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useCreateInviteLink` | `() => FilteredMutationResult<UseMutationResult<string, Error, { projectId: string; } and Omit<InviteOptions, "__testOnlyInviteId">>>` |
 
 ### useCancelInviteLink
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteUrl: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteUrl?: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useAcceptInviteLinkRequest
 
@@ -1126,7 +1126,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<InviteDecision, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; }, "error" or ... 3 ...` |
+| `useSendInvite` | `({ projectId, }: { projectId: string; }) => FilteredMutationResult<UseMutationResult<InviteDecision, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }>>` |
 
 Parameters:
 
