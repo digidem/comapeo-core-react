@@ -16,7 +16,6 @@ import {
 	getJoinRequestsByIdQueryKey,
 	getJoinRequestsQueryKey,
 	getMembersQueryKey,
-	getProjectByIdQueryKey,
 	getProjectsQueryKey,
 	type FilteredMutationResult,
 } from '../lib/react-query.js'
@@ -98,18 +97,9 @@ export function useAcceptInvite() {
 			mutationFn: async ({ inviteId }: { inviteId: string }) => {
 				return clientApi.invite.accept({ inviteId })
 			},
-			onSuccess: (projectId) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({
 					queryKey: getInvitesQueryKey(),
-				})
-				// Accepting an invite (re-)adds the project on the backend, which
-				// closes any project instance that was open before the invite (e.g.
-				// after leaving the project) and opens a fresh one. The project
-				// client is cached with staleTime/gcTime Infinity, so drop it here
-				// or every observer keeps using the closed instance.
-				queryClient.removeQueries({
-					queryKey: getProjectByIdQueryKey({ projectId }),
-					exact: true,
 				})
 				queryClient.invalidateQueries({
 					queryKey: getProjectsQueryKey(),
