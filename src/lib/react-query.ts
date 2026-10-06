@@ -217,22 +217,6 @@ export function getInviteLinksQueryKey({ projectId }: { projectId: string }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'invite-links'] as const
 }
 
-export function getInviteLinksByIdQueryKey({
-	projectId,
-	inviteId,
-}: {
-	projectId: string
-	inviteId: string
-}) {
-	return [
-		ROOT_QUERY_KEY,
-		'projects',
-		projectId,
-		'invite-links',
-		{ inviteId },
-	] as const
-}
-
 export function getDocumentCreatedByQueryKey({
 	projectId,
 	originalVersionId,
