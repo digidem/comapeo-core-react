@@ -18,6 +18,7 @@ import {
 	useAcceptInvite,
 	useAcceptInviteLinkRequest,
 	useCancelInviteLink,
+	useCancelJoinRequest,
 	useCreateInviteLink,
 	useCreateJoinRequest,
 	useDenyInviteLinkRequest,
@@ -857,5 +858,166 @@ test.describe('invite over internet', () => {
 		})
 
 		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 0)
+	})
+
+	test('invitee cancels join request', { timeout: 30_000 }, async (t) => {
+		// 1. Setup
+		const testnet = await createTestnet(2)
+
+		t.onTestFinished(() => {
+			return testnet.destroy()
+		})
+
+		const invitor = setupCoreIpc({
+			managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+		})
+
+		const invitee = setupCoreIpc({
+			managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+		})
+
+		t.onTestFinished(async () => {
+			await Promise.all([invitor.cleanup(), invitee.cleanup()])
+		})
+
+		await invitor.manager.setDeviceInfo({
+			name: 'invitor',
+			deviceType: 'desktop',
+		})
+
+		await invitee.manager.setDeviceInfo({
+			name: 'invitee',
+			deviceType: 'mobile',
+		})
+
+		const projectId = await invitor.manager.createProject({ name: 'mapeo' })
+
+		const invitorWrapper = createWrapper({
+			clientApi: invitor.client,
+		})
+
+		const inviteeWrapper = createWrapper({
+			clientApi: invitee.client,
+		})
+
+		const manyMembersHook = renderHook(
+			({ projectId }) => useManyMembers({ projectId, includeLeft: false }),
+			{ wrapper: invitorWrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(
+			() => {
+				assert.isNotNull(manyMembersHook.result.current)
+				assert.isNull(manyMembersHook.result.current.error)
+				assert.ok(manyMembersHook.result.current.data)
+			},
+			{ timeout: 10_000 },
+		)
+
+		assert.strictEqual(manyMembersHook.result.current.data.length, 1)
+
+		// 2. Invitor: create invite link
+		const createInviteLinkHook = renderHook(() => useCreateInviteLink(), {
+			wrapper: invitorWrapper,
+		})
+
+		const inviteUrl = await act(() => {
+			return createInviteLinkHook.result.current.mutateAsync({
+				projectId,
+				roleId: MEMBER_ROLE_ID,
+			})
+		})
+
+		// 3. Invitee: create join request
+		const createJoinRequestHook = renderHook(() => useCreateJoinRequest(), {
+			wrapper: inviteeWrapper,
+		})
+		const manyJoinRequestsHook = renderHook(() => useManyJoinRequests(), {
+			wrapper: inviteeWrapper,
+		})
+
+		const createdJoinRequest = await act(() => {
+			return createJoinRequestHook.result.current.mutateAsync({
+				url: inviteUrl,
+			})
+		})
+
+		const singleJoinRequestHook = renderHook(
+			({ inviteId }) => useSingleJoinRequest({ inviteId }),
+			{
+				wrapper: inviteeWrapper,
+				initialProps: { inviteId: createdJoinRequest.inviteId },
+			},
+		)
+
+		await waitFor(() => {
+			assert.strictEqual(
+				manyJoinRequestsHook.result.current.isRefetching,
+				false,
+			)
+			assert.isNull(manyJoinRequestsHook.result.current.error)
+			assert.ok(manyJoinRequestsHook.result.current.data)
+
+			assert.strictEqual(
+				singleJoinRequestHook.result.current.isRefetching,
+				false,
+			)
+			assert.isNull(singleJoinRequestHook.result.current.error)
+			assert.ok(singleJoinRequestHook.result.current.data)
+		})
+
+		assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 1)
+
+		// Changes to the `status` field are managed by internal implementation details.
+		{
+			const { status: __, ...joinRequestFromSingleJoinRequestHook } =
+				singleJoinRequestHook.result.current.data
+
+			const { status: ___, ...createdJoinRequestWithoutStatus } =
+				createdJoinRequest
+
+			assert.deepStrictEqual(
+				joinRequestFromSingleJoinRequestHook,
+				createdJoinRequestWithoutStatus,
+			)
+		}
+
+		// 4. Invitee: cancel join request
+		const cancelJoinRequestHook = renderHook(() => useCancelJoinRequest(), {
+			wrapper: inviteeWrapper,
+		})
+
+		act(() => {
+			cancelJoinRequestHook.result.current.mutate({
+				inviteId: createdJoinRequest.inviteId,
+			})
+		})
+
+		await waitFor(() => {
+			assert.strictEqual(
+				cancelJoinRequestHook.result.current.status,
+				'success',
+				`cancel join request failed: ${cancelJoinRequestHook.result.current.error?.stack}`,
+			)
+		})
+
+		// 4. Updates to relevant read hooks
+		await waitFor(() => {
+			assert.strictEqual(
+				manyJoinRequestsHook.result.current.isRefetching,
+				false,
+			)
+
+			assert.strictEqual(
+				singleJoinRequestHook.result.current.isRefetching,
+				false,
+			)
+		})
+
+		assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
+		assert.ok(
+			getErrorCode(singleJoinRequestHook.result.current.error),
+			NotFoundError.code,
+		)
 	})
 })
