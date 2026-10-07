@@ -219,13 +219,12 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 	const invitor = setupCoreIpc({
 		managerOverrides: {
 			swarm: { dht: testnet.nodes[0] },
-			untrustedTimeout: 1_000,
 		},
 	})
 
 	const invitee = setupCoreIpc({
 		managerOverrides: {
-			swarm: { dht: testnet.nodes[0], untrustedTimeout: 1_000 },
+			swarm: { dht: testnet.nodes[0] },
 		},
 	})
 
