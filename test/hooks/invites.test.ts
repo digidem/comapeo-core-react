@@ -1,8 +1,12 @@
 // @vitest-environment node
 import '../helpers/jsdom-setup.js'
 
-import type { InviteApi } from '@comapeo/core'
-import { getErrorCode, NotFoundError } from '@comapeo/core/errors.js'
+import type { InviteApi, InviteLinkJoiner } from '@comapeo/core'
+import {
+	getErrorCode,
+	InviteDeniedByInviterError,
+	NotFoundError,
+} from '@comapeo/core/errors.js'
 import { parseInviteURL } from '@comapeo/core/invite-urls.js'
 import { QueryClient } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
@@ -16,6 +20,7 @@ import {
 	useCancelInviteLink,
 	useCreateInviteLink,
 	useCreateJoinRequest,
+	useDenyInviteLinkRequest,
 	useLeaveProject,
 	useManyInviteLinks,
 	useManyJoinRequests,
@@ -449,6 +454,247 @@ test.describe('invite over internet', () => {
 			NotFoundError.code,
 		)
 	})
+
+	test(
+		'invitor denies invitee join request',
+		{ timeout: 30_000 },
+		async (t) => {
+			// 1. Setup
+			const testnet = await createTestnet(2)
+
+			t.onTestFinished(() => {
+				return testnet.destroy()
+			})
+
+			const invitor = setupCoreIpc({
+				managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+			})
+
+			const invitee = setupCoreIpc({
+				managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+			})
+
+			t.onTestFinished(async () => {
+				await Promise.all([invitor.cleanup(), invitee.cleanup()])
+			})
+
+			await invitor.manager.setDeviceInfo({
+				name: 'invitor',
+				deviceType: 'desktop',
+			})
+
+			await invitee.manager.setDeviceInfo({
+				name: 'invitee',
+				deviceType: 'mobile',
+			})
+
+			const projectId = await invitor.manager.createProject({ name: 'mapeo' })
+
+			const invitorWrapper = createWrapper({
+				clientApi: invitor.client,
+			})
+
+			const inviteeWrapper = createWrapper({
+				clientApi: invitee.client,
+			})
+
+			const manyMembersHook = renderHook(
+				({ projectId }) => useManyMembers({ projectId, includeLeft: false }),
+				{ wrapper: invitorWrapper, initialProps: { projectId } },
+			)
+
+			await waitFor(
+				() => {
+					assert.isNotNull(manyMembersHook.result.current)
+					assert.isNull(manyMembersHook.result.current.error)
+					assert.ok(manyMembersHook.result.current.data)
+				},
+				{ timeout: 10_000 },
+			)
+
+			assert.strictEqual(manyMembersHook.result.current.data.length, 1)
+
+			// 2. Invitor: create invite link and wait for Invitee to send join request
+			const createInviteLinkHook = renderHook(() => useCreateInviteLink(), {
+				wrapper: invitorWrapper,
+			})
+
+			const inviteUrl = await act(() => {
+				return createInviteLinkHook.result.current.mutateAsync({
+					projectId,
+					roleId: MEMBER_ROLE_ID,
+				})
+			})
+
+			const inviteIdFromUrl = parseInviteURL(inviteUrl).inviteIdString
+
+			const deferredInviteLinkJoinRequest = Promise.withResolvers<{
+				projectId: string
+				deviceId: string
+				inviteId: string
+			}>()
+
+			invitor.manager.on(
+				'invite-link-join-request',
+				(projectId, deviceId, inviteId) => {
+					if (inviteId !== inviteIdFromUrl) {
+						return
+					}
+
+					deferredInviteLinkJoinRequest.resolve({
+						projectId,
+						deviceId,
+						inviteId,
+					})
+				},
+			)
+
+			invitor.manager.on(
+				'invite-link-join-request-error',
+				(error, deviceId, inviteId) => {
+					if (inviteId !== inviteIdFromUrl) {
+						return
+					}
+
+					deferredInviteLinkJoinRequest.reject(
+						new Error(
+							`Invite link join error for device ${deviceId} and invite ${inviteId}`,
+							{ cause: error },
+						),
+					)
+				},
+			)
+
+			// 3. Invitee: create invite link request and wait for it to be denied
+			const createJoinRequestHook = renderHook(() => useCreateJoinRequest(), {
+				wrapper: inviteeWrapper,
+			})
+			const manyJoinRequestsHook = renderHook(() => useManyJoinRequests(), {
+				wrapper: inviteeWrapper,
+			})
+
+			const createdJoinRequest = await act(() => {
+				return createJoinRequestHook.result.current.mutateAsync({
+					url: inviteUrl,
+				})
+			})
+
+			const singleJoinRequestHook = renderHook(
+				({ inviteId }) => useSingleJoinRequest({ inviteId }),
+				{
+					wrapper: inviteeWrapper,
+					initialProps: { inviteId: createdJoinRequest.inviteId },
+				},
+			)
+
+			await waitFor(() => {
+				assert.strictEqual(
+					manyJoinRequestsHook.result.current.isRefetching,
+					false,
+				)
+				assert.isNull(manyJoinRequestsHook.result.current.error)
+				assert.ok(manyJoinRequestsHook.result.current.data)
+
+				assert.strictEqual(
+					singleJoinRequestHook.result.current.isRefetching,
+					false,
+				)
+				assert.isNull(singleJoinRequestHook.result.current.error)
+				assert.ok(singleJoinRequestHook.result.current.data)
+			})
+
+			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 1)
+
+			// Changes to the `status` field are managed by internal implementation details.
+			{
+				const { status: _, ...joinRequestFromManyJoinRequestsHook } =
+					manyJoinRequestsHook.result.current.data[0]!
+
+				const { status: __, ...joinRequestFromSingleJoinRequestHook } =
+					singleJoinRequestHook.result.current.data
+
+				const { status: ___, ...createdJoinRequestWithoutStatus } =
+					createdJoinRequest
+
+				assert.deepStrictEqual(
+					joinRequestFromManyJoinRequestsHook,
+					createdJoinRequestWithoutStatus,
+				)
+				assert.deepStrictEqual(
+					joinRequestFromSingleJoinRequestHook,
+					createdJoinRequestWithoutStatus,
+				)
+			}
+
+			const deferredJoinRequestDenied =
+				Promise.withResolvers<InviteLinkJoiner.JoinRequestUpdate>()
+
+			invitee.manager.inviteLinks.on('join-request-update', (update) => {
+				if (update.inviteId !== createdJoinRequest.inviteId) {
+					return
+				}
+
+				if (update.status === 'failed') {
+					deferredJoinRequestDenied.resolve(update)
+				} else {
+					deferredJoinRequestDenied.reject(
+						new Error('Unexpected join request update', { cause: update }),
+					)
+				}
+			})
+
+			const linkJoinRequestPayload = await deferredInviteLinkJoinRequest.promise
+
+			const denyInviteLinkRequestHook = renderHook(
+				() => useDenyInviteLinkRequest(),
+				{ wrapper: invitorWrapper },
+			)
+
+			act(() => {
+				denyInviteLinkRequestHook.result.current.mutate(linkJoinRequestPayload)
+			})
+
+			await waitFor(
+				() => {
+					assert.strictEqual(
+						denyInviteLinkRequestHook.result.current.status,
+						'success',
+						`deny invite link request failed: ${denyInviteLinkRequestHook.result.current.error?.stack}`,
+					)
+				},
+				{ timeout: 10_000 },
+			)
+
+			const joinRequestUpdatePayload = await deferredJoinRequestDenied.promise
+
+			assert.strictEqual(
+				getErrorCode(joinRequestUpdatePayload.error),
+				InviteDeniedByInviterError.code,
+			)
+
+			// 4. Updates to relevant read hooks
+			await waitFor(() => {
+				assert.strictEqual(manyMembersHook.result.current.isRefetching, false)
+
+				assert.strictEqual(
+					manyJoinRequestsHook.result.current.isRefetching,
+					false,
+				)
+
+				assert.strictEqual(
+					singleJoinRequestHook.result.current.isRefetching,
+					false,
+				)
+			})
+
+			assert.strictEqual(manyMembersHook.result.current.data.length, 1)
+			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
+			assert.ok(
+				getErrorCode(singleJoinRequestHook.result.current.error),
+				NotFoundError.code,
+			)
+		},
+	)
 
 	test('invitor cancels specific invite link', async (t) => {
 		const testnet = await createTestnet(1)
