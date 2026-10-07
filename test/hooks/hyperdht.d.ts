@@ -15,8 +15,8 @@ declare module 'hyperdht/testnet.js' {
 	) => void | Promise<void>
 
 	class TestNet {
-		nodes: HyperDHT[]
-		bootstrap: string[]
+		nodes: Array<HyperDHT>
+		bootstrap: Array<string>
 		createNode(opts?: object): HyperDHT
 		destroy(): Promise<void>
 	}
