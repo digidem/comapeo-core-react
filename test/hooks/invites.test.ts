@@ -322,7 +322,7 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 			assert.strictEqual(
 				createJoinRequestHook.result.current.status,
 				'success',
-				`accept failed: ${createJoinRequestHook.result.current.error?.stack}`,
+				`create join request failed: ${createJoinRequestHook.result.current.error?.stack}`,
 			)
 		},
 		{ timeout: 10_000 },
@@ -359,7 +359,7 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 			assert.strictEqual(
 				acceptInviteLinkRequestHook.result.current.status,
 				'success',
-				`accept failed: ${acceptInviteLinkRequestHook.result.current.error?.stack}`,
+				`accept invite link request failed: ${acceptInviteLinkRequestHook.result.current.error?.stack}`,
 			)
 		},
 		{ timeout: 10_000 },
