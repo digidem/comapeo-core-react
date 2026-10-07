@@ -211,21 +211,20 @@ test(
 	},
 )
 
-test('invite over internet', { timeout: 60_000 }, async (t) => {
+test('invite over internet', { timeout: 30_000 }, async (t) => {
 	// 1. Setup
 	const testnet = await createTestnet(2)
-	t.onTestFinished(() => testnet.destroy())
+
+	t.onTestFinished(() => {
+		return testnet.destroy()
+	})
 
 	const invitor = setupCoreIpc({
-		managerOverrides: {
-			swarm: { dht: testnet.nodes[0] },
-		},
+		managerOverrides: { swarm: { dht: testnet.nodes[0] } },
 	})
 
 	const invitee = setupCoreIpc({
-		managerOverrides: {
-			swarm: { dht: testnet.nodes[0] },
-		},
+		managerOverrides: { swarm: { dht: testnet.nodes[0] } },
 	})
 
 	t.onTestFinished(async () => {
@@ -280,8 +279,6 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 		})
 	})
 
-	console.log('invite url', inviteUrl)
-
 	const deferredInviteLinkJoinRequest = Promise.withResolvers<{
 		projectId: string
 		deviceId: string
@@ -330,8 +327,6 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 	const deferredJoinRequestCompleted = Promise.withResolvers<void>()
 
 	invitee.manager.inviteLinks.on('join-request-update', (update) => {
-		console.log('join request update', update)
-
 		if (update.status === 'failed') {
 			deferredJoinRequestCompleted.reject(update.error)
 			return
@@ -372,8 +367,6 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 		assert.isNull(manyMembersHook.result.current.error)
 		assert.ok(manyMembersHook.result.current.data)
 	})
-
-	console.log('members', manyMembersHook.result.current.data)
 
 	assert.strictEqual(manyMembersHook.result.current.data.length, 2)
 })
