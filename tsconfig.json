@@ -6,7 +6,14 @@
 		"esModuleInterop": true,
 		"isolatedModules": true,
 		"jsx": "react-jsx",
-		"lib": ["es2022", "dom", "dom.iterable"],
+		"lib": [
+			"es2024",
+			"ESNext.Array",
+			"ESNext.Collection",
+			"ESNext.Iterator",
+			"dom",
+			"dom.iterable"
+		],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"moduleDetection": "force",
