@@ -103,7 +103,7 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>` |
+| `useClientApi` | `() => ComapeoCoreClientApi` |
 
 Returns:
 
@@ -183,7 +183,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ComapeoCoreClientApi; mapServerApi: MapServerApi; } and { children?: ReactNode; } and { queryClient: QueryClient; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -858,7 +858,7 @@ Parameters:
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteUrl?: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteId?: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
 ### useAcceptInviteLinkRequest
 
@@ -1489,7 +1489,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }> or null>` |
+| `ClientApiContext` | `Context<ComapeoCoreClientApi or null>` |
 
 ### ReceivedMapSharesContext
 

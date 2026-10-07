@@ -1118,7 +1118,7 @@ export function useCancelInviteLink() {
 		useMutation({
 			...baseMutationOptions(),
 			mutationFn: async (
-				{ projectId, inviteUrl }: { projectId: string; inviteUrl?: string },
+				{ projectId, inviteId }: { projectId: string; inviteId?: string },
 				context,
 			) => {
 				const projectApi = await context.client.query({
@@ -1128,8 +1128,8 @@ export function useCancelInviteLink() {
 
 				// Have to avoid passing `undefined` explicitly
 				// See https://github.com/digidem/rpc-reflector/issues/21
-				return inviteUrl
-					? projectApi.$member.cancelInviteLink(inviteUrl)
+				return inviteId
+					? projectApi.$member.cancelInviteLink(inviteId)
 					: projectApi.$member.cancelInviteLink()
 			},
 			onSuccess: async (_data, variables, _onMutateResult, context) => {
