@@ -13,9 +13,11 @@ import { assert, test } from 'vitest'
 import {
 	useAcceptInvite,
 	useAcceptInviteLinkRequest,
+	useCancelInviteLink,
 	useCreateInviteLink,
 	useCreateJoinRequest,
 	useLeaveProject,
+	useManyInviteLinks,
 	useManyJoinRequests,
 	useManyMembers,
 	useProjectSettings,
@@ -446,5 +448,168 @@ test.describe('invite over internet', () => {
 			getErrorCode(singleJoinRequestHook.result.current.error),
 			NotFoundError.code,
 		)
+	})
+
+	test('invitor cancels specific invite link', async (t) => {
+		const testnet = await createTestnet(1)
+
+		t.onTestFinished(() => {
+			return testnet.destroy()
+		})
+
+		const invitor = setupCoreIpc({
+			managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+		})
+
+		t.onTestFinished(() => {
+			return invitor.cleanup()
+		})
+
+		await invitor.manager.setDeviceInfo({
+			name: 'invitor',
+			deviceType: 'desktop',
+		})
+
+		const projectId = await invitor.manager.createProject({ name: 'mapeo' })
+
+		const invitorWrapper = createWrapper({
+			clientApi: invitor.client,
+		})
+
+		const createInviteLinkHook = renderHook(() => useCreateInviteLink(), {
+			wrapper: invitorWrapper,
+		})
+		const cancelInviteLinkHook = renderHook(() => useCancelInviteLink(), {
+			wrapper: invitorWrapper,
+		})
+
+		// 1. Invitor creates invite links
+		const [inviteUrl1, inviteUrl2] = await act(() => {
+			return Promise.all([
+				createInviteLinkHook.result.current.mutateAsync({
+					projectId,
+					roleId: MEMBER_ROLE_ID,
+				}),
+				createInviteLinkHook.result.current.mutateAsync({
+					projectId,
+					roleId: MEMBER_ROLE_ID,
+				}),
+			])
+		})
+
+		const manyInviteLinksHook = renderHook(
+			({ projectId }) => useManyInviteLinks({ projectId }),
+			{ wrapper: invitorWrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(() => {
+			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+			assert.isNull(manyInviteLinksHook.result.current.error)
+			assert.ok(manyInviteLinksHook.result.current.data)
+		})
+
+		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 2)
+
+		// 2. Invitor cancels first invite link
+
+		act(() => {
+			cancelInviteLinkHook.result.current.mutate({
+				projectId,
+				inviteId: parseInviteURL(inviteUrl1).inviteIdString,
+			})
+		})
+
+		await waitFor(() => {
+			assert.strictEqual(cancelInviteLinkHook.result.current.status, 'success')
+		})
+
+		// 3. Updates to relevant read hooks
+		await waitFor(() => {
+			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+		})
+
+		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 1)
+
+		assert.strictEqual(
+			manyInviteLinksHook.result.current.data[0]!.inviteId,
+			parseInviteURL(inviteUrl2).inviteIdString,
+		)
+	})
+
+	test('invitor cancels all invite links', async (t) => {
+		const testnet = await createTestnet(1)
+
+		t.onTestFinished(() => {
+			return testnet.destroy()
+		})
+
+		const invitor = setupCoreIpc({
+			managerOverrides: { swarm: { dht: testnet.nodes[0] } },
+		})
+
+		t.onTestFinished(() => {
+			return invitor.cleanup()
+		})
+
+		await invitor.manager.setDeviceInfo({
+			name: 'invitor',
+			deviceType: 'desktop',
+		})
+
+		const projectId = await invitor.manager.createProject({ name: 'mapeo' })
+
+		const invitorWrapper = createWrapper({
+			clientApi: invitor.client,
+		})
+
+		const createInviteLinkHook = renderHook(() => useCreateInviteLink(), {
+			wrapper: invitorWrapper,
+		})
+		const cancelInviteLinkHook = renderHook(() => useCancelInviteLink(), {
+			wrapper: invitorWrapper,
+		})
+
+		// 1. Invitor creates invite links
+		await act(() => {
+			return Promise.all([
+				createInviteLinkHook.result.current.mutateAsync({
+					projectId,
+					roleId: MEMBER_ROLE_ID,
+				}),
+				createInviteLinkHook.result.current.mutateAsync({
+					projectId,
+					roleId: MEMBER_ROLE_ID,
+				}),
+			])
+		})
+
+		const manyInviteLinksHook = renderHook(
+			({ projectId }) => useManyInviteLinks({ projectId }),
+			{ wrapper: invitorWrapper, initialProps: { projectId } },
+		)
+
+		await waitFor(() => {
+			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+			assert.isNull(manyInviteLinksHook.result.current.error)
+			assert.ok(manyInviteLinksHook.result.current.data)
+		})
+
+		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 2)
+
+		// 2. Invitor cancels all invite links
+		act(() => {
+			cancelInviteLinkHook.result.current.mutate({ projectId })
+		})
+
+		await waitFor(() => {
+			assert.strictEqual(cancelInviteLinkHook.result.current.status, 'success')
+		})
+
+		// 3. Updates to relevant read hooks
+		await waitFor(() => {
+			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+		})
+
+		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 0)
 	})
 })
