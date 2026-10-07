@@ -223,7 +223,7 @@ test(
 )
 
 test.describe('invite over internet', () => {
-	test('join from URL', { timeout: 30_000 }, async (t) => {
+	test('invitee joins from URL', { timeout: 30_000 }, async (t) => {
 		// 1. Setup
 		const testnet = await createTestnet(2)
 
