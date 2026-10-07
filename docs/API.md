@@ -1168,7 +1168,7 @@ Parameters:
 
 | Function | Type |
 | ---------- | ---------- |
-| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { url: string; reason?: Error or undefined; }>>` |
+| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { inviteId: string; reason?: Error or undefined; }>>` |
 
 ### useMapStyleUrl
 

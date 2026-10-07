@@ -283,19 +283,25 @@ FilteredMutationResult<
 
 export function useCancelJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
-	UseMutationResult<void, Error, { url: string; reason?: Error }>
+	UseMutationResult<void, Error, { inviteId: string; reason?: Error }>
 > {
 	const clientApi = useClientApi()
 
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
-			mutationFn: async ({ url, reason }: { url: string; reason?: Error }) => {
+			mutationFn: async ({
+				inviteId,
+				reason,
+			}: {
+				inviteId: string
+				reason?: Error
+			}) => {
 				// Have to avoid passing `undefined` explicitly
 				// See https://github.com/digidem/rpc-reflector/issues/21
 				return reason === undefined
-					? clientApi.inviteLinks.cancelJoinRequest(url, reason)
-					: clientApi.inviteLinks.cancelJoinRequest(url)
+					? clientApi.inviteLinks.cancelJoinRequest(inviteId, reason)
+					: clientApi.inviteLinks.cancelJoinRequest(inviteId)
 			},
 			onSuccess: async (_data, _variables, _onMutateResult, context) => {
 				context.client.invalidateQueries({
