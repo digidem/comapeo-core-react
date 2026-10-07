@@ -331,7 +331,7 @@ test.describe('invite over internet', () => {
 			},
 		)
 
-		// 3. Invitee: create invite link request and wait for it to be accepted and completed
+		// 3. Invitee: create join request and wait for it to be accepted and completed
 		const createJoinRequestHook = renderHook(() => useCreateJoinRequest(), {
 			wrapper: inviteeWrapper,
 		})
@@ -566,7 +566,7 @@ test.describe('invite over internet', () => {
 				},
 			)
 
-			// 3. Invitee: create invite link request and wait for it to be denied
+			// 3. Invitee: create join request and wait for it to be denied
 			const createJoinRequestHook = renderHook(() => useCreateJoinRequest(), {
 				wrapper: inviteeWrapper,
 			})
@@ -758,7 +758,6 @@ test.describe('invite over internet', () => {
 		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 2)
 
 		// 2. Invitor cancels first invite link
-
 		act(() => {
 			cancelInviteLinkHook.result.current.mutate({
 				projectId,
