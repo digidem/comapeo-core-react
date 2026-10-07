@@ -969,12 +969,19 @@ test.describe('invite over internet', () => {
 
 		// Changes to the `status` field are managed by internal implementation details.
 		{
+			const { status: _, ...joinRequestFromManyJoinRequestsHook } =
+				manyJoinRequestsHook.result.current.data[0]!
+
 			const { status: __, ...joinRequestFromSingleJoinRequestHook } =
 				singleJoinRequestHook.result.current.data
 
 			const { status: ___, ...createdJoinRequestWithoutStatus } =
 				createdJoinRequest
 
+			assert.deepStrictEqual(
+				joinRequestFromManyJoinRequestsHook,
+				createdJoinRequestWithoutStatus,
+			)
 			assert.deepStrictEqual(
 				joinRequestFromSingleJoinRequestHook,
 				createdJoinRequestWithoutStatus,
