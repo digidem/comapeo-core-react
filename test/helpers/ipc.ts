@@ -24,7 +24,11 @@ const clientMigrationsFolder = path.join(
 	'drizzle/client',
 )
 
-export function setupCoreIpc() {
+export function setupCoreIpc({
+	managerOverrides,
+}: {
+	managerOverrides?: Partial<ConstructorParameters<typeof MapeoManager>[0]>
+} = {}) {
 	const { port1, port2 } = new MessageChannel()
 
 	const fastify = Fastify()
@@ -36,6 +40,7 @@ export function setupCoreIpc() {
 		projectMigrationsFolder,
 		clientMigrationsFolder,
 		fastify,
+		...managerOverrides,
 	})
 
 	const server = createComapeoCoreServer(manager, port1)
