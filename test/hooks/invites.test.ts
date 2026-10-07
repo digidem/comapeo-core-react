@@ -243,12 +243,6 @@ test('invite over internet', { timeout: 60_000 }, async (t) => {
 		deviceType: 'mobile',
 	})
 
-	const disconnect = connectPeers([invitor.manager, invitee.manager])
-
-	t.onTestFinished(disconnect)
-
-	await waitForPeers([invitor.manager, invitee.manager])
-
 	const projectId = await invitor.manager.createProject({ name: 'mapeo' })
 
 	const invitorWrapper = createWrapper({
