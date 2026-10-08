@@ -435,25 +435,13 @@ test.describe('invite over internet', () => {
 
 		// 4. Updates to relevant read hooks
 		await waitFor(() => {
-			assert.strictEqual(manyMembersHook.result.current.isRefetching, false)
-
-			assert.strictEqual(
-				manyJoinRequestsHook.result.current.isRefetching,
-				false,
-			)
-
-			assert.strictEqual(
-				singleJoinRequestHook.result.current.isRefetching,
-				false,
+			assert.strictEqual(manyMembersHook.result.current.data.length, 2)
+			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
+			assert.ok(
+				getErrorCode(singleJoinRequestHook.result.current.error),
+				NotFoundError.code,
 			)
 		})
-
-		assert.strictEqual(manyMembersHook.result.current.data.length, 2)
-		assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
-		assert.ok(
-			getErrorCode(singleJoinRequestHook.result.current.error),
-			NotFoundError.code,
-		)
 	})
 
 	test(
@@ -675,25 +663,13 @@ test.describe('invite over internet', () => {
 
 			// 4. Updates to relevant read hooks
 			await waitFor(() => {
-				assert.strictEqual(manyMembersHook.result.current.isRefetching, false)
-
-				assert.strictEqual(
-					manyJoinRequestsHook.result.current.isRefetching,
-					false,
-				)
-
-				assert.strictEqual(
-					singleJoinRequestHook.result.current.isRefetching,
-					false,
+				assert.strictEqual(manyMembersHook.result.current.data.length, 1)
+				assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
+				assert.ok(
+					getErrorCode(singleJoinRequestHook.result.current.error),
+					NotFoundError.code,
 				)
 			})
-
-			assert.strictEqual(manyMembersHook.result.current.data.length, 1)
-			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
-			assert.ok(
-				getErrorCode(singleJoinRequestHook.result.current.error),
-				NotFoundError.code,
-			)
 		},
 	)
 
@@ -771,15 +747,13 @@ test.describe('invite over internet', () => {
 
 		// 3. Updates to relevant read hooks
 		await waitFor(() => {
-			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+			assert.strictEqual(manyInviteLinksHook.result.current.data.length, 1)
+
+			assert.strictEqual(
+				manyInviteLinksHook.result.current.data[0]!.inviteId,
+				parseInviteURL(inviteUrl2).inviteIdString,
+			)
 		})
-
-		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 1)
-
-		assert.strictEqual(
-			manyInviteLinksHook.result.current.data[0]!.inviteId,
-			parseInviteURL(inviteUrl2).inviteIdString,
-		)
 	})
 
 	test('invitor cancels all invite links', async (t) => {
@@ -853,10 +827,8 @@ test.describe('invite over internet', () => {
 
 		// 3. Updates to relevant read hooks
 		await waitFor(() => {
-			assert.strictEqual(manyInviteLinksHook.result.current.isRefetching, false)
+			assert.strictEqual(manyInviteLinksHook.result.current.data.length, 0)
 		})
-
-		assert.strictEqual(manyInviteLinksHook.result.current.data.length, 0)
 	})
 
 	test('invitee cancels join request', { timeout: 30_000 }, async (t) => {
@@ -1009,21 +981,11 @@ test.describe('invite over internet', () => {
 
 		// 4. Updates to relevant read hooks
 		await waitFor(() => {
-			assert.strictEqual(
-				manyJoinRequestsHook.result.current.isRefetching,
-				false,
-			)
-
-			assert.strictEqual(
-				singleJoinRequestHook.result.current.isRefetching,
-				false,
+			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
+			assert.ok(
+				getErrorCode(singleJoinRequestHook.result.current.error),
+				NotFoundError.code,
 			)
 		})
-
-		assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
-		assert.ok(
-			getErrorCode(singleJoinRequestHook.result.current.error),
-			NotFoundError.code,
-		)
 	})
 })
