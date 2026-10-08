@@ -206,6 +206,9 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 	)
 }
 
+/**
+ * Get all active join requests.
+ */
 export function useManyJoinRequests(): // NOTE: Needs explicit return type due to TS2742
 Pick<
 	UseSuspenseQueryResult<Array<InviteLinkJoiner.JoinRequest>>,
@@ -224,6 +227,30 @@ Pick<
 	return { data, error, isRefetching }
 }
 
+/**
+ * Get an active join request.
+ *
+ * If the join request is no longer active after using this hook, the read result
+ * will update such that the `error` field is populated with the relevant error from core.
+ *
+ * @param opts.inviteId ID of relevant invite.
+ *
+ * @example
+ * ```ts
+ * import { getErrorCode } from '@comapeo/core/errors.js'
+ *
+ * function ErrorExample({ inviteId }) {
+ *   const joinRequestQuery = useSingleJoinRequest({ inviteId })
+ *
+ *   if (joinRequestQuery.error) {
+ *     const comapeoErrorCode = getErrorCode(joinRequestQuery.error)
+ *
+ *     // Match error code with errors from @comapeo/core and handle as needed...
+ *   }
+ * }
+ * ```
+ *
+ */
 export function useSingleJoinRequest({
 	inviteId,
 }: {
@@ -246,12 +273,20 @@ Pick<
 	return { data, error, isRefetching }
 }
 
+/**
+ * Create a join request for a received invite.
+ */
 export function useCreateJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
 	UseMutationResult<
 		InviteLinkJoiner.JoinRequest,
 		Error,
-		{ url: string; timeout?: number }
+		{
+			/** URL for the received invite link. */
+			url: string
+			/** Connection timeout in ms.  */
+			timeout?: number
+		}
 	>
 > {
 	const clientApi = useClientApi()
@@ -281,27 +316,28 @@ FilteredMutationResult<
 	)
 }
 
+/**
+ * Cancel a join request that has been created for a received invite.
+ */
 export function useCancelJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
-	UseMutationResult<void, Error, { inviteId: string; reason?: Error }>
+	UseMutationResult<
+		void,
+		Error,
+		// TODO: Expose reason?
+		{
+			/** ID of invite to cancel request for. */
+			inviteId: string
+		}
+	>
 > {
 	const clientApi = useClientApi()
 
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
-			mutationFn: async ({
-				inviteId,
-				reason,
-			}: {
-				inviteId: string
-				reason?: Error
-			}) => {
-				// Have to avoid passing `undefined` explicitly
-				// See https://github.com/digidem/rpc-reflector/issues/21
-				return reason === undefined
-					? clientApi.inviteLinks.cancelJoinRequest(inviteId, reason)
-					: clientApi.inviteLinks.cancelJoinRequest(inviteId)
+			mutationFn: async ({ inviteId }) => {
+				return clientApi.inviteLinks.cancelJoinRequest(inviteId)
 			},
 			onSuccess: async (_data, _variables, _onMutateResult, context) => {
 				context.client.invalidateQueries({

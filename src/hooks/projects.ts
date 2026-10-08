@@ -1059,6 +1059,9 @@ export function useExportZipFile({ projectId }: { projectId: string }) {
 	)
 }
 
+/**
+ * Get all active invite links.
+ */
 export function useManyInviteLinks({
 	projectId,
 }: {
@@ -1081,12 +1084,18 @@ Pick<
 	return { data, error, isRefetching }
 }
 
+/**
+ * Create an invite link for a project.
+ */
 export function useCreateInviteLink(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
 	UseMutationResult<
 		string,
 		Error,
-		{ projectId: string } & Omit<MemberApi.InviteOptions, '__testOnlyInviteId'>
+		{
+			/** Public ID of relevant project. */
+			projectId: string
+		} & Omit<MemberApi.InviteOptions, '__testOnlyInviteId'>
 	>
 > {
 	const clientApi = useClientApi()
@@ -1111,16 +1120,39 @@ FilteredMutationResult<
 	)
 }
 
+/**
+ * Cancel a created invite link or all invite links for a project. If `inviteId` is not specified,
+ * all invite links are cancelled.
+ *
+ * @example
+ * ts```
+ * function Example() {
+ *   const cancelInviteLink = useCancelInviteLink()
+ *
+ *   // Cancel a specific invite link
+ *   cancelInviteLink.mutate({ projectId: '...', inviteId: '...' })
+ *
+ *   // Cancel all invite links
+ *   cancelInviteLink.mutate({ projectId: '...' })
+ * }
+ * ```
+ */
 export function useCancelInviteLink() {
 	const clientApi = useClientApi()
 
 	return filterMutationResult(
-		useMutation({
+		useMutation<
+			void,
+			Error,
+			{
+				/** Public ID of relevant project. */
+				projectId: string
+				/** ID of relevant invite. */
+				inviteId?: string
+			}
+		>({
 			...baseMutationOptions(),
-			mutationFn: async (
-				{ projectId, inviteId }: { projectId: string; inviteId?: string },
-				context,
-			) => {
+			mutationFn: async ({ projectId, inviteId }, context) => {
 				const projectApi = await context.client.query({
 					...getProjectByIdQueryOptions({ clientApi, projectId }),
 					staleTime: 'static',
@@ -1141,12 +1173,22 @@ export function useCancelInviteLink() {
 	)
 }
 
+/**
+ * Accept an invite link join request for a project.
+ */
 export function useAcceptInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
 	UseMutationResult<
 		MemberApi.InviteDecision,
 		Error,
-		{ projectId: string; inviteId: string; deviceId: string }
+		{
+			/** Public ID of relevant project.  */
+			projectId: string
+			/** ID of relevant invite. */
+			inviteId: string
+			/** ID of device who sent join request. */
+			deviceId: string
+		}
 	>
 > {
 	const clientApi = useClientApi()
@@ -1154,18 +1196,7 @@ FilteredMutationResult<
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
-			mutationFn: async (
-				{
-					projectId,
-					inviteId,
-					deviceId,
-				}: {
-					projectId: string
-					inviteId: string
-					deviceId: string
-				},
-				context,
-			) => {
+			mutationFn: async ({ projectId, inviteId, deviceId }, context) => {
 				const projectApi = await context.client.query({
 					...getProjectByIdQueryOptions({ clientApi, projectId }),
 					staleTime: 'static',
@@ -1185,12 +1216,23 @@ FilteredMutationResult<
 	)
 }
 
+/**
+ * Deny an invite link join request for a project.
+ */
 export function useDenyInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
 FilteredMutationResult<
 	UseMutationResult<
 		void,
 		Error,
-		{ projectId: string; inviteId: string; deviceId: string }
+		// TODO: Expose reason?
+		{
+			/** Public ID of relevant project.  */
+			projectId: string
+			/** ID of relevant invite. */
+			inviteId: string
+			/** ID of device who sent join request. */
+			deviceId: string
+		}
 	>
 > {
 	const clientApi = useClientApi()
@@ -1198,19 +1240,7 @@ FilteredMutationResult<
 	return filterMutationResult(
 		useMutation({
 			...baseMutationOptions(),
-			mutationFn: async (
-				{
-					projectId,
-					inviteId,
-					deviceId,
-				}: {
-					projectId: string
-					inviteId: string
-					deviceId: string
-					// TODO: Expose reason?
-				},
-				context,
-			) => {
+			mutationFn: async ({ projectId, inviteId, deviceId }, context) => {
 				const projectApi = await context.client.query({
 					...getProjectByIdQueryOptions({ clientApi, projectId }),
 					staleTime: 'static',

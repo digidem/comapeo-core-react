@@ -844,11 +844,15 @@ Parameters:
 
 ### useManyInviteLinks
 
+Get all active invite links.
+
 | Function | Type |
 | ---------- | ---------- |
 | `useManyInviteLinks` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<InviteLink[]>, "data" or "error" or "isRefetching">` |
 
 ### useCreateInviteLink
+
+Create an invite link for a project.
 
 | Function | Type |
 | ---------- | ---------- |
@@ -856,17 +860,39 @@ Parameters:
 
 ### useCancelInviteLink
 
+Cancel a created invite link or all invite links for a project. If `inviteId` is not specified,
+all invite links are cancelled.
+
 | Function | Type |
 | ---------- | ---------- |
 | `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteId?: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
 
+Examples:
+
+ts```
+function Example() {
+  const cancelInviteLink = useCancelInviteLink()
+
+  // Cancel a specific invite link
+  cancelInviteLink.mutate({ projectId: '...', inviteId: '...' })
+
+  // Cancel all invite links
+  cancelInviteLink.mutate({ projectId: '...' })
+}
+```
+
+
 ### useAcceptInviteLinkRequest
+
+Accept an invite link join request for a project.
 
 | Function | Type |
 | ---------- | ---------- |
 | `useAcceptInviteLinkRequest` | `() => FilteredMutationResult<UseMutationResult<InviteDecision, Error, { projectId: string; inviteId: string; deviceId: string; }>>` |
 
 ### useDenyInviteLinkRequest
+
+Deny an invite link join request for a project.
 
 | Function | Type |
 | ---------- | ---------- |
@@ -1148,17 +1174,45 @@ Parameters:
 
 ### useManyJoinRequests
 
+Get all active join requests.
+
 | Function | Type |
 | ---------- | ---------- |
 | `useManyJoinRequests` | `() => Pick<UseSuspenseQueryResult<JoinRequest[]>, "data" or "error" or "isRefetching">` |
 
 ### useSingleJoinRequest
 
+Get an active join request.
+
+If the join request is no longer active after using this hook, the read result
+will update such that the `error` field is populated with the relevant error from core.
+
 | Function | Type |
 | ---------- | ---------- |
 | `useSingleJoinRequest` | `({ inviteId, }: { inviteId: string; }) => Pick<UseSuspenseQueryResult<JoinRequest>, "data" or "error" or "isRefetching">` |
 
+Parameters:
+
+* `opts.inviteId`: ID of relevant invite.
+
+
+Examples:
+
+```ts
+import { getErrorCode } from '@comapeo/core/errors.js'
+
+function ErrorExample({ inviteId }) {
+  const joinRequestQuery = useSingleJoinRequest({ inviteId })
+
+  if (joinRequestQuery.error) {
+    const comapeoErrorCode = getErrorCode(joinRequestQuery.error)
+
+    // Match error code with errors from
+
+
 ### useCreateJoinRequest
+
+Create a join request for a received invite.
 
 | Function | Type |
 | ---------- | ---------- |
@@ -1166,9 +1220,11 @@ Parameters:
 
 ### useCancelJoinRequest
 
+Cancel a join request that has been created for a received invite.
+
 | Function | Type |
 | ---------- | ---------- |
-| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { inviteId: string; reason?: Error or undefined; }>>` |
+| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { inviteId: string; }>>` |
 
 ### useMapStyleUrl
 
