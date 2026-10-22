@@ -11,7 +11,6 @@ import { parseInviteURL } from '@comapeo/core/invite-urls.js'
 import { QueryClient } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import createTestnet from 'hyperdht/testnet.js'
-import { pEvent, type TypedEventEmitter } from 'p-event'
 import { assert, test } from 'vitest'
 
 import {
@@ -115,17 +114,17 @@ test(
 		const wrapper = createWrapper({ clientApi: invitee.client, queryClient })
 
 		async function inviteAndAccept() {
-			const invitePromise = pEvent(
-				invitee.manager.invite as TypedEventEmitter<{
-					'invite-received': [invite: InviteApi.Invite]
-				}>,
-				'invite-received',
-			)
+			const deferredInvitePromise = Promise.withResolvers<InviteApi.Invite>()
+
+			invitee.manager.invite.once('invite-received', (invite) => {
+				deferredInvitePromise.resolve(invite)
+			})
+
 			const inviteSettled = invitorProject.$member.invite(
 				invitee.manager.deviceId,
 				{ roleId: MEMBER_ROLE_ID },
 			)
-			const { inviteId } = await invitePromise
+			const { inviteId } = await deferredInvitePromise.promise
 			const acceptHook = renderHook(() => useAcceptInvite(), { wrapper })
 			act(() => {
 				acceptHook.result.current.mutate({ inviteId })
