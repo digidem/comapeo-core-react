@@ -76,7 +76,7 @@
 		"react": "^18 || ^19"
 	},
 	"devDependencies": {
-		"@comapeo/core": "7.5.1",
+		"@comapeo/core": "7.5.2",
 		"@comapeo/ipc": "11.0.0",
 		"@eslint/js": "10.0.1",
 		"@ianvs/prettier-plugin-sort-imports": "4.7.1",
