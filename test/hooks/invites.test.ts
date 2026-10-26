@@ -5,6 +5,7 @@ import type { InviteApi, InviteLinkJoiner } from '@comapeo/core'
 import {
 	getErrorCode,
 	InviteDeniedByInviterError,
+	JoinRequestNotFoundError,
 	NotFoundError,
 } from '@comapeo/core/errors.js'
 import { parseInviteURL } from '@comapeo/core/invite-urls.js'
@@ -438,9 +439,9 @@ test.describe('invite over internet', () => {
 		await waitFor(() => {
 			assert.strictEqual(manyMembersHook.result.current.data.length, 2)
 			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
-			assert.ok(
+			assert.strictEqual(
 				getErrorCode(singleJoinRequestHook.result.current.error),
-				NotFoundError.code,
+				JoinRequestNotFoundError.code,
 			)
 		})
 	})
@@ -981,9 +982,9 @@ test.describe('invite over internet', () => {
 		// 4. Updates to relevant read hooks
 		await waitFor(() => {
 			assert.strictEqual(manyJoinRequestsHook.result.current.data.length, 0)
-			assert.ok(
+			assert.strictEqual(
 				getErrorCode(singleJoinRequestHook.result.current.error),
-				NotFoundError.code,
+				JoinRequestNotFoundError.code,
 			)
 		})
 	})
