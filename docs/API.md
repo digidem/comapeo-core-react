@@ -1206,8 +1206,10 @@ function ErrorExample({ inviteId }) {
 
   if (joinRequestQuery.error) {
     const comapeoErrorCode = getErrorCode(joinRequestQuery.error)
-
-    // Match error code with errors from
+    // Match error code with errors from `@comapeo/core` and handle as needed...
+  }
+}
+```
 
 
 ### useCreateJoinRequest

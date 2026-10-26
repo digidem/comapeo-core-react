@@ -244,12 +244,10 @@ Pick<
  *
  *   if (joinRequestQuery.error) {
  *     const comapeoErrorCode = getErrorCode(joinRequestQuery.error)
- *
- *     // Match error code with errors from @comapeo/core and handle as needed...
+ *     // Match error code with errors from `@comapeo/core` and handle as needed...
  *   }
  * }
  * ```
- *
  */
 export function useSingleJoinRequest({
 	inviteId,
