@@ -10,6 +10,7 @@ import type {
 } from '@comapeo/ipc'
 import {
 	matchQuery,
+	queryOptions,
 	useMutation,
 	UseMutationResult,
 	useQueryClient,
@@ -23,6 +24,7 @@ import {
 	baseQueryOptions,
 	filterMutationResult,
 	getDocumentCreatedByQueryKey,
+	getInviteLinksQueryKey,
 	getMediaServerOriginQueryKey,
 	getMemberByIdQueryKey,
 	getMembersQueryKey,
@@ -35,6 +37,28 @@ import {
 import { SyncStore, type SyncState } from '../lib/sync.js'
 import { getBlobUrl, getIconUrl } from '../lib/urls.js'
 import { useClientApi } from './client.js'
+
+function getProjectByIdQueryOptions({
+	clientApi,
+	projectId,
+}: {
+	clientApi: ComapeoCoreClientApi
+	projectId: string
+}) {
+	return queryOptions({
+		...baseQueryOptions(),
+		queryKey: getProjectByIdQueryKey({ projectId }),
+		queryFn: async () => {
+			return clientApi.getProject(projectId)
+		},
+		// Keep project instances around indefinitely - shouldn't be a memory
+		// problem because these are only lightweight proxy objects, and project
+		// references are kept indefinitely on the backend anyway once they are
+		// accessed
+		staleTime: Infinity,
+		gcTime: Infinity,
+	})
+}
 
 /**
  * Retrieve the project settings for a project.
@@ -99,19 +123,9 @@ Pick<
 > {
 	const clientApi = useClientApi()
 
-	const { data, error, isRefetching } = useSuspenseQuery({
-		...baseQueryOptions(),
-		queryKey: getProjectByIdQueryKey({ projectId }),
-		queryFn: async () => {
-			return clientApi.getProject(projectId)
-		},
-		// Keep project instances around indefinitely - shouldn't be a memory
-		// problem because these are only lightweight proxy objects, and project
-		// references are kept indefinitely on the backend anyway once they are
-		// accessed
-		staleTime: Infinity,
-		gcTime: Infinity,
-	})
+	const { data, error, isRefetching } = useSuspenseQuery(
+		getProjectByIdQueryOptions({ clientApi, projectId }),
+	)
 
 	return { data, error, isRefetching }
 }
@@ -1040,6 +1054,204 @@ export function useExportZipFile({ projectId }: { projectId: string }) {
 				}
 			}) => {
 				return projectApi.exportZipFile(opts.path, opts.exportOptions)
+			},
+		}),
+	)
+}
+
+/**
+ * Get all active invite links.
+ */
+export function useManyInviteLinks({
+	projectId,
+}: {
+	projectId: string
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
+	UseSuspenseQueryResult<Array<MemberApi.InviteLink>>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const { data: projectApi } = useSingleProject({ projectId })
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getInviteLinksQueryKey({ projectId }),
+		queryFn: async () => {
+			return projectApi.$member.listInviteLinks()
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Create an invite link for a project.
+ */
+export function useCreateInviteLink(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		string,
+		Error,
+		{
+			/** Public ID of relevant project. */
+			projectId: string
+		} & Omit<MemberApi.InviteOptions, '__testOnlyInviteId'>
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ projectId, ...inviteOptions }, context) => {
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
+
+				return projectApi.$member.createInviteLink(inviteOptions)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+/**
+ * Cancel a created invite link or all invite links for a project. If `inviteId` is not specified,
+ * all invite links are cancelled.
+ *
+ * @example
+ * ts```
+ * function Example() {
+ *   const cancelInviteLink = useCancelInviteLink()
+ *
+ *   // Cancel a specific invite link
+ *   cancelInviteLink.mutate({ projectId: '...', inviteId: '...' })
+ *
+ *   // Cancel all invite links
+ *   cancelInviteLink.mutate({ projectId: '...' })
+ * }
+ * ```
+ */
+export function useCancelInviteLink() {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation<
+			void,
+			Error,
+			{
+				/** Public ID of relevant project. */
+				projectId: string
+				/** ID of relevant invite. */
+				inviteId?: string
+			}
+		>({
+			...baseMutationOptions(),
+			mutationFn: async ({ projectId, inviteId }, context) => {
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
+
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return inviteId
+					? projectApi.$member.cancelInviteLink(inviteId)
+					: projectApi.$member.cancelInviteLink()
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+/**
+ * Accept an invite link join request for a project.
+ */
+export function useAcceptInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		MemberApi.InviteDecision,
+		Error,
+		{
+			/** Public ID of relevant project.  */
+			projectId: string
+			/** ID of relevant invite. */
+			inviteId: string
+			/** ID of device who sent join request. */
+			deviceId: string
+		}
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ projectId, inviteId, deviceId }, context) => {
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
+
+				return projectApi.$member.acceptInviteLinkRequest(inviteId, deviceId)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
+				context.client.invalidateQueries({
+					queryKey: getMembersQueryKey({ projectId: variables.projectId }),
+				})
+			},
+		}),
+	)
+}
+
+/**
+ * Deny an invite link join request for a project.
+ */
+export function useDenyInviteLinkRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		void,
+		Error,
+		// TODO: Expose reason?
+		{
+			/** Public ID of relevant project.  */
+			projectId: string
+			/** ID of relevant invite. */
+			inviteId: string
+			/** ID of device who sent join request. */
+			deviceId: string
+		}
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ projectId, inviteId, deviceId }, context) => {
+				const projectApi = await context.client.query({
+					...getProjectByIdQueryOptions({ clientApi, projectId }),
+					staleTime: 'static',
+				})
+
+				return projectApi.$member.denyInviteLinkRequest(inviteId, deviceId)
+			},
+			onSuccess: async (_data, variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getInviteLinksQueryKey({ projectId: variables.projectId }),
+				})
 			},
 		}),
 	)

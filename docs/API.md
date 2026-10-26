@@ -47,6 +47,11 @@
 - [useSetAutostopDataSyncTimeout](#usesetautostopdatasynctimeout)
 - [useExportGeoJSON](#useexportgeojson)
 - [useExportZipFile](#useexportzipfile)
+- [useManyInviteLinks](#usemanyinvitelinks)
+- [useCreateInviteLink](#usecreateinvitelink)
+- [useCancelInviteLink](#usecancelinvitelink)
+- [useAcceptInviteLinkRequest](#useacceptinvitelinkrequest)
+- [useDenyInviteLinkRequest](#usedenyinvitelinkrequest)
 - [useSingleDocByDocId](#usesingledocbydocid)
 - [useSingleDocByVersionId](#usesingledocbyversionid)
 - [useManyDocs](#usemanydocs)
@@ -60,6 +65,10 @@
 - [useRejectInvite](#userejectinvite)
 - [useSendInvite](#usesendinvite)
 - [useRequestCancelInvite](#userequestcancelinvite)
+- [useManyJoinRequests](#usemanyjoinrequests)
+- [useSingleJoinRequest](#usesinglejoinrequest)
+- [useCreateJoinRequest](#usecreatejoinrequest)
+- [useCancelJoinRequest](#usecanceljoinrequest)
 - [useMapStyleUrl](#usemapstyleurl)
 - [useImportCustomMapFile](#useimportcustommapfile)
 - [useRemoveCustomMapFile](#useremovecustommapfile)
@@ -94,7 +103,7 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>` |
+| `useClientApi` | `() => ComapeoCoreClientApi` |
 
 Returns:
 
@@ -174,7 +183,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ComapeoCoreClientApi; mapServerApi: MapServerApi; } and { children?: ReactNode; } and { queryClient: QueryClient; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -833,6 +842,62 @@ Parameters:
 * `opts.projectId`: Public ID of the project to apply changes to.
 
 
+### useManyInviteLinks
+
+Get all active invite links.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyInviteLinks` | `({ projectId, }: { projectId: string; }) => Pick<UseSuspenseQueryResult<InviteLink[]>, "data" or "error" or "isRefetching">` |
+
+### useCreateInviteLink
+
+Create an invite link for a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateInviteLink` | `() => FilteredMutationResult<UseMutationResult<string, Error, { projectId: string; } and Omit<InviteOptions, "__testOnlyInviteId">>>` |
+
+### useCancelInviteLink
+
+Cancel a created invite link or all invite links for a project. If `inviteId` is not specified,
+all invite links are cancelled.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCancelInviteLink` | `() => Pick<Override<MutationObserverIdleResult<void, Error, { projectId: string; inviteId?: string or undefined; }, unknown>, { mutate: UseMutateFunction<void, Error, { ...; }, unknown>; }> and { ...; }, "error" or ... 3 more ... or "mutateAsync"> or Pick<...> or Pick<...> or Pick<...>` |
+
+Examples:
+
+ts```
+function Example() {
+  const cancelInviteLink = useCancelInviteLink()
+
+  // Cancel a specific invite link
+  cancelInviteLink.mutate({ projectId: '...', inviteId: '...' })
+
+  // Cancel all invite links
+  cancelInviteLink.mutate({ projectId: '...' })
+}
+```
+
+
+### useAcceptInviteLinkRequest
+
+Accept an invite link join request for a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useAcceptInviteLinkRequest` | `() => FilteredMutationResult<UseMutationResult<InviteDecision, Error, { projectId: string; inviteId: string; deviceId: string; }>>` |
+
+### useDenyInviteLinkRequest
+
+Deny an invite link join request for a project.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useDenyInviteLinkRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { projectId: string; inviteId: string; deviceId: string; }>>` |
+
 ### useSingleDocByDocId
 
 Retrieve a single document from the database based on the document's document ID.
@@ -1087,7 +1152,7 @@ Send an invite for a project.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useSendInvite` | `({ projectId }: { projectId: string; }) => Pick<Override<MutationObserverIdleResult<"ACCEPT" or "REJECT" or "ALREADY", Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }, unknown>, { ...; }> and { ...; },...` |
+| `useSendInvite` | `({ projectId, }: { projectId: string; }) => FilteredMutationResult<UseMutationResult<InviteDecision, Error, { deviceId: string; roleDescription?: string or undefined; roleId: "f7c150f5a3a9a855" or "012fd2d431c0bf60" or "9e6d29263cba36c9"; roleName?: string or undefined; }>>` |
 
 Parameters:
 
@@ -1106,6 +1171,65 @@ Parameters:
 
 * `opts.projectId`: Public ID of project to request the invite cancellation for.
 
+
+### useManyJoinRequests
+
+Get all active join requests.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useManyJoinRequests` | `() => Pick<UseSuspenseQueryResult<JoinRequest[]>, "data" or "error" or "isRefetching">` |
+
+### useSingleJoinRequest
+
+Get a specific join request.
+
+If the join request is not available when the consuming component mounts, it will trigger the closest error boundary.
+If the join request is cancelled while this hook is active, the `error` field will be populated with the relevant error from core.
+Updates from the '`join-request-update`' event are reflected in the `data` field. Updates that indicate failure are represented by
+`data.status` and `data.error`, not the top-level error field from the hook's return value.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useSingleJoinRequest` | `({ inviteId, }: { inviteId: string; }) => Pick<UseSuspenseQueryResult<JoinRequest>, "data" or "error" or "isRefetching">` |
+
+Parameters:
+
+* `opts.inviteId`: ID of relevant invite.
+
+
+Examples:
+
+```ts
+function ErrorExample({ inviteId }) {
+  const joinRequestQuery = useSingleJoinRequest({ inviteId })
+
+  if (joinRequestQuery.error) {
+    // Handle error from refetch due to write hook call (e.g. cancelling the join request)  
+  }
+
+  if (joinRequestQuery.data.status === 'failed') {
+    // Handle failure state based on updates happening in the background.
+  }
+}
+```
+
+
+### useCreateJoinRequest
+
+Create a join request for a received invite.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCreateJoinRequest` | `() => FilteredMutationResult<UseMutationResult<JoinRequest, Error, { url: string; timeout?: number or undefined; }>>` |
+
+### useCancelJoinRequest
+
+Cancel a join request that has been created for a received invite.
+
+| Function | Type |
+| ---------- | ---------- |
+| `useCancelJoinRequest` | `() => FilteredMutationResult<UseMutationResult<void, Error, { inviteId: string; }>>` |
 
 ### useMapStyleUrl
 
@@ -1162,7 +1286,7 @@ Note that this is _not_ a suspenseful hook. The different read states should be 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<NoInfer<{ name: string; size: number; created: number; }>, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<{ name: string; size: number; created: number; }, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
 
 Examples:
 
@@ -1426,7 +1550,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }> or null>` |
+| `ClientApiContext` | `Context<ComapeoCoreClientApi or null>` |
 
 ### ReceivedMapSharesContext
 

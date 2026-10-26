@@ -113,6 +113,18 @@ export function getInvitesByIdQueryKey({ inviteId }: { inviteId: string }) {
 	return [ROOT_QUERY_KEY, 'invites', { inviteId }] as const
 }
 
+export function getJoinRequestsQueryKey() {
+	return [ROOT_QUERY_KEY, 'join-requests'] as const
+}
+
+export function getJoinRequestsByIdQueryKey({
+	inviteId,
+}: {
+	inviteId: string
+}) {
+	return [ROOT_QUERY_KEY, 'join-requests', { inviteId }] as const
+}
+
 // #endregion
 
 // #region Maps
@@ -199,6 +211,10 @@ export function getMemberByIdQueryKey({
 	deviceId: string
 }) {
 	return [ROOT_QUERY_KEY, 'projects', projectId, 'members', deviceId] as const
+}
+
+export function getInviteLinksQueryKey({ projectId }: { projectId: string }) {
+	return [ROOT_QUERY_KEY, 'projects', projectId, 'invite-links'] as const
 }
 
 export function getDocumentCreatedByQueryKey({
