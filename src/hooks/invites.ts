@@ -228,23 +228,26 @@ Pick<
 }
 
 /**
- * Get an active join request.
+ * Get a specific join request.
  *
- * If the join request is no longer active after using this hook, the read result
- * will update such that the `error` field is populated with the relevant error from core.
+ * If the join request is not available when the consuming component mounts, it will trigger the closest error boundary.
+ * If the join request is cancelled while this hook is active, the `error` field will be populated with the relevant error from core.
+ * Updates from the '`join-request-update`' event are reflected in the `data` field. Updates that indicate failure are represented by
+ * `data.status` and `data.error`, not the top-level error field from the hook's return value.
  *
  * @param opts.inviteId ID of relevant invite.
  *
  * @example
  * ```ts
- * import { getErrorCode } from '@comapeo/core/errors.js'
- *
  * function ErrorExample({ inviteId }) {
  *   const joinRequestQuery = useSingleJoinRequest({ inviteId })
  *
  *   if (joinRequestQuery.error) {
- *     const comapeoErrorCode = getErrorCode(joinRequestQuery.error)
- *     // Match error code with errors from `@comapeo/core` and handle as needed...
+ *     // Handle error from refetch due to write hook call (e.g. cancelling the join request)  
+ *   }
+ *
+ *   if (joinRequestQuery.data.status === 'failed') {
+ *     // Handle failure state based on updates happening in the background.
  *   }
  * }
  * ```
@@ -262,6 +265,10 @@ Pick<
 
 	const { data, error, isRefetching } = useSuspenseQuery({
 		...baseQueryOptions(),
+		// NOTE: Ensure garbage collection occurs immediately when all observers are unmounted
+		// so that newly active instances only use data from refetch.
+		// https://tanstack.com/query/latest/docs/framework/react/guides/caching
+		gcTime: 0,
 		queryKey: getJoinRequestsByIdQueryKey({ inviteId }),
 		queryFn: async () => {
 			return clientApi.inviteLinks.getJoinRequestById(inviteId)

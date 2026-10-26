@@ -1,3 +1,4 @@
+import type { InviteLinkJoiner } from '@comapeo/core'
 import type { ComapeoCoreClientApi } from '@comapeo/ipc'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -11,6 +12,7 @@ import {
 
 import {
 	getInvitesQueryKey,
+	getJoinRequestsByIdQueryKey,
 	getJoinRequestsQueryKey,
 } from '../lib/react-query.js'
 
@@ -42,8 +44,26 @@ export function ClientApiProvider({
 		clientApi.invite.addListener('invite-received', handleInviteEvent)
 		clientApi.invite.addListener('invite-updated', handleInviteEvent)
 
-		function handleJoinRequestUpdateEvent() {
-			queryClient.invalidateQueries({ queryKey: getJoinRequestsQueryKey() })
+		function handleJoinRequestUpdateEvent(
+			update: InviteLinkJoiner.JoinRequestUpdate,
+		) {
+			queryClient.invalidateQueries({
+				queryKey: getJoinRequestsQueryKey(),
+				// NOTE: Only want to invalidate the query for getting all join requests (no cascade)
+				exact: true,
+			})
+
+			// NOTE: Directly update query for getting specific join request
+			queryClient.setQueryData<InviteLinkJoiner.JoinRequest>(
+				getJoinRequestsByIdQueryKey({ inviteId: update.inviteId }),
+				(prev) => {
+					if (!prev) {
+						return prev
+					}
+
+					return { ...prev, ...update }
+				},
+			)
 		}
 
 		clientApi.inviteLinks.addListener(
