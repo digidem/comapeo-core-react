@@ -61,7 +61,7 @@ export class SyncStore {
 			const existingMaxCount = this.#perDeviceMaxSyncCount.get(deviceId)
 
 			if (typeof existingMaxCount === 'number' && existingMaxCount > 0) {
-				currentSyncCount = getDataSyncCountForDevice(deviceSyncState)
+				currentSyncCount += getDataSyncCountForDevice(deviceSyncState)
 				totalMaxSyncCount += existingMaxCount
 			}
 		}
