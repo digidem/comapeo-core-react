@@ -94,7 +94,7 @@ set up, it will throw an error.
 
 | Function | Type |
 | ---------- | ---------- |
-| `useClientApi` | `() => ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>` |
+| `useClientApi` | `() => ComapeoCoreClientApi` |
 
 Returns:
 
@@ -174,7 +174,7 @@ Set or unset the current device as an archive device.
 
 | Function | Type |
 | ---------- | ---------- |
-| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }>; mapServerApi: MapServerApi; } and { ...; } and { ...; }) => Element` |
+| `ReceivedMapSharesProvider` | `({ children, clientApi, mapServerApi, queryClient, }: { clientApi: ComapeoCoreClientApi; mapServerApi: MapServerApi; } and { children?: ReactNode; } and { queryClient: QueryClient; }) => Element` |
 
 ### SentMapSharesProvider
 
@@ -1162,7 +1162,7 @@ Note that this is _not_ a suspenseful hook. The different read states should be 
 
 | Function | Type |
 | ---------- | ---------- |
-| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<NoInfer<{ name: string; size: number; created: number; }>, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
+| `useGetCustomMapInfo` | `() => Pick<QueryObserverRefetchErrorResult<{ name: string; size: number; created: number; }, Error>, "data" or "error" or "status" or "isRefetching"> or ... 4 more ... or Pick<...>` |
 
 Examples:
 
@@ -1426,7 +1426,7 @@ function SentShareStatus({ shareId }: { shareId: string }) {
 
 | Constant | Type |
 | ---------- | ---------- |
-| `ClientApiContext` | `Context<ClientApi<Omit<MapeoManager, "getProject"> and { getProject: (projectPublicId: string) => Promise<ClientApi<MapeoProject>>; }> or null>` |
+| `ClientApiContext` | `Context<ComapeoCoreClientApi or null>` |
 
 ### ReceivedMapSharesContext
 
