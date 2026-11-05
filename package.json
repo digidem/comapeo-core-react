@@ -112,6 +112,6 @@
 		"typescript": "6.0.3",
 		"typescript-eslint": "8.72.0",
 		"uint8array-extras": "1.6.0",
-		"vitest": "5.0.5"
+		"vitest": "5.1.0"
 	}
 }
