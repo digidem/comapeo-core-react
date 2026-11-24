@@ -1,8 +1,9 @@
-import type { InviteApi, MemberApi } from '@comapeo/core'
+import type { InviteApi, InviteLinkJoiner, MemberApi } from '@comapeo/core'
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
+	type UseMutationResult,
 	type UseSuspenseQueryResult,
 } from '@tanstack/react-query'
 
@@ -12,8 +13,11 @@ import {
 	filterMutationResult,
 	getInvitesByIdQueryKey,
 	getInvitesQueryKey,
+	getJoinRequestsByIdQueryKey,
+	getJoinRequestsQueryKey,
 	getMembersQueryKey,
 	getProjectsQueryKey,
+	type FilteredMutationResult,
 } from '../lib/react-query.js'
 import { useClientApi } from './client.js'
 import { useSingleProject } from './projects.js'
@@ -132,7 +136,23 @@ export function useRejectInvite() {
  *
  * @param opts.projectId Public ID of project to send the invite on behalf of.
  */
-export function useSendInvite({ projectId }: { projectId: string }) {
+export function useSendInvite({
+	projectId,
+}: {
+	projectId: string
+}): // NOTE: Needs explicit return type due to TS struggles with inference (TS 2883)
+FilteredMutationResult<
+	UseMutationResult<
+		MemberApi.InviteDecision,
+		Error,
+		{
+			deviceId: string
+			roleDescription?: string
+			roleId: MemberApi.RoleIdForNewInvite
+			roleName?: string
+		}
+	>
+> {
 	const queryClient = useQueryClient()
 	const { data: projectApi } = useSingleProject({ projectId })
 
@@ -180,6 +200,153 @@ export function useRequestCancelInvite({ projectId }: { projectId: string }) {
 			onSuccess: () => {
 				queryClient.invalidateQueries({
 					queryKey: getInvitesQueryKey(),
+				})
+			},
+		}),
+	)
+}
+
+/**
+ * Get all active join requests.
+ */
+export function useManyJoinRequests(): // NOTE: Needs explicit return type due to TS2742
+Pick<
+	UseSuspenseQueryResult<Array<InviteLinkJoiner.JoinRequest>>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		queryKey: getJoinRequestsQueryKey(),
+		queryFn: async () => {
+			return clientApi.inviteLinks.getJoinRequests()
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Get a specific join request.
+ *
+ * If the join request is not available when the consuming component mounts, it will trigger the closest error boundary.
+ * If the join request is cancelled while this hook is active, the `error` field will be populated with the relevant error from core.
+ * Updates from the '`join-request-update`' event are reflected in the `data` field. Updates that indicate failure are represented by
+ * `data.status` and `data.error`, not the top-level error field from the hook's return value.
+ *
+ * @param opts.inviteId ID of relevant invite.
+ *
+ * @example
+ * ```ts
+ * function ErrorExample({ inviteId }) {
+ *   const joinRequestQuery = useSingleJoinRequest({ inviteId })
+ *
+ *   if (joinRequestQuery.error) {
+ *     // Handle error from refetch due to write hook call (e.g. cancelling the join request)  
+ *   }
+ *
+ *   if (joinRequestQuery.data.status === 'failed') {
+ *     // Handle failure state based on updates happening in the background.
+ *   }
+ * }
+ * ```
+ */
+export function useSingleJoinRequest({
+	inviteId,
+}: {
+	inviteId: string
+}): // NOTE: Needs explicit return type due to TS2742
+Pick<
+	UseSuspenseQueryResult<InviteLinkJoiner.JoinRequest>,
+	'data' | 'error' | 'isRefetching'
+> {
+	const clientApi = useClientApi()
+
+	const { data, error, isRefetching } = useSuspenseQuery({
+		...baseQueryOptions(),
+		// NOTE: Ensure garbage collection occurs immediately when all observers are unmounted
+		// so that newly active instances only use data from refetch.
+		// https://tanstack.com/query/latest/docs/framework/react/guides/caching
+		gcTime: 0,
+		queryKey: getJoinRequestsByIdQueryKey({ inviteId }),
+		queryFn: async () => {
+			return clientApi.inviteLinks.getJoinRequestById(inviteId)
+		},
+	})
+
+	return { data, error, isRefetching }
+}
+
+/**
+ * Create a join request for a received invite.
+ */
+export function useCreateJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		InviteLinkJoiner.JoinRequest,
+		Error,
+		{
+			/** URL for the received invite link. */
+			url: string
+			/** Connection timeout in ms.  */
+			timeout?: number
+		}
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({
+				url,
+				timeout,
+			}: {
+				url: string
+				timeout?: number
+			}) => {
+				// Have to avoid passing `undefined` explicitly
+				// See https://github.com/digidem/rpc-reflector/issues/21
+				return timeout === undefined
+					? clientApi.inviteLinks.createJoinRequest(url)
+					: clientApi.inviteLinks.createJoinRequest(url, { timeout })
+			},
+			onSuccess: async (_data, _variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getJoinRequestsQueryKey(),
+				})
+			},
+		}),
+	)
+}
+
+/**
+ * Cancel a join request that has been created for a received invite.
+ */
+export function useCancelJoinRequest(): // NOTE: Needs explicit return type due to TS struggles with inference (TS2883)
+FilteredMutationResult<
+	UseMutationResult<
+		void,
+		Error,
+		// TODO: Expose reason?
+		{
+			/** ID of invite to cancel request for. */
+			inviteId: string
+		}
+	>
+> {
+	const clientApi = useClientApi()
+
+	return filterMutationResult(
+		useMutation({
+			...baseMutationOptions(),
+			mutationFn: async ({ inviteId }) => {
+				return clientApi.inviteLinks.cancelJoinRequest(inviteId)
+			},
+			onSuccess: async (_data, _variables, _onMutateResult, context) => {
+				context.client.invalidateQueries({
+					queryKey: getJoinRequestsQueryKey(),
 				})
 			},
 		}),

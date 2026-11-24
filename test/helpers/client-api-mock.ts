@@ -10,6 +10,10 @@ export type MockClientApi = {
 		addListener: ReturnType<typeof vi.fn>
 		removeListener: ReturnType<typeof vi.fn>
 	}
+	inviteLinks: {
+		addListener: ReturnType<typeof vi.fn>
+		removeListener: ReturnType<typeof vi.fn>
+	}
 }
 
 export function createMockClientApi(): MockClientApi {
@@ -48,5 +52,10 @@ export function createMockClientApi(): MockClientApi {
 		removeListener: vi.fn(),
 	}
 
-	return { on, off, emit, listeners, sendMapShare, invite }
+	const inviteLinks = {
+		addListener: vi.fn(),
+		removeListener: vi.fn(),
+	}
+
+	return { on, off, emit, listeners, sendMapShare, invite, inviteLinks }
 }
